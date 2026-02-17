@@ -1,0 +1,17 @@
+{
+  "name": "polypoint-skills",
+  "owner": {
+    "name": "POLYPOINT"
+  },
+  "metadata": {
+    "description": "POLYPOINT internal skills marketplace"
+  },
+  "plugins": [
+    {
+      "name": "delphi-to-angular",
+      "source": "./skills/delphi-to-angular",
+      "description": "Guides conversion of Delphi components to Angular",
+      "category": "development"
+    }
+  ]
+}
