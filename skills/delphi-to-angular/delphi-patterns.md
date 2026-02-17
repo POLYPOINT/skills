@@ -1,8 +1,7 @@
 # Delphi P2 Codebase Patterns
 
-## Repository Location
+## Repository Structure
 
-Source: `~/repo/polypoint/P2/P2/`
 Main modules: `delphi/pep/` (PEP) and `delphi/rap/` (RAP)
 
 ## File Naming

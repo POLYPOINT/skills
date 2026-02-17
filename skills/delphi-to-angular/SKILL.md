@@ -1,7 +1,7 @@
 ---
 name: delphi-to-angular
 description: Use when converting Delphi VCL views (.dfm/.pas) from the P2 codebase to Angular components. Handles forms, frames, data modules, grids, trees, tabs, and dialogs. Produces full Angular features (component + store + service + tests) matching the POLYPOINT saas repo stack.
-argument-hint: [analyze|generate] [delphi-file-path] [screenshot-path]
+argument-hint: [analyze|generate] [path/to/file.dfm] [screenshot-path]
 disable-model-invocation: true
 ---
 
@@ -12,8 +12,8 @@ Converts Delphi VCL views from the P2 codebase into Angular components for the P
 ## Usage
 
 ```
-/delphi-to-angular analyze delphi/pep/fEditMitarbeiter
-/delphi-to-angular analyze delphi/pep/fEditMitarbeiter /path/to/screenshot.png
+/delphi-to-angular analyze /path/to/P2/delphi/pep/fEditMitarbeiter.dfm
+/delphi-to-angular analyze /path/to/P2/delphi/pep/fEditMitarbeiter.dfm /path/to/screenshot.png
 /delphi-to-angular generate
 ```
 
@@ -27,18 +27,18 @@ Otherwise, show usage examples above and stop.
 
 ## Analyze Phase
 
-**Input:** `$ARGUMENTS[1]` is the Delphi file base path (without extension), relative to `~/repo/polypoint/P2/P2/`. Optional `$ARGUMENTS[2]` is a screenshot path.
+**Input:** `$ARGUMENTS[1]` is the full path to the Delphi `.dfm` file. The `.pas` file is derived from the same path with a `.pas` extension. Optional `$ARGUMENTS[2]` is a screenshot path.
 
 ### Step 1: Read Delphi source files
 
-1. Read `~/repo/polypoint/P2/P2/$ARGUMENTS[1].dfm`
-2. Read `~/repo/polypoint/P2/P2/$ARGUMENTS[1].pas`
+1. Read `$ARGUMENTS[1]` (the `.dfm` file)
+2. Read the same path with `.pas` extension
 3. If screenshot path provided, read it for visual reference
 4. For Delphi patterns and file structure, see [delphi-patterns.md](delphi-patterns.md)
 
 ### Step 2: Follow references
 
-From the PAS `uses` clause:
+From the PAS `uses` clause, resolve referenced files from the same directory as the input file:
 - Read any frames referenced (`fr*.pas` + `.dfm`)
 - Read any interface files (`intf*.pas`) to understand data contracts
 - Read any data modules (`dm*.pas` + `.dfm`) for SQL queries
@@ -115,14 +115,14 @@ Present the conversion plan in this format:
 
 ### Target location
 
-All files go into: `~/repo/github/POLYPOINT/saas/webapps/apps/pep/src/app/<feature-name>/`
+All files go into: `apps/pep/src/app/<feature-name>/`
 
 For Angular conventions, code patterns, and styling rules, see [angular-conventions.md](angular-conventions.md).
 
 ### Step 1: Create feature directory
 
 ```bash
-mkdir -p ~/repo/github/POLYPOINT/saas/webapps/apps/pep/src/app/<feature-name>
+mkdir -p apps/pep/src/app/<feature-name>
 ```
 
 And subdirectories for any child components.
@@ -142,7 +142,7 @@ Generate each file following the patterns in [angular-conventions.md](angular-co
 
 ### Step 3: Add route
 
-Add a lazy-loaded route to `~/repo/github/POLYPOINT/saas/webapps/apps/pep/src/app/app.routes.ts`:
+Add a lazy-loaded route to `apps/pep/src/app/app.routes.ts`:
 
 ```typescript
 {
@@ -154,8 +154,8 @@ Add a lazy-loaded route to `~/repo/github/POLYPOINT/saas/webapps/apps/pep/src/ap
 ### Step 4: Validate
 
 ```bash
-cd ~/repo/github/POLYPOINT/saas/webapps && bun run lint
-cd ~/repo/github/POLYPOINT/saas/webapps && bun run test
+bun run lint
+bun run test
 ```
 
 Fix any lint errors or test failures before presenting the result.
@@ -171,4 +171,3 @@ List all generated files with a one-line description of each. Highlight any deci
 - [component-mapping.md](component-mapping.md) — Delphi VCL to Angular component mapping tables and German-English domain glossary. Load during analyze phase.
 - [angular-conventions.md](angular-conventions.md) — saas repo code conventions, complete code patterns for components, stores, services, tests, and styling. Load during generate phase.
 - [delphi-patterns.md](delphi-patterns.md) — P2 Delphi codebase structure, file naming, DFM/PAS anatomy. Load during analyze phase.
-- [examples/sample-conversion.md](examples/sample-conversion.md) — Worked example converting fChooseMonthRange to choose-month-range. Load when unsure about conversion approach.
