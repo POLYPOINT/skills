@@ -97,7 +97,7 @@ end;
 ```typescript
 import { Component, inject, signal } from '@angular/core'
 import { form, FormField, required } from '@angular/forms/signals'
-import { MatButtonModule } from '@angular/material/button'
+import { PPButtonComponent } from '@pdx/pp-button'
 import { MatDatepickerModule } from '@angular/material/datepicker'
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog'
 import { MatFormFieldModule } from '@angular/material/form-field'
@@ -115,7 +115,7 @@ export interface MonthRangeResult {
 
 @Component({
   selector: 'app-choose-month-range',
-  imports: [FormField, MatButtonModule, MatDatepickerModule, MatDialogModule, MatFormFieldModule, MatInputModule],
+  imports: [FormField, PPButtonComponent, MatDatepickerModule, MatDialogModule, MatFormFieldModule, MatInputModule],
   templateUrl: './choose-month-range.component.html',
   styleUrl: './choose-month-range.component.scss',
   host: { 'data-testid': 'choose-month-range' },
@@ -169,8 +169,8 @@ export class ChooseMonthRangeComponent {
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button (click)="cancel()">Cancel</button>
-  <button mat-flat-button color="primary" (click)="confirm()">OK</button>
+  <pp-button variant="text" (click)="cancel()">Cancel</pp-button>
+  <pp-button variant="filled" (click)="confirm()">OK</pp-button>
 </mat-dialog-actions>
 ```
 

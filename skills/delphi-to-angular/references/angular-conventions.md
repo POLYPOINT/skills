@@ -8,10 +8,13 @@
 | Monorepo | Nx |
 | Package manager | Bun |
 | State management | NgRx Signal Store |
-| UI components | Angular Material (M3) |
+| UI components | Angular Material (M3) + PDX component libraries |
+| PDX buttons | `@pdx/pp-button` — `PPButtonComponent`, `PPIconButtonComponent`, `PPFloatingActionButtonComponent` |
+| PDX checkbox | `@pdx/pp-checkbox` — `PPCheckboxComponent` (with `CheckboxState` enum) |
+| PDX icons | `@pdx/pp-icons` — Icon webfont, use `<i class="pp-icon pp-icon-<name>">` |
+| PDX theme | `@pdx/pp-theme` — Design tokens, Akkurat font, `--pp-*` CSS variables |
 | Forms | Angular Signal Forms (`@angular/forms/signals`) |
 | Styling | TailwindCSS v4 + SCSS (BEM) |
-| Design tokens | pp-theme (`--pp-*` CSS variables) |
 | Date/time | Temporal API (native, no polyfill) |
 | Unit testing | Vitest |
 | Build | esbuild + Vite |
@@ -322,6 +325,53 @@ Scale: 50 (darkest) to 990 (lightest). 500 is the base value.
 },
 ```
 
+## PDX Component Usage
+
+### pp-button
+
+```typescript
+import { PPButtonComponent, PPIconButtonComponent } from '@pdx/pp-button'
+
+@Component({
+  imports: [PPButtonComponent, PPIconButtonComponent],
+  template: `
+    <pp-button variant="filled" (click)="save()">Save</pp-button>
+    <pp-button variant="outlined" (click)="cancel()">Cancel</pp-button>
+    <pp-button variant="text" size="sm" (click)="reset()">Reset</pp-button>
+    <pp-icon-button (click)="delete()">
+      <i class="pp-icon pp-icon-delete"></i>
+    </pp-icon-button>
+  `,
+})
+```
+
+Variants: `filled`, `outlined`, `text`, `tonal`. Sizes: `sm`, `md`, `lg`.
+
+### pp-checkbox
+
+```typescript
+import { PPCheckboxComponent } from '@pdx/pp-checkbox'
+
+@Component({
+  imports: [PPCheckboxComponent],
+  template: `
+    <pp-checkbox [formField]="form.active">Active</pp-checkbox>
+  `,
+})
+```
+
+Supports `indeterminate`, `error`, and `disabled` states. Implements `ControlValueAccessor` for reactive forms integration.
+
+### pp-icons
+
+```html
+<i class="pp-icon pp-icon-calendar"></i>
+<i class="pp-icon pp-icon-delete"></i>
+<i class="pp-icon pp-icon-edit"></i>
+```
+
+Import SCSS: `@use '@pdx/pp-icons/icons'`.
+
 ## General Rules
 
 - Single quotes, no semicolons (enforced by Prettier)
@@ -329,3 +379,6 @@ Scale: 50 (darkest) to 990 (lightest). 500 is the base value.
 - Temporal API for all date/time: `Temporal.PlainDate.from(...)`, `Temporal.Now.plainDateISO()`
 - `data-testid` attributes on host elements
 - `protected` for template-bound members, `private` for internal
+- Prefer `@pdx/pp-button` over `MatButtonModule` for all buttons
+- Prefer `@pdx/pp-checkbox` over `MatCheckboxModule` for all checkboxes
+- Use `@pdx/pp-icons` for all icons (not Material Icons)
