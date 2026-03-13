@@ -1,8 +1,11 @@
 ---
 name: delphi-to-angular
 description: Use when converting Delphi VCL views (.dfm/.pas) from the P2 codebase to Angular components. Handles forms, frames, data modules, grids, trees, tabs, and dialogs. Produces full Angular features (component + store + service + tests) matching the POLYPOINT saas repo stack.
-argument-hint: [analyze|generate] [path/to/file.dfm] [screenshot-path]
+argument-hint: "[analyze|generate] [path/to/file.dfm] [screenshot-path]"
 disable-model-invocation: true
+compatibility: Designed for Claude Code. Uses argument-hint and disable-model-invocation Claude Code extensions.
+metadata:
+  version: "1.1.0"
 ---
 
 # Delphi-to-Angular Conversion
@@ -34,7 +37,7 @@ Otherwise, show usage examples above and stop.
 1. Read `$ARGUMENTS[1]` (the `.dfm` file)
 2. Read the same path with `.pas` extension
 3. If screenshot path provided, read it for visual reference
-4. For Delphi patterns and file structure, see [delphi-patterns.md](delphi-patterns.md)
+4. For Delphi patterns and file structure, see [references/delphi-patterns.md](references/delphi-patterns.md)
 
 ### Step 2: Follow references
 
@@ -65,7 +68,7 @@ Extract from the PAS file:
 
 ### Step 5: Build conversion plan
 
-For each mapping decision, consult [component-mapping.md](component-mapping.md).
+For each mapping decision, consult [references/component-mapping.md](references/component-mapping.md).
 
 Translate all German identifiers to English using the domain glossary in component-mapping.md. **Flag any German terms not in the glossary** and ask the user to confirm the translation before proceeding.
 
@@ -117,7 +120,7 @@ Present the conversion plan in this format:
 
 All files go into: `apps/pep/src/app/<feature-name>/`
 
-For Angular conventions, code patterns, and styling rules, see [angular-conventions.md](angular-conventions.md).
+For Angular conventions, code patterns, and styling rules, see [references/angular-conventions.md](references/angular-conventions.md).
 
 ### Step 1: Create feature directory
 
@@ -129,7 +132,7 @@ And subdirectories for any child components.
 
 ### Step 2: Generate files in dependency order
 
-Generate each file following the patterns in [angular-conventions.md](angular-conventions.md):
+Generate each file following the patterns in [references/angular-conventions.md](references/angular-conventions.md):
 
 1. **TypeScript interfaces** — for the data model (from Delphi field types and interface contracts)
 2. **Service** (`<feature>.service.ts`) — `@Injectable({ providedIn: 'root' })`, mock data with TODO endpoint comments
@@ -168,6 +171,12 @@ List all generated files with a one-line description of each. Highlight any deci
 
 ## Supporting Files
 
-- [component-mapping.md](component-mapping.md) — Delphi VCL to Angular component mapping tables and German-English domain glossary. Load during analyze phase.
-- [angular-conventions.md](angular-conventions.md) — saas repo code conventions, complete code patterns for components, stores, services, tests, and styling. Load during generate phase.
-- [delphi-patterns.md](delphi-patterns.md) — P2 Delphi codebase structure, file naming, DFM/PAS anatomy. Load during analyze phase.
+### Reference Files
+
+- **[references/component-mapping.md](references/component-mapping.md)** — Delphi VCL to Angular component mapping tables and German-English domain glossary. Load during analyze phase.
+- **[references/angular-conventions.md](references/angular-conventions.md)** — saas repo code conventions, complete code patterns for components, stores, services, tests, and styling. Load during generate phase.
+- **[references/delphi-patterns.md](references/delphi-patterns.md)** — P2 Delphi codebase structure, file naming, DFM/PAS anatomy. Load during analyze phase.
+
+### Example Files
+
+- **[examples/sample-conversion.md](examples/sample-conversion.md)** — Complete worked example converting fChooseMonthRange to choose-month-range.

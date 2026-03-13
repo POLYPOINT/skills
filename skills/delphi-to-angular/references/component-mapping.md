@@ -19,7 +19,7 @@
 | `TEdit` | `<mat-form-field>` + `<input matInput [formField]="form.field">` | Signal Forms |
 | `TMemo` | `<mat-form-field>` + `<textarea matInput [formField]="form.field">` | |
 | `TComboBox` | `<mat-form-field>` + `<mat-select [formField]="form.field">` | |
-| `TCheckBox` | `<mat-checkbox [formField]="form.field">` | |
+| `TCheckBox` | `<pp-checkbox [formField]="form.field">` | Use `@pdx/pp-checkbox` `PPCheckboxComponent`. Supports `indeterminate`, `error`, and `disabled` states |
 | `TRadioButton` | `<mat-radio-group>` + `<mat-radio-button>` | |
 | `TECMonthEdit` | `<mat-form-field>` + `<input matInput [matDatepicker] [formField]="form.date">` | Temporal API |
 | `TPEPDateNavigator` | Custom date nav component | Temporal.PlainDate |
@@ -41,10 +41,15 @@
 
 | Delphi VCL | Angular | Notes |
 |---|---|---|
-| `TButton` / `TBitBtn` | `<button mat-raised-button>` or `mat-flat-button` | Context-dependent |
-| `TButtonPanel` (OK/Cancel) | `<mat-dialog-actions>` if dialog, form footer otherwise | |
-| `TListPanel` (CRUD) | Toolbar with `<button mat-icon-button>` | Insert/Edit/Delete |
+| `TButton` / `TBitBtn` | `<pp-button variant="filled">` or `variant="outlined"` | Use `@pdx/pp-button` `PPButtonComponent`. Variants: `filled`, `outlined`, `text`, `tonal`. Sizes: `sm`, `md`, `lg` |
+| `TButtonPanel` (OK/Cancel) | `<mat-dialog-actions>` with `<pp-button>` if dialog, form footer otherwise | |
+| `TListPanel` (CRUD) | Toolbar with `<pp-icon-button>` | Use `@pdx/pp-button` `PPIconButtonComponent` for Insert/Edit/Delete |
+| Floating action | `<pp-fab>` | Use `@pdx/pp-button` `PPFloatingActionButtonComponent` |
 | `TPopupMenu` | `<mat-menu>` | |
+
+### Icons
+
+Use `@pdx/pp-icons` for all icons. Apply via CSS class: `<i class="pp-icon pp-icon-<name>"></i>`. Import SCSS: `@use '@pdx/pp-icons/icons'`.
 
 ## Data Layer
 
