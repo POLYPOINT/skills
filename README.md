@@ -34,10 +34,22 @@ These skills follow the [Agent Skills](https://agentskills.io) open standard and
 
 Works the same in the terminal CLI, VS Code extension, and JetBrains plugin.
 
-**Plugin install (recommended):**
+**Step 1 — Add the marketplace (one-time):**
 
 ```
-/install-plugin https://github.com/POLYPOINT/skills/tree/main/skills/delphi-to-angular
+/plugin marketplace add https://github.com/POLYPOINT/skills
+```
+
+**Step 2 — Install the plugin:**
+
+```
+/plugin install delphi-to-angular
+```
+
+**Update to latest version:**
+
+```
+/plugin update delphi-to-angular
 ```
 
 Once installed, invoke with:
