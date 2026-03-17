@@ -20,7 +20,7 @@
 | `TMemo` | `<mat-form-field>` + `<textarea matInput [formField]="form.field">` | |
 | `TComboBox` | `<mat-form-field>` + `<mat-select [formField]="form.field">` | |
 | `TCheckBox` | `<pp-checkbox [formField]="form.field">` | Use `@pdx/pp-checkbox` `PPCheckboxComponent`. Supports `indeterminate`, `error`, and `disabled` states |
-| `TRadioButton` | `<mat-radio-group>` + `<mat-radio-button>` | |
+| `TRadioButton` | `<pp-radio-group [formField]="form.field" [options]="options">` or individual `<pp-radio-button>` | Use `@pdx/pp-radio` `PPRadioGroupComponent` / `PPRadioButtonComponent`. Options via `PPRadioOption[]`. Implements `ControlValueAccessor` |
 | `TECMonthEdit` | `<mat-form-field>` + `<input matInput [matDatepicker] [formField]="form.date">` | Temporal API |
 | `TPEPDateNavigator` | Custom date nav component | Temporal.PlainDate |
 | Form data model | `signal<FormData>({...})` + `form(model, schema)` | |

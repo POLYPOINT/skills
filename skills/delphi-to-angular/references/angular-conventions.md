@@ -10,7 +10,8 @@
 | State management | NgRx Signal Store |
 | UI components | Angular Material (M3) + PDX component libraries |
 | PDX buttons | `@pdx/pp-button` — `PPButtonComponent`, `PPIconButtonComponent`, `PPFloatingActionButtonComponent` |
-| PDX checkbox | `@pdx/pp-checkbox` — `PPCheckboxComponent` (with `CheckboxState` enum) |
+| PDX checkbox | `@pdx/pp-checkbox` — `PPCheckboxComponent` (with `CheckboxState` enum, `PPCheckboxChangeEvent`) |
+| PDX radio | `@pdx/pp-radio` — `PPRadioGroupComponent`, `PPRadioButtonComponent` (with `PPRadioOption` interface) |
 | PDX icons | `@pdx/pp-icons` — Icon webfont, use `<i class="pp-icon pp-icon-<name>">` |
 | PDX theme | `@pdx/pp-theme` — Design tokens, Akkurat font, `--pp-*` CSS variables |
 | Forms | Angular Signal Forms (`@angular/forms/signals`) |
@@ -360,7 +361,28 @@ import { PPCheckboxComponent } from '@pdx/pp-checkbox'
 })
 ```
 
-Supports `indeterminate`, `error`, and `disabled` states. Implements `ControlValueAccessor` for reactive forms integration.
+Supports `indeterminate`, `error`, and `disabled` states via `CheckboxState` enum (`Selected`, `Unselected`, `Indeterminate`). Implements `ControlValueAccessor` for Signal Forms integration. Inputs: `label`, `error`, `disabled`, `state`. Outputs: `checkboxChange`, `indeterminateChange` (both emit `PPCheckboxChangeEvent`).
+
+### pp-radio
+
+```typescript
+import { PPRadioGroupComponent, PPRadioButtonComponent, PPRadioOption } from '@pdx/pp-radio'
+
+@Component({
+  imports: [PPRadioGroupComponent],
+  template: `
+    <pp-radio-group [formField]="form.status" [options]="statusOptions" />
+  `,
+})
+export class SomeComponent {
+  protected readonly statusOptions: PPRadioOption[] = [
+    { id: 'active', label: 'Active', value: 'active' },
+    { id: 'inactive', label: 'Inactive', value: 'inactive' },
+  ]
+}
+```
+
+`PPRadioGroupComponent` accepts an `options: PPRadioOption[]` input and renders radio buttons automatically. Use individual `PPRadioButtonComponent` elements when custom layout is needed. Both implement `ControlValueAccessor`. Value type: `string | number`. `PPRadioOption` interface: `{ id: string, label: string, value: string | number, disabled?: boolean, ariaLabel?: string | null }`.
 
 ### pp-icons
 
@@ -381,4 +403,5 @@ Import SCSS: `@use '@pdx/pp-icons/icons'`.
 - `protected` for template-bound members, `private` for internal
 - Prefer `@pdx/pp-button` over `MatButtonModule` for all buttons
 - Prefer `@pdx/pp-checkbox` over `MatCheckboxModule` for all checkboxes
+- Prefer `@pdx/pp-radio` over `MatRadioModule` for all radio buttons
 - Use `@pdx/pp-icons` for all icons (not Material Icons)
