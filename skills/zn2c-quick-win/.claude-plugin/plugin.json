@@ -1,0 +1,6 @@
+{
+  "name": "zn2c-quick-win",
+  "description": "Guided end-to-end implementation of Zn2C Quick-Win issues from the ZQW Jira board",
+  "version": "1.0.0",
+  "skills": ["./"]
+}

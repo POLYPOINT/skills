@@ -12,6 +12,12 @@
       "source": "./skills/delphi-to-angular",
       "description": "Guides conversion of Delphi components to Angular",
       "category": "development"
+    },
+    {
+      "name": "zn2c-quick-win",
+      "source": "./skills/zn2c-quick-win",
+      "description": "Guided end-to-end implementation of Zn2C Quick-Win issues from the ZQW Jira board",
+      "category": "development"
     }
   ]
 }
