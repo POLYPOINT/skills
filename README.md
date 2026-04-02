@@ -9,10 +9,19 @@ Skills follow the [Agent Skills](https://agentskills.io) open standard, supporte
 Skills are folders of instructions and resources that AI agents load dynamically to perform specialized tasks. Each skill has a `SKILL.md` file with YAML frontmatter and markdown instructions that the agent follows when the skill is active.
 
 Skills can:
+
 - Add knowledge (conventions, patterns, domain context)
 - Define tasks (deployments, code generation, reviews)
 - Bundle scripts and templates for complex workflows
 - Work across any tool that supports the [Agent Skills standard](https://agentskills.io)
+
+## Available Skills
+
+| Skill                 | Description                                                                                                                                                                                                                      | Usage                                         |
+| :-------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------- |
+| **delphi-to-angular** | Converts Delphi VCL views (.dfm/.pas) to Angular components. Produces full Angular features (component + store + service + tests) matching the POLYPOINT saas repo stack.                                                        | `/delphi-to-angular analyze path/to/file.dfm` |
+| **zn2c-quick-win**    | Guided end-to-end implementation of Zn2C Quick-Win issues from the ZQW Jira board, including Jira transitions, Confluence docs, git worktree workflow, build validation, Azure DevOps PR creation, and review feedback handling. | `/zn2c-quick-win ZQW-123`                     |
+| **pdx**               | Applies the PDX (POLYPOINT Design Experience) design system to Angular frontends. Guides usage of `@pdx/*` component libraries and design tokens for consistent POLYPOINT UI.                                                    | `/pdx`                                        |
 
 ## Repository Structure
 
@@ -20,6 +29,8 @@ Skills can:
 skills/
   skill-name/
     SKILL.md              # Main instructions (required)
+    .claude-plugin/       # Claude Code plugin manifest (required for /command)
+      plugin.json
     references/           # Detailed documentation (optional)
     examples/             # Example outputs (optional)
     scripts/              # Utility scripts (optional)
@@ -40,10 +51,12 @@ Works the same in the terminal CLI, VS Code extension, and JetBrains plugin.
 /plugin marketplace add https://github.com/POLYPOINT/skills
 ```
 
-**Step 2 — Install the plugin:**
+**Step 2 — Install a skill:**
 
 ```
 /plugin install delphi-to-angular
+/plugin install zn2c-quick-win
+/plugin install pdx
 ```
 
 **Update to latest version:**
@@ -52,11 +65,12 @@ Works the same in the terminal CLI, VS Code extension, and JetBrains plugin.
 /plugin update delphi-to-angular
 ```
 
-Once installed, invoke with:
+Once installed, invoke with `/skill-name`:
 
 ```
-/delphi-to-angular analyze /path/to/file.dfm
-/delphi-to-angular generate
+/delphi-to-angular analyze path/to/file.dfm
+/zn2c-quick-win ZQW-123
+/pdx
 ```
 
 <details>
@@ -65,6 +79,7 @@ Once installed, invoke with:
 ```bash
 ln -s /path/to/this/repo/skills/skill-name ~/.claude/skills/skill-name
 ```
+
 </details>
 
 <details>
@@ -73,87 +88,65 @@ ln -s /path/to/this/repo/skills/skill-name ~/.claude/skills/skill-name
 ```bash
 cp -r /path/to/this/repo/skills/skill-name .claude/skills/
 ```
+
 </details>
 
-### Cursor
+### Other Tools (Cursor, Copilot, Codex, Gemini CLI, Junie, OpenCode, ...)
 
-Cursor has [native Agent Skills support](https://cursor.com/docs/context/skills). Copy or symlink the skill directory into `.cursor/skills/`:
-
-```bash
-cp -r skills/delphi-to-angular .cursor/skills/
-```
-
-Cursor auto-discovers `SKILL.md` files and loads them based on the `description` field.
-
-### VS Code — Copilot
-
-VS Code Copilot [supports Agent Skills](https://code.visualstudio.com/docs/copilot/customization/agent-skills). Copy or symlink into `.github/skills/`:
+Use the [Agent Skills CLI](https://github.com/vercel-labs/skills) to install skills:
 
 ```bash
-cp -r skills/delphi-to-angular .github/skills/
+# Install all skills (auto-detects installed tools)
+npx skills add https://github.com/POLYPOINT/skills
+
+# Install a specific skill only
+npx skills add https://github.com/POLYPOINT/skills --skill pdx
+
+# Install to specific tools only
+npx skills add https://github.com/POLYPOINT/skills --agent cursor codex
+
+# Install globally (user-level, available across all projects)
+npx skills add https://github.com/POLYPOINT/skills -g
+
+# Preview available skills without installing
+npx skills add https://github.com/POLYPOINT/skills --list
+
+# Copy files instead of symlinking
+npx skills add https://github.com/POLYPOINT/skills --copy
 ```
 
-Copilot also reads `AGENTS.md` files at the workspace root. See [GitHub docs](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills).
-
-### Codex (OpenAI)
-
-Codex [supports Agent Skills](https://developers.openai.com/codex/skills/). Copy or symlink into `.agents/skills/`:
+Manage installed skills:
 
 ```bash
-cp -r skills/delphi-to-angular .agents/skills/
+npx skills list              # List project skills
+npx skills list -g           # List global skills
+npx skills check             # Check for updates
+npx skills update            # Update all skills
+npx skills remove pdx        # Remove a skill
 ```
 
-Codex auto-discovers skills in `.agents/skills/` and `~/.codex/skills/`.
+<details>
+<summary>Manual installation per tool</summary>
 
-### Gemini CLI
+Copy or symlink the skill directory into the tool's skills location:
 
-Gemini CLI has [native Agent Skills support](https://geminicli.com/docs/cli/skills/). Install directly from GitHub:
+| Tool              | Skills directory  |
+| :---------------- | :---------------- |
+| Cursor            | `.cursor/skills/` |
+| VS Code — Copilot | `.github/skills/` |
+| Codex (OpenAI)    | `.agents/skills/` |
+| Gemini CLI        | `.gemini/skills/` |
+| JetBrains — Junie | `.junie/skills/`  |
+| OpenCode          | `.agents/skills/` |
+| Antigravity       | `.agents/skills/` |
+
+Example:
 
 ```bash
-gemini skills install https://github.com/POLYPOINT/skills
+cp -r skills/pdx .cursor/skills/
 ```
 
-Or copy into the local skills directory:
-
-```bash
-cp -r skills/delphi-to-angular .gemini/skills/
-```
-
-Manage with `/skills list`, `/skills enable`, `/skills disable`.
-
-### JetBrains — Junie
-
-Junie [supports Agent Skills](https://junie.jetbrains.com/docs/agent-skills.html). Copy or symlink into `.junie/skills/`:
-
-```bash
-cp -r skills/delphi-to-angular .junie/skills/
-```
-
-Junie CLI also reads from `.agents/skills/` and can import skills from other agents.
-
-### Antigravity
-
-Copy skill content into the Antigravity rules directory:
-
-```bash
-cp -r skills/delphi-to-angular .agents/skills/
-```
-
-Antigravity reads from `.agents/` at the project root.
-
-### OpenCode
-
-OpenCode [supports Agent Skills](https://opencode.ai/docs/skills/). Copy or symlink into `.agents/skills/`:
-
-```bash
-cp -r skills/delphi-to-angular .agents/skills/
-```
-
-OpenCode also has Claude Code compatibility — it reads from `.claude/skills/` as a fallback.
-
-### Other Agent Skills-Compatible Tools
-
-Any tool that supports the [Agent Skills standard](https://agentskills.io) can use these skills. Check the [full list of compatible tools](https://agentskills.io) for specific instructions. The general pattern is to copy the skill directory into the tool's skills location.
+</details>
 
 ## SKILL.md Format
 
@@ -184,28 +177,28 @@ What goes wrong and how to fix it.
 
 ### Frontmatter Reference
 
-| Field                      | Required    | Description                                                              |
-| :------------------------- | :---------- | :----------------------------------------------------------------------- |
-| `name`                     | Yes         | Must match directory name. Lowercase, hyphens, max 64 chars.             |
-| `description`              | Yes         | What the skill does and when to use it. Used by agents for auto-discovery. Max 1024 chars. |
-| `license`                  | No          | License name or reference to a bundled license file.                     |
-| `compatibility`            | No          | Environment requirements (intended product, system packages, etc.).      |
-| `metadata`                 | No          | Arbitrary key-value map for tool-specific properties.                    |
-| `allowed-tools`            | No          | Space-delimited list of pre-approved tools. Support varies by tool.      |
-| `argument-hint`            | No          | Hint for autocomplete, e.g. `[issue-number]`. (Claude Code extension)    |
-| `disable-model-invocation` | No          | `true` = only user can invoke via `/name`. (Claude Code extension)       |
-| `user-invocable`           | No          | `false` = hidden from `/` menu. (Claude Code extension)                  |
-| `model`                    | No          | Model override when skill is active. (Claude Code extension)             |
-| `context`                  | No          | `fork` to run in an isolated subagent context. (Claude Code extension)   |
-| `agent`                    | No          | Subagent type when `context: fork` is set. (Claude Code extension)       |
+| Field                      | Required | Description                                                                                |
+| :------------------------- | :------- | :----------------------------------------------------------------------------------------- |
+| `name`                     | Yes      | Must match directory name. Lowercase, hyphens, max 64 chars.                               |
+| `description`              | Yes      | What the skill does and when to use it. Used by agents for auto-discovery. Max 1024 chars. |
+| `license`                  | No       | License name or reference to a bundled license file.                                       |
+| `compatibility`            | No       | Environment requirements (intended product, system packages, etc.).                        |
+| `metadata`                 | No       | Arbitrary key-value map for tool-specific properties.                                      |
+| `allowed-tools`            | No       | Space-delimited list of pre-approved tools. Support varies by tool.                        |
+| `argument-hint`            | No       | Hint for autocomplete, e.g. `[issue-number]`. (Claude Code extension)                      |
+| `disable-model-invocation` | No       | `true` = only user can invoke via `/name`. (Claude Code extension)                         |
+| `user-invocable`           | No       | `false` = hidden from `/` menu. (Claude Code extension)                                    |
+| `model`                    | No       | Model override when skill is active. (Claude Code extension)                               |
+| `context`                  | No       | `fork` to run in an isolated subagent context. (Claude Code extension)                     |
+| `agent`                    | No       | Subagent type when `context: fork` is set. (Claude Code extension)                         |
 
 ### String Substitutions
 
-| Variable               | Description                                           |
-| :--------------------- | :---------------------------------------------------- |
-| `$ARGUMENTS`           | All arguments passed when invoking the skill.         |
-| `$ARGUMENTS[N]` / `$N` | Access a specific argument by 0-based index.          |
-| `${CLAUDE_SESSION_ID}` | Current session ID.                                   |
+| Variable               | Description                                                  |
+| :--------------------- | :----------------------------------------------------------- |
+| `$ARGUMENTS`           | All arguments passed when invoking the skill.                |
+| `$ARGUMENTS[N]` / `$N` | Access a specific argument by 0-based index.                 |
+| `${CLAUDE_SESSION_ID}` | Current session ID.                                          |
 | `` !`command` ``       | Runs a shell command and injects its output (preprocessing). |
 
 ## Contributing
@@ -214,10 +207,11 @@ What goes wrong and how to fix it.
 
 1. Create `skills/your-skill-name/SKILL.md`
 2. Add YAML frontmatter with at least `name` and `description`
-3. Description must start with "Use when..." — describe triggering conditions, not workflow
-4. Keep `SKILL.md` under 500 lines; move heavy reference to supporting files
-5. Test the skill: invoke it directly with `/skill-name` and verify Claude follows instructions
-6. Open a PR for review
+3. Create `.claude-plugin/plugin.json` for Claude Code slash command support (see existing skills for the format)
+4. Description must start with "Use when..." — describe triggering conditions, not workflow
+5. Keep `SKILL.md` under 500 lines; move heavy reference to supporting files
+6. Test the skill: invoke it directly with `/skill-name` and verify Claude follows instructions
+7. Open a PR for review
 
 ### Naming Conventions
 

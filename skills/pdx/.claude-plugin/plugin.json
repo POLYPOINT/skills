@@ -1,0 +1,6 @@
+{
+  "name": "pdx",
+  "description": "Apply PDX (Polypoint Design Experience) styling and component libraries to Angular frontends",
+  "version": "1.0.0",
+  "skills": ["./"]
+}
