@@ -18,6 +18,12 @@
       "source": "./skills/zn2c-quick-win",
       "description": "Guided end-to-end implementation of Zn2C Quick-Win issues from the ZQW Jira board",
       "category": "development"
+    },
+    {
+      "name": "pdx",
+      "source": "./skills/pdx",
+      "description": "Apply PDX (Polypoint Design Experience) styling and component libraries to Angular frontends",
+      "category": "development"
     }
   ]
 }
