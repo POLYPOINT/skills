@@ -22,6 +22,7 @@ Skills can:
 | **delphi-to-angular** | Converts Delphi VCL views (.dfm/.pas) to Angular components. Produces full Angular features (component + store + service + tests) matching the POLYPOINT saas repo stack.                                                        | `/delphi-to-angular analyze path/to/file.dfm` |
 | **zn2c-quick-win**    | Guided end-to-end implementation of Zn2C Quick-Win issues from the ZQW Jira board, including Jira transitions, Confluence docs, git worktree workflow, build validation, Azure DevOps PR creation, and review feedback handling. | `/zn2c-quick-win ZQW-123`                     |
 | **pdx**               | Applies the PDX (POLYPOINT Design Experience) design system to Angular frontends. Guides usage of `@pdx/*` component libraries and design tokens for consistent POLYPOINT UI.                                                    | `/pdx`                                        |
+| **research**          | Deeply investigate a codebase topic and produce a structured research document with architecture diagrams, glossary, and actionable findings.                                                                                     | `/research <topic>`                           |
 
 ## Repository Structure
 
@@ -57,6 +58,7 @@ Works the same in the terminal CLI, VS Code extension, and JetBrains plugin.
 /plugin install delphi-to-angular
 /plugin install zn2c-quick-win
 /plugin install pdx
+/plugin install research
 ```
 
 **Update to latest version:**
@@ -71,6 +73,7 @@ Once installed, invoke with `/skill-name`:
 /delphi-to-angular analyze path/to/file.dfm
 /zn2c-quick-win ZQW-123
 /pdx
+/research Authentication flow in the API layer
 ```
 
 <details>
