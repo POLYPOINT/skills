@@ -42,7 +42,10 @@ When using Bun as the package manager, add all `@pdx/*` packages to `trustedDepe
     "@pdx/pp-radio",
     "@pdx/pp-chip",
     "@pdx/pp-dialog",
-    "@pdx/pp-tree"
+    "@pdx/pp-tree",
+    "@pdx/pp-select",
+    "@pdx/pp-menu",
+    "@pdx/pp-tab"
   ],
   "minimumReleaseAgeExcludes": [
     "@pdx/pp-theme",
@@ -53,7 +56,10 @@ When using Bun as the package manager, add all `@pdx/*` packages to `trustedDepe
     "@pdx/pp-radio",
     "@pdx/pp-chip",
     "@pdx/pp-dialog",
-    "@pdx/pp-tree"
+    "@pdx/pp-tree",
+    "@pdx/pp-select",
+    "@pdx/pp-menu",
+    "@pdx/pp-tab"
   ]
 }
 ```
@@ -66,10 +72,10 @@ Install the theme and icon packages first, then component libraries as needed:
 
 ```bash
 npm install @pdx/pp-theme @pdx/pp-icons
-npm install @pdx/pp-button @pdx/pp-input @pdx/pp-checkbox @pdx/pp-radio @pdx/pp-chip @pdx/pp-dialog @pdx/pp-tree
+npm install @pdx/pp-button @pdx/pp-input @pdx/pp-checkbox @pdx/pp-radio @pdx/pp-chip @pdx/pp-dialog @pdx/pp-tree @pdx/pp-select @pdx/pp-menu @pdx/pp-tab
 ```
 
-All component libraries have `@pdx/pp-theme` as a peer dependency. `@pdx/pp-dialog` additionally requires `@pdx/pp-button`.
+All component libraries have `@pdx/pp-theme` as a peer dependency. `@pdx/pp-dialog` additionally requires `@pdx/pp-button`. `@pdx/pp-select` requires `@pdx/pp-menu`. `@pdx/pp-menu` requires `@pdx/pp-checkbox`.
 
 ---
 

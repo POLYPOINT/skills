@@ -137,6 +137,17 @@ Shadows are a **semantic signal for elevation**, not a decorative tool. A shadow
 - States: Default, Hovered, Focused, Error, Disabled, Read-only.
 - The label should clearly describe the expected input.
 
+### Select-specific rules
+
+- Use `PPSelectComponent` (`@pdx/pp-select`) for single-selection dropdowns and `PPMultiselectComponent` for multi-selection. These replace `mat-select`.
+- **Floating label:** When no value is selected, the label sits centered inside the trigger. When a value is selected, the label floats to the top at a smaller size — same behavior as text inputs.
+- **Multiselect display:** Selected values are shown as a comma-separated string with ellipsis overflow. The dropdown stays open during selection to allow toggling multiple items.
+- **Supporting text:** Optional helper text appears below the trigger. When `isError` is true, both the border and supporting text render in the error color.
+- **Leading icon:** Optional, applied to the trigger and passed through to each dropdown item.
+- Options use the `PPMenuItem` interface: `{ id: string, label: string, supportingText: string | null }`. The `supportingText` field provides secondary text on each dropdown option.
+- For form-integrated dropdowns (with label, floating label, ControlValueAccessor), use `pp-select` — not `pp-menu` directly. `pp-select` composes `pp-menu` internally.
+- `pp-menu` is a standalone component in its own right — use it anywhere `mat-menu` would be used: action menus, context menus, three-dot overflow menus (e.g. the `moreMenu` slot in `pp-tree`), or any custom dropdown that is not a form field.
+
 ---
 
 ## Textareas
@@ -147,8 +158,32 @@ Textareas should fill the available width **when the layout calls for it** — f
 
 ## Tabs
 
+Use `PPTabGroupComponent` + `PPTabComponent` (`@pdx/pp-tab`) for all tabbed navigation. These replace `mat-tab-group` + `mat-tab`.
+
 - Text size: `1rem`
-- Selected tab text color: `mint`
+- Selected tab text color: `$pp-primary` (mint/teal)
+- Unselected tab text color: `$pp-secondary-300`
+- Disabled tab text color: `$pp-secondary-700`
+- Active indicator: 2px bar in `$pp-primary` that slides beneath the active tab with a smooth transition
+- Tabs support optional leading icons (e.g. `pp-icon-dashboard`)
+- Use `fullWidth` when tabs should stretch to fill the container equally
+- Two content strategies:
+  - **Tab-managed:** Use `ppTabContent` directive on `<ng-template>` inside each tab — the group renders the active panel automatically
+  - **Consumer-managed:** Omit `ppTabContent` and use two-way `[(selectedIndex)]` binding with `@switch` for custom content rendering
+- Keyboard navigation: Arrow keys to move between tabs, Home/End to jump to first/last, Enter/Space to activate
+- States: Enabled, Hovered, Focused, Pressed, Disabled
+
+---
+
+## Menus & Dropdowns
+
+- Use `PPMenuComponent` (`@pdx/pp-menu`) as the PDX replacement for `mat-menu`. Suitable for action menus, context menus, three-dot overflow menus, and any dropdown list that is not a form select field.
+- Use `PPMenuMultiselectComponent` for multi-select dropdown lists with leading checkboxes.
+- `pp-menu` is presentational — the parent must control `[isOpen]` and handle closing (outside click, Escape, selection). This makes it composable in different trigger patterns (icon button, three-dot button, custom trigger).
+- For form-integrated dropdowns (label, floating label, validation, `ControlValueAccessor`), use `pp-select` instead — it wraps `pp-menu` with full form field behavior.
+- Menu items follow the `PPMenuItem` interface: `{ id: string, label: string, supportingText: string | null }`
+- Two sizes: `'large'` (default) and `'small'` for compact contexts
+- Items can display an optional leading icon
 
 ---
 

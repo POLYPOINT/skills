@@ -487,16 +487,16 @@ import { PPTreeComponent, TreeData } from "@pdx/pp-tree";
 />
 ```
 
-| Input            | Type         | Default  | Description                     |
-| ---------------- | ------------ | -------- | ------------------------------- |
-| `data`           | `TreeData[]` | required | Hierarchical data               |
-| `selectedId`     | `string`     | —        | Currently selected node         |
-| `folderMode`     | `boolean`    | —        | Folder/document icons           |
-| `showDragButton` | `boolean`    | —        | Show drag handles               |
-| `showAddButton`  | `boolean`    | —        | Show add child buttons          |
-| `showSortButton` | `boolean`    | —        | Show sort up/down buttons       |
-| `moreMenu`       | `MatMenu`    | —        | Context menu reference          |
-| `ariaLabel*`     | `string`     | —        | Various ARIA labels for buttons |
+| Input            | Type         | Default  | Description                                                                                                                 |
+| ---------------- | ------------ | -------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `data`           | `TreeData[]` | required | Hierarchical data                                                                                                           |
+| `selectedId`     | `string`     | —        | Currently selected node                                                                                                     |
+| `folderMode`     | `boolean`    | —        | Folder/document icons                                                                                                       |
+| `showDragButton` | `boolean`    | —        | Show drag handles                                                                                                           |
+| `showAddButton`  | `boolean`    | —        | Show add child buttons                                                                                                      |
+| `showSortButton` | `boolean`    | —        | Show sort up/down buttons                                                                                                   |
+| `moreMenu`       | `MatMenu`    | —        | Context menu reference — `MatMenu` provides the overlay mechanics, `pp-menu` provides the PDX-styled menu content inside it |
+| `ariaLabel*`     | `string`     | —        | Various ARIA labels for buttons                                                                                             |
 
 **Outputs:**
 
@@ -538,29 +538,332 @@ interface NodeSortEvent {
 
 ---
 
+## @pdx/pp-select (v1.0.0)
+
+Accessible dropdown fields for single and multiple selection. Floating label animation, optional leading icons, error/disabled states, supporting text, and full Angular forms integration via `ControlValueAccessor`.
+
+### Components
+
+#### PPSelectComponent
+
+```typescript
+import { PPSelectComponent } from "@pdx/pp-select";
+```
+
+```html
+<pp-select
+  label="Country"
+  [options]="countryOptions"
+  [value]="selectedId"
+  (selectionChange)="onSelect($event.id)"
+/>
+```
+
+Reactive form integration:
+
+```html
+<pp-select
+  label="Country"
+  [options]="countryOptions"
+  [formControl]="countryControl"
+/>
+```
+
+| Input            | Type                  | Default     | Description                                             |
+| ---------------- | --------------------- | ----------- | ------------------------------------------------------- |
+| `label`          | `string` _(required)_ | —           | Floating label text                                     |
+| `options`        | `PPMenuItem[]`        | `[]`        | List of options to display                              |
+| `value`          | `string`              | `''`        | ID of the currently selected option                     |
+| `isDisabled`     | `boolean`             | `false`     | Disables the trigger and prevents dropdown from opening |
+| `isError`        | `boolean`             | `false`     | Error state styling for border and supporting text      |
+| `size`           | `'large' \| 'small'`  | `'large'`   | `large`: 2.5rem height, `small`: 2rem height            |
+| `icon`           | `string`              | `''`        | Leading icon CSS class (e.g. `'pp-icon-global_world'`)  |
+| `supportingText` | `string`              | `''`        | Helper text below the trigger                           |
+| `ariaLabel`      | `string \| undefined` | `undefined` | Accessible label (falls back to `label`)                |
+
+**Output:** `selectionChange` emits `PPSelectChangeEvent` (`{ id: string }`).
+
+**Forms:** Implements `ControlValueAccessor` for reactive forms.
+
+#### PPMultiselectComponent
+
+```typescript
+import { PPMultiselectComponent } from "@pdx/pp-select";
+```
+
+```html
+<pp-multiselect
+  label="Countries"
+  [options]="countryOptions"
+  [values]="selectedIds"
+  (selectionChange)="onSelect($event.ids)"
+/>
+```
+
+Reactive form integration:
+
+```html
+<pp-multiselect
+  label="Countries"
+  [options]="countryOptions"
+  [formControl]="countriesControl"
+/>
+```
+
+| Input            | Type                  | Default     | Description                                             |
+| ---------------- | --------------------- | ----------- | ------------------------------------------------------- |
+| `label`          | `string` _(required)_ | —           | Floating label text                                     |
+| `options`        | `PPMenuItem[]`        | `[]`        | List of options to display                              |
+| `values`         | `readonly string[]`   | `[]`        | IDs of the currently selected options                   |
+| `isDisabled`     | `boolean`             | `false`     | Disables the trigger and prevents dropdown from opening |
+| `isError`        | `boolean`             | `false`     | Error state styling for border and supporting text      |
+| `size`           | `'large' \| 'small'`  | `'large'`   | `large`: 2.5rem height, `small`: 2rem height            |
+| `icon`           | `string`              | `''`        | Leading icon CSS class                                  |
+| `supportingText` | `string`              | `''`        | Helper text below the trigger                           |
+| `ariaLabel`      | `string \| undefined` | `undefined` | Accessible label (falls back to `label`)                |
+
+**Output:** `selectionChange` emits `PPMultiselectChangeEvent` (`{ ids: readonly string[] }`).
+
+**Forms:** Implements `ControlValueAccessor` for reactive forms. Value type: `string[]`.
+
+### Models
+
+`PPMenuItem` is defined in and must be imported from `@pdx/pp-menu`:
+
+```typescript
+import { PPMenuItem } from "@pdx/pp-menu";
+
+interface PPMenuItem {
+  id: string;
+  label: string;
+  supportingText: string | null;
+}
+```
+
+Change event types are exported from `@pdx/pp-select`:
+
+```typescript
+interface PPSelectChangeEvent {
+  readonly id: string;
+}
+
+interface PPMultiselectChangeEvent {
+  readonly ids: readonly string[];
+}
+```
+
+### Peer Dependencies
+
+`@angular/core`, `@angular/forms`, `@pdx/pp-menu`, `@pdx/pp-theme`
+
+---
+
+## @pdx/pp-menu (v1.0.0)
+
+Standalone dropdown menu components for single and multiple selection. Used internally by `@pdx/pp-select` but can also be used directly for custom dropdown implementations.
+
+### Components
+
+#### PPMenuComponent
+
+```typescript
+import { PPMenuComponent, PPMenuItem } from "@pdx/pp-menu";
+```
+
+```html
+<pp-menu
+  [items]="items"
+  [selectedId]="selectedId"
+  [isOpen]="isOpen"
+  [ariaLabel]="'Choose an option'"
+  (itemSelect)="onItemSelect($event)"
+/>
+```
+
+| Input        | Type                  | Default     | Description                              |
+| ------------ | --------------------- | ----------- | ---------------------------------------- |
+| `items`      | `PPMenuItem[]`        | `[]`        | List of options to display               |
+| `selectedId` | `string`              | `''`        | ID of the currently selected item        |
+| `isOpen`     | `boolean`             | `false`     | Whether the dropdown is visible          |
+| `ariaLabel`  | `string \| undefined` | `undefined` | Accessible label for the listbox         |
+| `size`       | `'large' \| 'small'`  | `'large'`   | Visual size variant                      |
+| `icon`       | `string`              | `''`        | Icon class for each menu item (optional) |
+
+**Output:** `itemSelect` emits `PPMenuSelectEvent` (`{ id: string }`).
+
+#### PPMenuMultiselectComponent
+
+```typescript
+import { PPMenuMultiselectComponent } from "@pdx/pp-menu";
+```
+
+```html
+<pp-menu-multiselect
+  [items]="items"
+  [selectedIds]="selectedIds"
+  [isOpen]="isOpen"
+  [ariaLabel]="'Choose options'"
+  (selectionChange)="onSelectionChange($event.ids)"
+/>
+```
+
+| Input         | Type                  | Default     | Description                              |
+| ------------- | --------------------- | ----------- | ---------------------------------------- |
+| `items`       | `PPMenuItem[]`        | `[]`        | List of options to display               |
+| `selectedIds` | `readonly string[]`   | `[]`        | Array of IDs of currently selected items |
+| `isOpen`      | `boolean`             | `false`     | Whether the dropdown is visible          |
+| `ariaLabel`   | `string \| undefined` | `undefined` | Accessible label for the listbox         |
+| `size`        | `'large' \| 'small'`  | `'large'`   | Visual size variant                      |
+| `icon`        | `string`              | `''`        | Icon class for each menu item (optional) |
+
+**Output:** `selectionChange` emits `PPMenuMultiselectChangeEvent` (`{ ids: string[] }`).
+
+### Models
+
+```typescript
+interface PPMenuItem {
+  id: string;
+  label: string;
+  supportingText: string | null;
+}
+
+interface PPMenuSelectEvent {
+  id: string;
+}
+
+interface PPMenuMultiselectChangeEvent {
+  readonly ids: string[];
+}
+```
+
+### Peer Dependencies
+
+`@angular/core`, `@pdx/pp-checkbox`, `@pdx/pp-theme`
+
+---
+
+## @pdx/pp-tab (v1.0.0)
+
+Secondary tab navigation component with icons, disabled states, content panels, keyboard navigation, and full accessibility.
+
+### Components
+
+#### PPTabGroupComponent
+
+```typescript
+import {
+  PPTabGroupComponent,
+  PPTabComponent,
+  PPTabContentDirective,
+} from "@pdx/pp-tab";
+```
+
+```html
+<pp-tab-group [(selectedIndex)]="activeTab">
+  <pp-tab label="Overview" icon="pp-icon-dashboard">
+    <ng-template ppTabContent>
+      <p>Overview content goes here.</p>
+    </ng-template>
+  </pp-tab>
+  <pp-tab label="Settings" icon="pp-icon-settings_gears">
+    <ng-template ppTabContent>
+      <p>Settings content goes here.</p>
+    </ng-template>
+  </pp-tab>
+</pp-tab-group>
+```
+
+| Input           | Type      | Default | Description                                               |
+| --------------- | --------- | ------- | --------------------------------------------------------- |
+| `selectedIndex` | `number`  | `0`     | Index of the active tab. Supports two-way binding `[()]`. |
+| `fullWidth`     | `boolean` | `false` | When true, tabs stretch to fill the full width equally.   |
+
+**Output:** `selectedIndexChange` emits the new index (via two-way binding).
+
+#### PPTabComponent
+
+```html
+<pp-tab label="Tab 1" />
+<pp-tab label="Dashboard" icon="pp-icon-dashboard" />
+<pp-tab label="Disabled" [disabled]="true" />
+```
+
+| Input      | Type             | Default | Description                                  |
+| ---------- | ---------------- | ------- | -------------------------------------------- |
+| `label`    | `string`         | `''`    | Text label displayed in the tab              |
+| `icon`     | `string \| null` | `null`  | Icon class name (e.g. `'pp-icon-dashboard'`) |
+| `disabled` | `boolean`        | `false` | Disables the tab when true                   |
+
+#### PPTabContentDirective
+
+```html
+<pp-tab label="Details">
+  <ng-template ppTabContent>
+    <p>Panel content rendered by the tab group.</p>
+  </ng-template>
+</pp-tab>
+```
+
+Structural directive for marking tab panel content. When provided, the tab group renders the active tab's content below the tab bar.
+
+Consumer-managed content (without `ppTabContent`):
+
+```html
+<pp-tab-group [(selectedIndex)]="activeTab">
+  <pp-tab label="Tab 1" />
+  <pp-tab label="Tab 2" />
+</pp-tab-group>
+
+@switch (activeTab) { @case (0) {
+<div>Content 1</div>
+} @case (1) {
+<div>Content 2</div>
+} }
+```
+
+### Design Tokens
+
+- **Text (unselected):** `$pp-secondary-300`
+- **Text (selected/hover):** `$pp-primary`
+- **Text (disabled):** `$pp-secondary-700`
+- **Indicator (selected):** `$pp-primary`
+- **Divider:** `$pp-secondary-800`
+
+### Peer Dependencies
+
+`@angular/common`, `@angular/core`, `@pdx/pp-theme`
+
+---
+
 ## Component Replacement Map
 
 When a PDX component exists, always use it instead of Angular Material or custom implementations.
 
-| Need            | PDX Component                     | Replaces                                                        |
-| --------------- | --------------------------------- | --------------------------------------------------------------- |
-| Standard button | `PPButtonComponent`               | `mat-button`, `mat-raised-button`, `mat-flat-button`            |
-| Icon button     | `PPIconButtonComponent`           | `mat-icon-button`                                               |
-| FAB             | `PPFloatingActionButtonComponent` | `mat-fab`, `mat-mini-fab`                                       |
-| Text input      | `PPInputComponent`                | `mat-form-field` + `matInput`                                   |
-| Textarea        | `PPTextareaComponent`             | `mat-form-field` + `matInput` + `<textarea>`                    |
-| Checkbox        | `PPCheckboxComponent`             | `mat-checkbox`                                                  |
-| Radio button    | `PPRadioButtonComponent`          | `mat-radio-button`                                              |
-| Radio group     | `PPRadioGroupComponent`           | `mat-radio-group`                                               |
-| Chip            | `PPChipComponent`                 | `mat-chip`                                                      |
-| Chip list       | `PPChipListComponent`             | `mat-chip-listbox`, `mat-chip-set`                              |
-| Dialog          | `PPDialogComponent`               | Custom dialog templates (still use `MatDialog` service to open) |
-| Tree            | `PPTreeComponent`                 | `mat-tree`, custom tree implementations                         |
-| Icons           | `pp-icon pp-icon-*`               | `mat-icon`, FontAwesome, other icon libraries                   |
+| Need             | PDX Component                     | Replaces                                                        |
+| ---------------- | --------------------------------- | --------------------------------------------------------------- |
+| Standard button  | `PPButtonComponent`               | `mat-button`, `mat-raised-button`, `mat-flat-button`            |
+| Icon button      | `PPIconButtonComponent`           | `mat-icon-button`                                               |
+| FAB              | `PPFloatingActionButtonComponent` | `mat-fab`, `mat-mini-fab`                                       |
+| Text input       | `PPInputComponent`                | `mat-form-field` + `matInput`                                   |
+| Textarea         | `PPTextareaComponent`             | `mat-form-field` + `matInput` + `<textarea>`                    |
+| Checkbox         | `PPCheckboxComponent`             | `mat-checkbox`                                                  |
+| Radio button     | `PPRadioButtonComponent`          | `mat-radio-button`                                              |
+| Radio group      | `PPRadioGroupComponent`           | `mat-radio-group`                                               |
+| Chip             | `PPChipComponent`                 | `mat-chip`                                                      |
+| Chip list        | `PPChipListComponent`             | `mat-chip-listbox`, `mat-chip-set`                              |
+| Dialog           | `PPDialogComponent`               | Custom dialog templates (still use `MatDialog` service to open) |
+| Tree             | `PPTreeComponent`                 | `mat-tree`, custom tree implementations                         |
+| Select           | `PPSelectComponent`               | `mat-select`                                                    |
+| Multiselect      | `PPMultiselectComponent`          | `mat-select` (multiple)                                         |
+| Menu             | `PPMenuComponent`                 | `mat-menu`                                                      |
+| Menu multiselect | `PPMenuMultiselectComponent`      | `mat-menu` (multi-select)                                       |
+| Tab group        | `PPTabGroupComponent`             | `mat-tab-group`                                                 |
+| Tab              | `PPTabComponent`                  | `mat-tab`                                                       |
+| Icons            | `pp-icon pp-icon-*`               | `mat-icon`, FontAwesome, other icon libraries                   |
 
 **Components without a PDX replacement yet** — use Angular Material with PDX theme applied:
 
-- Select / Autocomplete (`mat-select`, `mat-autocomplete`)
+- Autocomplete (`mat-autocomplete`)
 - Date picker (`mat-datepicker`)
 - Slide toggle (`mat-slide-toggle`)
 - Progress bar / spinner (`mat-progress-bar`, `mat-progress-spinner`)
@@ -569,8 +872,6 @@ When a PDX component exists, always use it instead of Angular Material or custom
 - Table (`mat-table`)
 - Paginator (`mat-paginator`)
 - Sort (`mat-sort`)
-- Menu (`mat-menu`)
 - Sidenav (`mat-sidenav`)
 - Toolbar (`mat-toolbar`)
-- Tabs (`mat-tab-group`) — follow PDX tab styling guidelines
 - Expansion panel (`mat-expansion-panel`)

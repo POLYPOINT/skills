@@ -23,6 +23,9 @@ Apply the PDX design system to Angular frontends. PDX provides reusable Angular 
 | `@pdx/pp-radio`    | `PPRadioButtonComponent`, `PPRadioGroupComponent`                                          |
 | `@pdx/pp-chip`     | `PPChipComponent`, `PPChipListComponent`                                                   |
 | `@pdx/pp-dialog`   | `PPDialogComponent` (shell for MatDialog)                                                  |
+| `@pdx/pp-select`   | `PPSelectComponent`, `PPMultiselectComponent` (single/multi dropdown)                      |
+| `@pdx/pp-menu`     | `PPMenuComponent`, `PPMenuMultiselectComponent` (standalone dropdown menus)                |
+| `@pdx/pp-tab`      | `PPTabGroupComponent`, `PPTabComponent`, `PPTabContentDirective`                           |
 | `@pdx/pp-tree`     | `PPTreeComponent` (hierarchical data, drag-and-drop, sorting)                              |
 
 ## Component Replacement Rules
@@ -41,9 +44,13 @@ Replace Angular Material components with PDX equivalents:
 | `mat-chip` / `mat-chip-set`                          | `PPChipComponent` / `PPChipListComponent`                  |
 | Custom dialog templates                              | `PPDialogComponent` (still opened via `MatDialog` service) |
 | `mat-tree`                                           | `PPTreeComponent`                                          |
+| `mat-select`                                         | `PPSelectComponent`                                        |
+| `mat-select` (multiple)                              | `PPMultiselectComponent`                                   |
+| `mat-menu`                                           | `PPMenuComponent` / `PPMenuMultiselectComponent`           |
+| `mat-tab-group` + `mat-tab`                          | `PPTabGroupComponent` + `PPTabComponent`                   |
 | `mat-icon`, FontAwesome                              | `<span class="pp-icon pp-icon-*">`                         |
 
-**No PDX replacement yet** — use Angular Material with pp-theme: select, autocomplete, datepicker, slide-toggle, progress bar/spinner, snackbar, tooltip, table, paginator, sort, menu, sidenav, toolbar, tabs, expansion panel.
+**No PDX replacement yet** — use Angular Material with pp-theme: autocomplete, datepicker, slide-toggle, progress bar/spinner, snackbar, tooltip, table, paginator, sort, sidenav, toolbar, expansion panel.
 
 ## Workflow
 
