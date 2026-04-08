@@ -5,7 +5,7 @@ argument-hint: "[analyze|generate] [path/to/file.dfm] [screenshot-path]"
 disable-model-invocation: true
 compatibility: Designed for Claude Code. Uses argument-hint and disable-model-invocation Claude Code extensions.
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # Delphi-to-Angular Conversion
@@ -42,6 +42,7 @@ Otherwise, show usage examples above and stop.
 ### Step 2: Follow references
 
 From the PAS `uses` clause, resolve referenced files from the same directory as the input file:
+
 - Read any frames referenced (`fr*.pas` + `.dfm`)
 - Read any interface files (`intf*.pas`) to understand data contracts
 - Read any data modules (`dm*.pas` + `.dfm`) for SQL queries
@@ -49,6 +50,7 @@ From the PAS `uses` clause, resolve referenced files from the same directory as 
 ### Step 3: Parse DFM structure
 
 Extract from the DFM file:
+
 - Component tree (parent/child nesting)
 - Component types and key properties (dimensions, captions, alignment, visibility)
 - Data bindings: which `TDataSource` links to which `TOraQuery`
@@ -59,6 +61,7 @@ Extract from the DFM file:
 ### Step 4: Parse PAS logic
 
 Extract from the PAS file:
+
 - Event handlers and their logic (OnClick, OnChange, OnCreate, etc.)
 - Private fields (`F` prefix = state, `i` prefix = interface)
 - `Sync*` methods — these become `computed()` signals
@@ -78,6 +81,7 @@ Present the conversion plan in this format:
 ## Conversion Plan: <delphi-name> -> <angular-name>
 
 ### Components to generate
+
 1. <ComponentName> (<routed|child|dialog>, <purpose>)
    - Mapped from: <Delphi class> (<base class>)
    - Layout: <Delphi layout> -> <Angular layout approach>
@@ -87,24 +91,29 @@ Present the conversion plan in this format:
    ...
 
 ### Store
+
 - <StoreName> (signalStore)
   - State: { <property>: <type>, ... }
   - Methods: <method1>, <method2>, ...
 
 ### Service
+
 - <ServiceName>
   - <method>(params) -> mocked, TODO: <HTTP method> <endpoint path>
   - ...
 
 ### Form model (if applicable)
+
 - <formName>: signal<{ <field>: <type>, ... }>
   - Validation: <rules>
   - Drives: <what computed signals depend on it>
 
 ### Route
+
 - /<route-path> (lazy loaded)
 
 ### Translation decisions needed
+
 - "<German term>" -> "<proposed English>"?
 ```
 
