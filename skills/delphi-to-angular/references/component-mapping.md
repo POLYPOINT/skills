@@ -29,13 +29,13 @@
 
 ## Data Display
 
-| Delphi VCL           | Angular                            | Notes                 |
-| -------------------- | ---------------------------------- | --------------------- |
-| `TDBGrid`            | `<table mat-table>` with `matSort` | Column defs per field |
-| `TVirtualStringTree` | `<mat-tree>`                       | Flat or nested        |
-| `TListBox`           | `<mat-selection-list>`             |                       |
-| `TLabel`             | `<span>` or `<p>` with Tailwind    |                       |
-| `TStatusBar`         | Tailwind-styled footer             |                       |
+| Delphi VCL           | Angular                                                       | Notes                                                                                                                            |
+| -------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `TDBGrid`            | `<table mat-table>` with `matSort`                            | Column defs per field                                                                                                            |
+| `TVirtualStringTree` | `<pp-tree [data]="treeData" (selectNode)="onSelect($event)">` | Use `@pdx/pp-tree` `PPTreeComponent`. Data via `TreeData[]`. Supports drag-and-drop, sorting, context menu via `PPMenuComponent` |
+| `TListBox`           | `<mat-selection-list>`                                        |                                                                                                                                  |
+| `TLabel`             | `<span>` or `<p>` with Tailwind                               |                                                                                                                                  |
+| `TStatusBar`         | Tailwind-styled footer                                        |                                                                                                                                  |
 
 ## Actions
 

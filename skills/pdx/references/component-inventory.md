@@ -463,9 +463,9 @@ Provides overlay and backdrop styling.
 
 ---
 
-## @pdx/pp-tree (v1.2.1)
+## @pdx/pp-tree (v2.0.1)
 
-Flexible tree component for hierarchical data. Supports selection, expansion, drag-and-drop, sorting, and custom node templates.
+Flexible tree component for hierarchical data. Supports selection, expansion, drag-and-drop, sorting, and context menus via `PPMenuComponent`.
 
 ### Components
 
@@ -473,30 +473,38 @@ Flexible tree component for hierarchical data. Supports selection, expansion, dr
 
 ```typescript
 import { PPTreeComponent, TreeData } from "@pdx/pp-tree";
+import { PPMenuComponent, PPMenuItem } from "@pdx/pp-menu";
 ```
 
 ```html
 <pp-tree
   [data]="treeData"
-  [selectedId]="selectedNodeId"
+  [(selectedId)]="selectedNodeId"
   [showDragButton]="true"
   [showAddButton]="true"
+  [moreMenu]="contextMenu"
   (selectNode)="onSelect($event)"
   (moveNode)="onMove($event)"
   (treeChange)="onTreeUpdate($event)"
 />
+
+<pp-menu
+  #contextMenu
+  [items]="menuItems()"
+  (itemSelect)="onMenuAction($event)"
+/>
 ```
 
-| Input            | Type         | Default  | Description                                                                                                                 |
-| ---------------- | ------------ | -------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `data`           | `TreeData[]` | required | Hierarchical data                                                                                                           |
-| `selectedId`     | `string`     | —        | Currently selected node                                                                                                     |
-| `folderMode`     | `boolean`    | —        | Folder/document icons                                                                                                       |
-| `showDragButton` | `boolean`    | —        | Show drag handles                                                                                                           |
-| `showAddButton`  | `boolean`    | —        | Show add child buttons                                                                                                      |
-| `showSortButton` | `boolean`    | —        | Show sort up/down buttons                                                                                                   |
-| `moreMenu`       | `MatMenu`    | —        | Context menu reference — `MatMenu` provides the overlay mechanics, `pp-menu` provides the PDX-styled menu content inside it |
-| `ariaLabel*`     | `string`     | —        | Various ARIA labels for buttons                                                                                             |
+| Input            | Type                      | Default  | Description                                                                                                                                                                                        |
+| ---------------- | ------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data`           | `TreeData[]`              | required | Hierarchical data                                                                                                                                                                                  |
+| `selectedId`     | `string`                  | —        | Currently selected node (ModelSignal, supports two-way `[()]`)                                                                                                                                     |
+| `folderMode`     | `boolean`                 | —        | Folder/document icons                                                                                                                                                                              |
+| `showDragButton` | `boolean`                 | —        | Show drag handles                                                                                                                                                                                  |
+| `showAddButton`  | `boolean`                 | —        | Show add child buttons (respects per-node `hideAddButton`)                                                                                                                                         |
+| `showSortButton` | `boolean`                 | —        | Show sort up/down buttons                                                                                                                                                                          |
+| `moreMenu`       | `PPMenuComponent \| null` | `null`   | Reference to a `PPMenuComponent` instance for the "more actions" context menu. The tree node toggles `isOpen` and sets `triggerElement` automatically; items and events are owned by the consumer. |
+| `ariaLabel*`     | `string`                  | —        | Various ARIA labels for buttons (drag, add, more, sort up/down, expand, collapse)                                                                                                                  |
 
 **Outputs:**
 
@@ -518,6 +526,7 @@ interface TreeData {
   children?: TreeData[];
   isDisabled?: boolean;
   isExpanded?: boolean;
+  hideAddButton?: boolean;
 }
 
 interface NodeMoveEvent {
@@ -534,11 +543,11 @@ interface NodeSortEvent {
 
 ### Peer Dependencies
 
-`@angular/core`, `@angular/material` (menu, drag support), `@pdx/pp-theme`
+`@angular/core`, `@pdx/pp-menu`, `@pdx/pp-theme`
 
 ---
 
-## @pdx/pp-select (v1.0.0)
+## @pdx/pp-select (v1.1.0)
 
 Accessible dropdown fields for single and multiple selection. Floating label animation, optional leading icons, error/disabled states, supporting text, and full Angular forms integration via `ControlValueAccessor`.
 
@@ -573,7 +582,7 @@ Reactive form integration:
 | ---------------- | --------------------- | ----------- | ------------------------------------------------------- |
 | `label`          | `string` _(required)_ | —           | Floating label text                                     |
 | `options`        | `PPMenuItem[]`        | `[]`        | List of options to display                              |
-| `value`          | `string`              | `''`        | ID of the currently selected option                     |
+| `value`          | `string \| number`    | `''`        | ID of the currently selected option                     |
 | `isDisabled`     | `boolean`             | `false`     | Disables the trigger and prevents dropdown from opening |
 | `isError`        | `boolean`             | `false`     | Error state styling for border and supporting text      |
 | `size`           | `'large' \| 'small'`  | `'large'`   | `large`: 2.5rem height, `small`: 2rem height            |
@@ -581,7 +590,7 @@ Reactive form integration:
 | `supportingText` | `string`              | `''`        | Helper text below the trigger                           |
 | `ariaLabel`      | `string \| undefined` | `undefined` | Accessible label (falls back to `label`)                |
 
-**Output:** `selectionChange` emits `PPSelectChangeEvent` (`{ id: string }`).
+**Output:** `selectionChange` emits `PPSelectChangeEvent` (`{ id: string | number }`).
 
 **Forms:** Implements `ControlValueAccessor` for reactive forms.
 
@@ -610,21 +619,21 @@ Reactive form integration:
 />
 ```
 
-| Input            | Type                  | Default     | Description                                             |
-| ---------------- | --------------------- | ----------- | ------------------------------------------------------- |
-| `label`          | `string` _(required)_ | —           | Floating label text                                     |
-| `options`        | `PPMenuItem[]`        | `[]`        | List of options to display                              |
-| `values`         | `readonly string[]`   | `[]`        | IDs of the currently selected options                   |
-| `isDisabled`     | `boolean`             | `false`     | Disables the trigger and prevents dropdown from opening |
-| `isError`        | `boolean`             | `false`     | Error state styling for border and supporting text      |
-| `size`           | `'large' \| 'small'`  | `'large'`   | `large`: 2.5rem height, `small`: 2rem height            |
-| `icon`           | `string`              | `''`        | Leading icon CSS class                                  |
-| `supportingText` | `string`              | `''`        | Helper text below the trigger                           |
-| `ariaLabel`      | `string \| undefined` | `undefined` | Accessible label (falls back to `label`)                |
+| Input            | Type                            | Default     | Description                                             |
+| ---------------- | ------------------------------- | ----------- | ------------------------------------------------------- |
+| `label`          | `string` _(required)_           | —           | Floating label text                                     |
+| `options`        | `PPMenuItem[]`                  | `[]`        | List of options to display                              |
+| `values`         | `readonly (string \| number)[]` | `[]`        | IDs of the currently selected options                   |
+| `isDisabled`     | `boolean`                       | `false`     | Disables the trigger and prevents dropdown from opening |
+| `isError`        | `boolean`                       | `false`     | Error state styling for border and supporting text      |
+| `size`           | `'large' \| 'small'`            | `'large'`   | `large`: 2.5rem height, `small`: 2rem height            |
+| `icon`           | `string`                        | `''`        | Leading icon CSS class                                  |
+| `supportingText` | `string`                        | `''`        | Helper text below the trigger                           |
+| `ariaLabel`      | `string \| undefined`           | `undefined` | Accessible label (falls back to `label`)                |
 
-**Output:** `selectionChange` emits `PPMultiselectChangeEvent` (`{ ids: readonly string[] }`).
+**Output:** `selectionChange` emits `PPMultiselectChangeEvent` (`{ ids: readonly (string | number)[] }`).
 
-**Forms:** Implements `ControlValueAccessor` for reactive forms. Value type: `string[]`.
+**Forms:** Implements `ControlValueAccessor` for reactive forms. Value type: `(string | number)[]`.
 
 ### Models
 
@@ -634,9 +643,9 @@ Reactive form integration:
 import { PPMenuItem } from "@pdx/pp-menu";
 
 interface PPMenuItem {
-  id: string;
-  label: string;
-  supportingText: string | null;
+  readonly id: string | number;
+  readonly label: string;
+  readonly supportingText?: string;
 }
 ```
 
@@ -644,11 +653,11 @@ Change event types are exported from `@pdx/pp-select`:
 
 ```typescript
 interface PPSelectChangeEvent {
-  readonly id: string;
+  readonly id: string | number;
 }
 
 interface PPMultiselectChangeEvent {
-  readonly ids: readonly string[];
+  readonly ids: readonly (string | number)[];
 }
 ```
 
@@ -658,9 +667,9 @@ interface PPMultiselectChangeEvent {
 
 ---
 
-## @pdx/pp-menu (v1.0.0)
+## @pdx/pp-menu (v1.1.0)
 
-Standalone dropdown menu components for single and multiple selection. Used internally by `@pdx/pp-select` but can also be used directly for custom dropdown implementations.
+Standalone dropdown menu components for single and multiple selection. Used internally by `@pdx/pp-select` and as the context menu for `@pdx/pp-tree`. Can also be used directly for custom dropdown implementations.
 
 ### Components
 
@@ -680,16 +689,17 @@ import { PPMenuComponent, PPMenuItem } from "@pdx/pp-menu";
 />
 ```
 
-| Input        | Type                  | Default     | Description                              |
-| ------------ | --------------------- | ----------- | ---------------------------------------- |
-| `items`      | `PPMenuItem[]`        | `[]`        | List of options to display               |
-| `selectedId` | `string`              | `''`        | ID of the currently selected item        |
-| `isOpen`     | `boolean`             | `false`     | Whether the dropdown is visible          |
-| `ariaLabel`  | `string \| undefined` | `undefined` | Accessible label for the listbox         |
-| `size`       | `'large' \| 'small'`  | `'large'`   | Visual size variant                      |
-| `icon`       | `string`              | `''`        | Icon class for each menu item (optional) |
+| Input            | Type                  | Default     | Description                                                                                                                                                    |
+| ---------------- | --------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `items`          | `PPMenuItem[]`        | `[]`        | List of options to display                                                                                                                                     |
+| `selectedId`     | `string \| number`    | `''`        | ID of the currently selected item                                                                                                                              |
+| `isOpen`         | `boolean`             | `false`     | Whether the dropdown is visible (ModelSignal — supports two-way `[()]` or direct `.set()`)                                                                     |
+| `triggerElement` | `HTMLElement \| null` | `null`      | When set, the menu uses `position: fixed` anchored to this element's coordinates. Used by `pp-tree` to position the menu near the "more" button. (ModelSignal) |
+| `ariaLabel`      | `string \| undefined` | `undefined` | Accessible label for the listbox                                                                                                                               |
+| `size`           | `'large' \| 'small'`  | `'large'`   | Visual size variant                                                                                                                                            |
+| `icon`           | `string`              | `''`        | Icon class for each menu item (optional)                                                                                                                       |
 
-**Output:** `itemSelect` emits `PPMenuSelectEvent` (`{ id: string }`).
+**Output:** `itemSelect` emits `PPMenuSelectEvent` (`{ id: string | number }`).
 
 #### PPMenuMultiselectComponent
 
@@ -707,32 +717,32 @@ import { PPMenuMultiselectComponent } from "@pdx/pp-menu";
 />
 ```
 
-| Input         | Type                  | Default     | Description                              |
-| ------------- | --------------------- | ----------- | ---------------------------------------- |
-| `items`       | `PPMenuItem[]`        | `[]`        | List of options to display               |
-| `selectedIds` | `readonly string[]`   | `[]`        | Array of IDs of currently selected items |
-| `isOpen`      | `boolean`             | `false`     | Whether the dropdown is visible          |
-| `ariaLabel`   | `string \| undefined` | `undefined` | Accessible label for the listbox         |
-| `size`        | `'large' \| 'small'`  | `'large'`   | Visual size variant                      |
-| `icon`        | `string`              | `''`        | Icon class for each menu item (optional) |
+| Input         | Type                            | Default     | Description                              |
+| ------------- | ------------------------------- | ----------- | ---------------------------------------- |
+| `items`       | `PPMenuItem[]`                  | `[]`        | List of options to display               |
+| `selectedIds` | `readonly (string \| number)[]` | `[]`        | Array of IDs of currently selected items |
+| `isOpen`      | `boolean`                       | `false`     | Whether the dropdown is visible          |
+| `ariaLabel`   | `string \| undefined`           | `undefined` | Accessible label for the listbox         |
+| `size`        | `'large' \| 'small'`            | `'large'`   | Visual size variant                      |
+| `icon`        | `string`                        | `''`        | Icon class for each menu item (optional) |
 
-**Output:** `selectionChange` emits `PPMenuMultiselectChangeEvent` (`{ ids: string[] }`).
+**Output:** `selectionChange` emits `PPMenuMultiselectChangeEvent` (`{ ids: readonly (string | number)[] }`).
 
 ### Models
 
 ```typescript
 interface PPMenuItem {
-  id: string;
-  label: string;
-  supportingText: string | null;
+  readonly id: string | number;
+  readonly label: string;
+  readonly supportingText?: string;
 }
 
 interface PPMenuSelectEvent {
-  id: string;
+  readonly id: string | number;
 }
 
 interface PPMenuMultiselectChangeEvent {
-  readonly ids: string[];
+  readonly ids: readonly (string | number)[];
 }
 ```
 

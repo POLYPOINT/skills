@@ -431,17 +431,17 @@ export class SomeComponent {
   protected readonly skillsControl = new FormControl<string[]>([]);
 
   protected readonly departmentOptions: PPMenuItem[] = [
-    { id: "1", label: "Engineering", supportingText: null },
-    { id: "2", label: "Design", supportingText: null },
+    { id: "1", label: "Engineering" },
+    { id: "2", label: "Design" },
   ];
   protected readonly skillOptions: PPMenuItem[] = [
-    { id: "ts", label: "TypeScript", supportingText: null },
-    { id: "angular", label: "Angular", supportingText: null },
+    { id: "ts", label: "TypeScript" },
+    { id: "angular", label: "Angular" },
   ];
 }
 ```
 
-`PPSelectComponent` is a single-selection dropdown. `PPMultiselectComponent` is multi-selection (displays comma-separated labels with ellipsis). Both implement `ControlValueAccessor`. Options via `PPMenuItem[]` (`{ id: string, label: string, supportingText: string | null }`). Sizes: `'large'` (default, 2.5rem), `'small'` (2rem). Inputs: `label` (required), `options`, `value`/`values`, `isDisabled`, `isError`, `size`, `icon`, `supportingText`, `ariaLabel`. Output: `selectionChange` emits `PPSelectChangeEvent` / `PPMultiselectChangeEvent`.
+`PPSelectComponent` is a single-selection dropdown. `PPMultiselectComponent` is multi-selection (displays comma-separated labels with ellipsis). Both implement `ControlValueAccessor`. Options via `PPMenuItem[]` (`{ id: string | number, label: string, supportingText?: string }`). Sizes: `'large'` (default, 2.5rem), `'small'` (2rem). Inputs: `label` (required), `options`, `value`/`values`, `isDisabled`, `isError`, `size`, `icon`, `supportingText`, `ariaLabel`. Output: `selectionChange` emits `PPSelectChangeEvent` / `PPMultiselectChangeEvent`.
 
 ### pp-menu
 
@@ -462,7 +462,31 @@ import { PPMenuComponent, PPMenuMultiselectComponent, PPMenuItem } from '@pdx/pp
 })
 ```
 
-`PPMenuComponent` is a standalone single-select dropdown listbox. `PPMenuMultiselectComponent` is a multi-select variant with leading checkboxes. Both are presentational — open/close state is managed by the parent. Used internally by `@pdx/pp-select` but can be composed directly for custom dropdown UIs. Items via `PPMenuItem[]`. Sizes: `'large'`, `'small'`.
+`PPMenuComponent` is a standalone single-select dropdown listbox. `PPMenuMultiselectComponent` is a multi-select variant with leading checkboxes. Both are presentational — open/close state is managed by the parent. Used internally by `@pdx/pp-select` and as the context menu for `@pdx/pp-tree`. Can also be composed directly for custom dropdown UIs. Items via `PPMenuItem[]`. Sizes: `'large'`, `'small'`. Supports fixed positioning via `triggerElement` ModelSignal for use cases where the menu is placed outside the trigger's DOM subtree.
+
+### pp-tree
+
+```typescript
+import { PPTreeComponent, TreeData } from '@pdx/pp-tree'
+import { PPMenuComponent, PPMenuItem } from '@pdx/pp-menu'
+
+@Component({
+  imports: [PPTreeComponent, PPMenuComponent],
+  template: `
+    <pp-tree
+      [data]="treeData"
+      [(selectedId)]="selectedNodeId"
+      [showAddButton]="true"
+      [moreMenu]="contextMenu"
+      (selectNode)="onSelect($event)"
+      (addNode)="onAdd($event)"
+    />
+    <pp-menu #contextMenu [items]="menuItems()" (itemSelect)="onMenuAction($event)" />
+  `,
+})
+```
+
+`PPTreeComponent` displays hierarchical data with selection, expansion, drag-and-drop reordering, sorting, and context menus. Data via `TreeData[]` (`{ id: string, label: string, icon?: string, children?: TreeData[], isDisabled?: boolean, isExpanded?: boolean, hideAddButton?: boolean }`). The `moreMenu` input accepts a `PPMenuComponent` reference — the tree node toggles `isOpen` and sets `triggerElement` automatically; items and event handling are owned by the consumer. Peer deps: `@angular/core`, `@pdx/pp-menu`, `@pdx/pp-theme`.
 
 ### pp-tab
 
