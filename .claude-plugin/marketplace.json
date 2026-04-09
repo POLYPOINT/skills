@@ -30,6 +30,12 @@
       "source": "./skills/research",
       "description": "Deeply investigate a codebase topic and produce a structured research document with architecture diagrams, glossary, and actionable findings",
       "category": "development"
+    },
+    {
+      "name": "playwright-e2e",
+      "source": "./skills/playwright-e2e",
+      "description": "Create Playwright E2E tests using Chrome browser exploration for real selector discovery and Page Object Model patterns",
+      "category": "testing"
     }
   ]
 }
