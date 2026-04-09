@@ -16,6 +16,13 @@ Create robust Playwright E2E tests by exploring the live UI in Chrome, discoveri
 
 The argument is a free-form description of the test to create (e.g., `User can create a new booking and see it in the list`, `Login fails with invalid credentials and shows error message`).
 
+## Hard Rules
+
+- **Every invocation MUST end by asking the user whether to run the tests.** No exceptions. Do not present final output without this question.
+- Never hardcode environment URLs in tests or POMs.
+- Always check existing POMs before creating new ones.
+- Never skip Chrome exploration — real selector discovery produces more resilient tests than guessing.
+
 ## Workflow
 
 ### Phase 0: Project Discovery
@@ -191,11 +198,21 @@ Present a concrete plan for approval before writing code.
 - Use descriptive test names that read as specifications.
 - Follow the AAA pattern: Arrange → Act → Assert.
 
-#### 5c. Validate
+**After generating all files, you MUST proceed to Phase 6. Do not stop here.**
 
-1. Run `npx playwright test <test-file> --reporter=list` to execute the new tests.
-2. If tests fail: diagnose using error output. Use Chrome tools to re-inspect if needed. Fix and re-run.
-3. Present pass/fail results to the user.
+### Phase 6: Run Tests (MANDATORY — do NOT skip this phase)
+
+**This phase is required after every test creation or edit. You MUST execute it.**
+
+1. Present the generated/modified files to the user.
+2. **Ask the user: "Would you like me to run the tests now?"** — You MUST ask this question. Do not end the workflow without asking.
+3. If the user says **yes**:
+   - Run `npx playwright test <test-file> --reporter=list`
+   - If tests fail: diagnose using error output. Use Chrome tools to re-inspect if needed. Fix and re-run.
+   - Present pass/fail results to the user.
+4. If the user says **no**: acknowledge and end.
+
+**IMPORTANT:** Never finish the skill without completing this phase. If you created or modified any test file, you MUST ask the user whether to run tests before ending.
 
 ## Important Notes
 
@@ -204,6 +221,7 @@ Present a concrete plan for approval before writing code.
 - Always check existing POMs before creating new ones. Reuse over duplication.
 - The Chrome exploration phase is essential — do not skip it. Real selector discovery produces far more resilient tests than guessing from source code.
 - When authentication is needed, always ask the user — never assume credentials.
+- **Always ask the user whether to run tests after creating or modifying test files.** This is the final required step of every invocation.
 
 ## Reference Files
 
