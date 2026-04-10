@@ -1,20 +1,49 @@
 ---
 name: playwright-e2e
-description: Use when the user wants to create Playwright end-to-end tests, write E2E tests, add browser tests, or create integration tests with Playwright. Uses Chrome browser exploration to discover real selectors and follows Page Object Model patterns.
-argument-hint: "<test description>"
+description: Use when the user wants to create Playwright end-to-end tests from an annotated codegen recording. The user records a flow with `npx playwright codegen`, gives the test a descriptive name, adds `// assert that` comments, and this skill enriches it with resilient selectors via Chrome exploration and generates Page Object Model tests.
+argument-hint: "<path to annotated codegen file>"
 disable-model-invocation: true
-compatibility: Designed for Claude Code. Requires Chrome browser MCP tools (mcp__claude-in-chrome__*) for UI exploration. Project must have Playwright installed.
+compatibility: Designed for Claude Code. Requires Chrome browser MCP tools (mcp__claude-in-chrome__*) for selector enrichment. Project must have Playwright installed.
 metadata:
-  version: "1.0.0"
+  version: "2.0.0"
 ---
 
 # Playwright E2E Test Creator
 
-Create robust Playwright E2E tests by exploring the live UI in Chrome, discovering real selectors, and following Page Object Model patterns.
+Create robust Playwright E2E tests from annotated codegen recordings. Chrome exploration enriches selectors, and the output follows Page Object Model patterns.
 
-**Usage:** `/playwright-e2e <test description>`
+**Usage:** `/playwright-e2e <path to annotated codegen file>`
 
-The argument is a free-form description of the test to create (e.g., `User can create a new booking and see it in the list`, `Login fails with invalid credentials and shows error message`).
+### How it works
+
+1. **Record** the user flow with Playwright codegen:
+   ```bash
+   npx playwright codegen <url>
+   ```
+2. **Annotate** the saved file:
+   - Rename the test from the default `test('test', ...)` to a descriptive name that captures the overall test intent (e.g., `test('User logs in and creates a new booking', ...)`)
+   - Add `// assert that <description>` comments inline at each point where an assertion should occur
+3. **Invoke** the skill with the path to the annotated file.
+
+### Example annotated codegen file
+
+```typescript
+import { test, expect } from '@playwright/test';
+
+test('User logs in and creates a new booking', async ({ page }) => {
+  await page.goto('http://localhost:3000/login');
+  await page.getByLabel('Email').fill('user@example.com');
+  await page.getByLabel('Password').fill('password123');
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  // assert that User is redirected to the dashboard
+  await page.goto('http://localhost:3000/bookings/new');
+  await page.getByLabel('Name').fill('Team Meeting');
+  await page.getByLabel('Date').fill('2025-06-15');
+  await page.getByRole('button', { name: 'Create Booking' }).click();
+  // assert that Success message is visible
+  // assert that New booking appears in the bookings list
+});
+```
 
 ## Hard Rules
 
@@ -22,6 +51,8 @@ The argument is a free-form description of the test to create (e.g., `User can c
 - Never hardcode environment URLs in tests or POMs.
 - Always check existing POMs before creating new ones.
 - Never skip Chrome exploration — real selector discovery produces more resilient tests than guessing.
+- The annotated codegen file is the source of truth for the flow. Chrome exploration enriches selectors and page context but does not change the flow unless a discrepancy is found and confirmed with the user.
+- Never use raw codegen selectors in the final test — always replace with selectors discovered during Chrome exploration.
 
 ## Workflow
 
@@ -29,7 +60,7 @@ The argument is a free-form description of the test to create (e.g., `User can c
 
 Automatically scan the project before any user interaction.
 
-1. Parse `$ARGUMENTS` as the test description.
+1. Parse `$ARGUMENTS` as the path to the annotated codegen file.
 2. Search for Playwright configuration:
    - Look for `playwright.config.ts`, `playwright.config.js`
    - Check `package.json` for `@playwright/test` dependency
@@ -47,19 +78,24 @@ Automatically scan the project before any user interaction.
    - Record: file path, class name, which page/URL it covers, public methods
 6. Index existing **test files** — glob for `**/*.spec.ts`, `**/*.test.ts` in the test directory. Record: file path, `test.describe` names, individual `test()` names.
 
-### Phase 1: Clarification
+### Phase 1: Parse Annotated Codegen
 
-Resolve ambiguities before investing time in exploration.
+Extract the test specification from the annotated codegen file.
 
-1. Analyze the test description together with project context from Phase 0.
-2. Ask the user **3-5 focused questions**, selected based on what is unclear:
-   - What is the URL/route for the feature being tested?
-   - Does the test require authentication? If so, what role/credentials?
-   - Which environment URL should be used for Chrome exploration? (list the base URLs found in config as options)
-   - Should the test cover only the happy path, or also error/edge-case scenarios?
-   - Are there data prerequisites (test users, seeded data, specific application state)?
-   - Is this a new feature or does it modify existing tested behavior?
-3. **Wait for answers before proceeding.**
+1. Read the file provided in `$ARGUMENTS`.
+2. Parse the test name from the `test('...', ...)` call as the test description / overall flow intent.
+3. Parse all `// assert that` comments, preserving their position relative to the surrounding codegen actions. Each `// assert that` comment maps to a specific point in the flow where the assertion should fire.
+4. Extract the sequence of user actions: navigations (`goto`), clicks, fills, selects, etc.
+5. Extract all URLs visited during the flow.
+6. **Validate**:
+   - The test must have a descriptive name (not the default `'test'`). If the name is still the codegen default, ask the user to rename it.
+   - The file must contain at least one `// assert that` comment. If missing, ask the user to add them.
+   > "The codegen file needs a descriptive test name (not the default 'test') and at least one `// assert that` comment. See the usage section above for the expected format."
+7. Only ask clarifying questions if something is genuinely ambiguous:
+   - A URL in the codegen is not covered by any `baseURL` in the Playwright config.
+   - The flow includes a login page but no credentials are apparent and no `storageState` is configured.
+   - An `// assert that` comment is vague enough that multiple interpretations exist (e.g., `// assert that the data is correct`).
+   - Do NOT ask mandatory clarification questions — the codegen file IS the specification.
 
 ### Phase 2: Similarity Search
 
@@ -85,25 +121,26 @@ Avoid duplicating existing tests. Find reusable code.
    ```
 4. **Wait for user response.** If existing tests suffice, stop. Otherwise, note which POMs to reuse and proceed.
 
-### Phase 3: Chrome Exploration
+### Phase 3: Context Enrichment (Chrome Exploration)
 
-Navigate the actual UI to discover real selectors and verify the test description matches reality.
+Replay the codegen flow in Chrome to enrich selectors and deepen page understanding. The flow steps come from the codegen file — Chrome exploration validates and enriches, it does not discover the flow.
 
-#### 3a. Navigate to the target page
+#### 3a. Open the browser and navigate
 
 1. Call `mcp__claude-in-chrome__tabs_context_mcp` to check current browser state.
 2. Call `mcp__claude-in-chrome__tabs_create_mcp` to open a new tab.
-3. Call `mcp__claude-in-chrome__navigate` to go to the target URL (environment URL from Phase 1).
+3. Call `mcp__claude-in-chrome__navigate` to go to the first URL from the codegen file.
 4. If the page redirects to a login screen:
    - Inform the user: "The page requires authentication. Please either log in manually in the Chrome tab and tell me when ready, or provide credentials for me to fill the login form."
    - **Wait for user guidance.**
    - If credentials provided, use `mcp__claude-in-chrome__form_input` and `mcp__claude-in-chrome__computer` to log in.
 
-#### 3b. Map the page structure
+#### 3b. Replay the flow and enrich at each step
 
-1. Use `mcp__claude-in-chrome__read_page` to capture DOM structure.
-2. Use `mcp__claude-in-chrome__find` to locate elements described in the test (buttons, forms, inputs, tables, modals).
-3. Use `mcp__claude-in-chrome__javascript_tool` to extract selector attributes:
+Walk through each action from the codegen file in order. At each page or state change:
+
+1. Use `mcp__claude-in-chrome__read_page` to capture the accessibility tree.
+2. Use `mcp__claude-in-chrome__javascript_tool` to extract selector attributes:
    ```javascript
    // Extract all testid and aria attributes for selector mapping
    const elements = document.querySelectorAll('[data-testid], [aria-label], [role]');
@@ -116,33 +153,35 @@ Navigate the actual UI to discover real selectors and verify the test descriptio
      type: el.getAttribute('type')
    }));
    ```
-4. Build a **selector map** for each element the test will interact with. Selector preference order:
+3. Use `mcp__claude-in-chrome__read_network_requests` to identify API calls backing the page (useful for assertions like "API returned 200" or understanding data flow).
+4. Use `mcp__claude-in-chrome__read_console_messages` to catch any console errors during the flow.
+5. Step through the action using `mcp__claude-in-chrome__computer` (click) and `mcp__claude-in-chrome__form_input` (type), then observe the result with `mcp__claude-in-chrome__read_page`.
+6. Optionally call `mcp__claude-in-chrome__gif_creator` to record the flow as a GIF for reference.
+
+#### 3c. Build the selector map
+
+For each element the codegen interacts with, find the best available selector. Preference order:
    - `data-testid` (most resilient)
    - `getByRole` with accessible name (semantic)
    - `getByLabel` (form elements)
    - `getByText` (buttons, links)
    - CSS selector (last resort — most brittle)
 
-#### 3c. Walk through the user flow
+Map each raw codegen selector to the improved selector found during exploration.
 
-1. Step through each action using `mcp__claude-in-chrome__computer` (click) and `mcp__claude-in-chrome__form_input` (type).
-2. After each action, call `mcp__claude-in-chrome__read_page` to observe state changes (new elements, modals, navigation, success/error messages).
-3. Call `mcp__claude-in-chrome__read_console_messages` to check for console errors during the flow.
-4. Optionally call `mcp__claude-in-chrome__gif_creator` to record the flow as a GIF for reference.
+#### 3d. Handle discrepancies
 
-#### 3d. Handle inconsistencies
-
-If the UI does not match the user's description:
-- Report the discrepancy with specifics, e.g.: "Your description says to click 'Submit Order' but the button is labeled 'Place Order'. The form also has a required 'Delivery Date' field not mentioned in your description."
-- **Ask the user for guidance.** Should the test use actual UI labels? Are extra fields in scope?
+If the live UI does not match the codegen file (e.g., a button label changed, a page no longer exists, an element is missing):
+- Report the discrepancy with specifics, e.g.: "The codegen clicks a button labeled 'Submit Order' but the current page has 'Place Order' instead. The form also has a new required 'Delivery Date' field not present in the codegen."
+- **Ask the user for guidance.** Should the test use the current UI state? Should the codegen be re-recorded?
 - **Wait for user response before proceeding.**
 
 ### Phase 4: Test Plan
 
-Present a concrete plan for approval before writing code.
+Present a concrete plan for approval before writing code. Each `// assert that` comment from the codegen file maps to a concrete assertion.
 
 ```markdown
-## Test Plan: <test description>
+## Test Plan: <FLOW description>
 
 ### Test file
 - Location: `tests/<feature>.spec.ts`
@@ -153,14 +192,24 @@ Present a concrete plan for approval before writing code.
 - Create: <list of new POMs with file paths>
   - <NewPage>.page.ts — covers <route>, methods: <list>
 
-### Test cases
-1. `should <happy path description>`
-   - Navigate to <url>
-   - <action> → <expected result>
-   - Assert: <assertion>
+### Flow → test mapping
+| Codegen action | Enriched selector | Notes |
+|----------------|-------------------|-------|
+| `page.getByLabel('Email').fill(...)` | `getByRole('textbox', { name: 'Email' })` | data-testid not available |
+| `page.getByRole('button', { name: 'Sign in' }).click()` | `getByTestId('login-submit')` | testid found |
 
-2. `should <edge case>` (if applicable)
-   ...
+### Assertions (from `// assert that` comments)
+1. `// assert that User is redirected to the dashboard`
+   - After: Sign in button click
+   - Assert: `await expect(page).toHaveURL('/dashboard');`
+
+2. `// assert that Success message is visible`
+   - After: Create Booking button click
+   - Assert: `await expect(bookingPage.successMessage).toBeVisible();`
+
+3. `// assert that New booking appears in the bookings list`
+   - After: Success message
+   - Assert: `await expect(bookingPage.bookingRows).toContainText('Team Meeting');`
 
 ### Selectors discovered
 | Element | Selector | Type |
