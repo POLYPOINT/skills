@@ -131,7 +131,7 @@ Shadows are a **semantic signal for elevation**, not a decorative tool. A shadow
 - Max height: `2.5rem`
 - Always use a visible stroke (border). No background fill, except in the disabled state.
 - Corner radius: `full`
-- Two variants: **No Filled** (label inside, displayed as placeholder) and **Filled** (label moves above the input, entered value displayed inside).
+- **Floating label:** The label sits inside the field as a placeholder when empty. On focus or when filled, the label floats above the input at a smaller size. This is a single unified style — there are no variant options.
 - Two sizes: **Large (LG)** for standard desktop forms, **Small (SM)** for compact/dense contexts like table cells and filters.
 - Structure: label, input area, optional leading icon, optional supporting/validation text, optional required indicator (`*`), optional field status icon or tooltip.
 - States: Default, Hovered, Focused, Error, Disabled, Read-only.

@@ -10,6 +10,7 @@
 | State management | NgRx Signal Store                                                                                           |
 | UI components    | Angular Material (M3) + PDX component libraries                                                             |
 | PDX buttons      | `@pdx/pp-button` — `PPButtonComponent`, `PPIconButtonComponent`, `PPFloatingActionButtonComponent`          |
+| PDX input        | `@pdx/pp-input` — `PPInputComponent`, `PPTextareaComponent`                                                 |
 | PDX checkbox     | `@pdx/pp-checkbox` — `PPCheckboxComponent` (with `CheckboxState` enum, `PPCheckboxChangeEvent`)             |
 | PDX radio        | `@pdx/pp-radio` — `PPRadioGroupComponent`, `PPRadioButtonComponent` (with `PPRadioOption` interface)        |
 | PDX select       | `@pdx/pp-select` — `PPSelectComponent`, `PPMultiselectComponent` (with `PPMenuItem`, `PPSelectChangeEvent`) |
@@ -100,8 +101,7 @@ export class FeatureNameComponent {
 ```typescript
 import { Component, signal } from "@angular/core";
 import { form, FormField, required, minLength } from "@angular/forms/signals";
-import { MatFormFieldModule } from "@angular/material/form-field";
-import { MatInputModule } from "@angular/material/input";
+import { PPInputComponent } from "@pdx/pp-input";
 
 interface FilterData {
   lastName: string;
@@ -111,17 +111,11 @@ interface FilterData {
 
 @Component({
   selector: "app-employee-filter",
-  imports: [FormField, MatFormFieldModule, MatInputModule],
+  imports: [FormField, PPInputComponent],
   template: `
-    <mat-form-field>
-      <mat-label>Last Name</mat-label>
-      <input matInput [formField]="filterForm.lastName" />
-    </mat-form-field>
+    <pp-input label="Last Name" [formField]="filterForm.lastName" />
 
-    <mat-form-field>
-      <mat-label>First Name</mat-label>
-      <input matInput [formField]="filterForm.firstName" />
-    </mat-form-field>
+    <pp-input label="First Name" [formField]="filterForm.firstName" />
 
     @if (filterForm.lastName().touched() && filterForm.lastName().invalid()) {
       <ul>
@@ -365,6 +359,23 @@ import { PPButtonComponent, PPIconButtonComponent } from '@pdx/pp-button'
 
 Variants: `filled`, `outlined`, `text`, `tonal`. Sizes: `sm`, `md`, `lg`.
 
+### pp-input
+
+```typescript
+import { PPInputComponent, PPTextareaComponent } from '@pdx/pp-input'
+
+@Component({
+  imports: [PPInputComponent, PPTextareaComponent],
+  template: `
+    <pp-input label="Email" inputType="email" [formField]="form.email" />
+    <pp-input label="Search" leadingIcon="pp-icon-search" size="sm" />
+    <pp-textarea label="Notes" [formField]="form.notes" [autoGrowth]="true" />
+  `,
+})
+```
+
+`PPInputComponent` replaces `mat-form-field` + `matInput` for text fields. Supported input types: `text`, `email`, `password`, `tel`, `url`. For unsupported types (e.g. `month`, `date`), fall back to `mat-form-field` + `matInput`. `PPTextareaComponent` replaces `mat-form-field` + `<textarea matInput>`. Both implement `ControlValueAccessor` for Signal Forms. Inputs: `label` (required), `inputType`, `size` (`sm`/`lg`), `leadingIcon`, `trailingIcon`, `helperText`, `tooltip`, `required`, `optional`, `invalid`, `disabled`, `readonly`, `fullWidth`, `value`. Output: `inputChange` / `textareaChange`.
+
 ### pp-checkbox
 
 ```typescript
@@ -539,6 +550,7 @@ Import SCSS: `@use '@pdx/pp-icons/icons'`.
 - `data-testid` attributes on host elements
 - `protected` for template-bound members, `private` for internal
 - Prefer `@pdx/pp-button` over `MatButtonModule` for all buttons
+- Prefer `@pdx/pp-input` over `MatFormFieldModule` + `MatInputModule` for text inputs and textareas (fall back to Material for unsupported input types like `month`)
 - Prefer `@pdx/pp-checkbox` over `MatCheckboxModule` for all checkboxes
 - Prefer `@pdx/pp-radio` over `MatRadioModule` for all radio buttons
 - Prefer `@pdx/pp-select` over `MatSelectModule` for all selects/dropdowns

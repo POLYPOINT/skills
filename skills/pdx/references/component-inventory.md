@@ -148,7 +148,7 @@ Prominent FAB for primary screen actions. Supports fixed positioning.
 
 ---
 
-## @pdx/pp-input (v1.4.0)
+## @pdx/pp-input (v2.0.0)
 
 Text inputs and textareas with validation, helper text, tooltips, and forms integration.
 
@@ -162,29 +162,30 @@ import { PPInputComponent } from "@pdx/pp-input";
 
 ```html
 <pp-input label="Email" inputType="email" size="lg" [required]="true" />
-<pp-input label="Search" leadingIcon="pp-icon pp-icon-search" size="sm" />
-<pp-input label="Name" variant="filled" helperText="Enter your full name" />
+<pp-input label="Search" leadingIcon="pp-icon-search" size="sm" />
+<pp-input label="Name" helperText="Enter your full name" />
 <pp-input label="Password" inputType="password" [invalid]="hasError" />
 ```
 
-| Input          | Type                                                | Default      | Description               |
-| -------------- | --------------------------------------------------- | ------------ | ------------------------- |
-| `label`        | `string`                                            | required     | Field label               |
-| `inputType`    | `'text' \| 'email' \| 'password' \| 'tel' \| 'url'` | `'text'`     | HTML input type           |
-| `size`         | `'sm' \| 'lg'`                                      | `'sm'`       | Field size                |
-| `variant`      | `'filled' \| 'unfilled'`                            | `'unfilled'` | Label behavior            |
-| `leadingIcon`  | `string`                                            | —            | Icon before field         |
-| `trailingIcon` | `boolean`                                           | —            | Show trailing icon        |
-| `helperText`   | `string`                                            | —            | Guidance text below field |
-| `tooltip`      | `string`                                            | —            | Hover hint text           |
-| `required`     | `boolean`                                           | `false`      | Shows required marker     |
-| `optional`     | `boolean`                                           | `false`      | Shows "(optional)"        |
-| `invalid`      | `boolean`                                           | `false`      | Error state               |
-| `disabled`     | `boolean`                                           | `false`      | Disabled state            |
-| `readonly`     | `boolean`                                           | `false`      | Read-only state           |
-| `fullWidth`    | `boolean`                                           | `false`      | Full-width field          |
-| `value`        | `string`                                            | —            | Current value             |
-| `ariaLabel`    | `string`                                            | —            | Accessibility label       |
+| Input                     | Type                                                | Default                                      | Description                        |
+| ------------------------- | --------------------------------------------------- | -------------------------------------------- | ---------------------------------- |
+| `label`                   | `string`                                            | required                                     | Field label                        |
+| `inputType`               | `'text' \| 'email' \| 'password' \| 'tel' \| 'url'` | `'text'`                                     | HTML input type                    |
+| `size`                    | `'sm' \| 'lg'`                                      | `'sm'`                                       | Field size                         |
+| `leadingIcon`             | `string`                                            | —                                            | Icon before field                  |
+| `trailingIcon`            | `boolean`                                           | `false`                                      | Show trailing icon                 |
+| `helperText`              | `string`                                            | —                                            | Guidance text below field          |
+| `tooltip`                 | `string`                                            | —                                            | Hover hint text                    |
+| `required`                | `boolean`                                           | `false`                                      | Shows required marker              |
+| `optional`                | `boolean`                                           | `false`                                      | Shows "(optional)"                 |
+| `invalid`                 | `boolean`                                           | `false`                                      | Error state                        |
+| `disabled`                | `boolean`                                           | `false`                                      | Disabled state                     |
+| `readonly`                | `boolean`                                           | `false`                                      | Read-only state                    |
+| `fullWidth`               | `boolean`                                           | `false`                                      | Full-width field                   |
+| `value`                   | `string`                                            | `''`                                         | Current value                      |
+| `id`                      | `string`                                            | —                                            | Unique identifier for the element  |
+| `ariaLabel`               | `string`                                            | —                                            | Accessibility label                |
+| `ariaLabelTrailingButton` | `string`                                            | `'Trailing button for resetting the input.'` | Accessible name for trailing reset |
 
 **Output:** `inputChange` emits the new value.
 
@@ -196,9 +197,34 @@ import { PPInputComponent } from "@pdx/pp-input";
 import { PPTextareaComponent } from "@pdx/pp-input";
 ```
 
-Same inputs as PPInputComponent, plus `autoGrowth: boolean` for auto-expanding height.
+```html
+<pp-textarea
+  label="Comments"
+  [autoGrowth]="true"
+  helperText="Tell us what you think"
+/>
+```
+
+| Input        | Type      | Default  | Description                   |
+| ------------ | --------- | -------- | ----------------------------- |
+| `label`      | `string`  | required | Field label                   |
+| `autoGrowth` | `boolean` | `false`  | Auto-expanding height         |
+| `resizable`  | `boolean` | `false`  | User-resizable textarea       |
+| `helperText` | `string`  | —        | Guidance text below field     |
+| `tooltip`    | `string`  | —        | Hover hint text               |
+| `required`   | `boolean` | `false`  | Shows required marker         |
+| `optional`   | `boolean` | `false`  | Shows "(optional)"            |
+| `invalid`    | `boolean` | `false`  | Error state                   |
+| `disabled`   | `boolean` | `false`  | Disabled state                |
+| `readonly`   | `boolean` | `false`  | Read-only state               |
+| `fullWidth`  | `boolean` | `false`  | Full-width field              |
+| `value`      | `string`  | `''`     | Current value                 |
+| `id`         | `string`  | —        | Unique identifier for element |
+| `ariaLabel`  | `string`  | —        | Accessibility label           |
 
 **Output:** `textareaChange` emits the new value.
+
+**Forms:** Implements `ControlValueAccessor` for reactive forms.
 
 ### Global Styles
 
