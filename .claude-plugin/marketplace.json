@@ -36,6 +36,12 @@
       "source": "./skills/playwright-e2e",
       "description": "Create Playwright E2E tests using Chrome browser exploration for real selector discovery and Page Object Model patterns",
       "category": "testing"
+    },
+    {
+      "name": "playwright-api",
+      "source": "./skills/playwright-api",
+      "description": "Create Playwright API tests based on a playwright e2e test, it will test the corner cases missed by the e2e test",
+      "category": "testing"
     }
   ]
 }
