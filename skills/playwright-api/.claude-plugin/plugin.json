@@ -1,0 +1,6 @@
+{
+  "name": "playwright-api",
+  "description": "Generate Playwright API corner-case tests from existing E2E tests or descriptions",
+  "version": "1.0.0",
+  "skills": ["./"]
+}

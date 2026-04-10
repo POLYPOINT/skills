@@ -1,0 +1,6 @@
+{
+  "name": "playwright-e2e",
+  "description": "Create Playwright E2E tests using Chrome browser exploration and Page Object Model patterns",
+  "version": "1.0.0",
+  "skills": ["./"]
+}
