@@ -42,6 +42,12 @@
       "source": "./skills/playwright-api",
       "description": "Create Playwright API tests based on a playwright e2e test, it will test the corner cases missed by the e2e test",
       "category": "testing"
+    },
+    {
+      "name": "grill-me",
+      "source": "./skills/grill-me",
+      "description": "Interview the user relentlessly about a plan or design until reaching shared understanding, resolving each branch of the decision tree",
+      "category": "development"
     }
   ]
 }
