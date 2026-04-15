@@ -2,7 +2,7 @@
 name: pdx
 description: This skill should be used when the user asks to "apply PDX styles", "use PDX libs", "use PDX styling", "make it look like POLYPOINT", "apply POLYPOINT styling", "use POLYPOINT libs", "use POLYPOINT components", "apply pdx", or mentions the POLYPOINT Design Experience design system. Guides usage of @pdx/* Angular component libraries and design tokens to produce UI consistent with the PDX design system.
 metadata:
-  version: "1.3.0"
+  version: "1.3.1"
 ---
 
 # PDX — POLYPOINT Design Experience

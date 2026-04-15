@@ -1,6 +1,6 @@
 {
   "name": "delphi-to-angular",
   "description": "Guides conversion of Delphi components to Angular",
-  "version": "1.4.0",
-  "skills": ["./"]
+  "version": "1.4.1",
+  "skills": ["SKILL.md"]
 }

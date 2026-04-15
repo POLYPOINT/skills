@@ -1,6 +1,6 @@
 {
   "name": "research",
   "description": "Deeply investigate a codebase topic and produce a structured research document with architecture diagrams, glossary, and actionable findings",
-  "version": "1.0.0",
-  "skills": ["./"]
+  "version": "1.0.1",
+  "skills": ["SKILL.md"]
 }

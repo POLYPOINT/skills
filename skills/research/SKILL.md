@@ -5,7 +5,7 @@ argument-hint: "<topic>"
 disable-model-invocation: true
 compatibility: Designed for Claude Code. Works with any codebase.
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
 ---
 
 # Research
@@ -47,6 +47,7 @@ Produce the research document following the format in [references/output-format.
 **Output location:** `docs/research/<slugified-topic>.md` in the project root. Create the directory if it doesn't exist.
 
 Important:
+
 - Every claim must reference specific files and line numbers
 - Diagrams use Mermaid syntax
 - Skip sections that don't apply — no filler

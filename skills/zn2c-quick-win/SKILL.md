@@ -5,7 +5,7 @@ argument-hint: "[ZQW-XXX]"
 disable-model-invocation: true
 compatibility: Designed for Claude Code. Requires Atlassian MCP tools, Azure DevOps CLI (`az`), and access to the Zn2C cloud repository.
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
 ---
 
 # Quick-Win Implementation
