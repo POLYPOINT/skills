@@ -5,7 +5,7 @@ argument-hint: "<topic>"
 disable-model-invocation: true
 compatibility: Designed for Claude Code. Works with any codebase.
 metadata:
-  version: "1.0.1"
+  version: "1.0.2"
 ---
 
 # Research
