@@ -38,6 +38,7 @@ When using Bun as the package manager, add all `@pdx/*` packages to `trustedDepe
     "@pdx/pp-icons",
     "@pdx/pp-button",
     "@pdx/pp-input",
+    "@pdx/pp-form",
     "@pdx/pp-checkbox",
     "@pdx/pp-radio",
     "@pdx/pp-chip",
@@ -45,13 +46,18 @@ When using Bun as the package manager, add all `@pdx/*` packages to `trustedDepe
     "@pdx/pp-tree",
     "@pdx/pp-select",
     "@pdx/pp-menu",
-    "@pdx/pp-tab"
+    "@pdx/pp-list",
+    "@pdx/pp-tab",
+    "@pdx/pp-expansion-panel",
+    "@pdx/pp-sidenav",
+    "@pdx/pp-top-navigation"
   ],
   "minimumReleaseAgeExcludes": [
     "@pdx/pp-theme",
     "@pdx/pp-icons",
     "@pdx/pp-button",
     "@pdx/pp-input",
+    "@pdx/pp-form",
     "@pdx/pp-checkbox",
     "@pdx/pp-radio",
     "@pdx/pp-chip",
@@ -59,7 +65,11 @@ When using Bun as the package manager, add all `@pdx/*` packages to `trustedDepe
     "@pdx/pp-tree",
     "@pdx/pp-select",
     "@pdx/pp-menu",
-    "@pdx/pp-tab"
+    "@pdx/pp-list",
+    "@pdx/pp-tab",
+    "@pdx/pp-expansion-panel",
+    "@pdx/pp-sidenav",
+    "@pdx/pp-top-navigation"
   ]
 }
 ```
@@ -72,10 +82,18 @@ Install the theme and icon packages first, then component libraries as needed:
 
 ```bash
 npm install @pdx/pp-theme @pdx/pp-icons
-npm install @pdx/pp-button @pdx/pp-input @pdx/pp-checkbox @pdx/pp-radio @pdx/pp-chip @pdx/pp-dialog @pdx/pp-tree @pdx/pp-select @pdx/pp-menu @pdx/pp-tab
+npm install @pdx/pp-button @pdx/pp-input @pdx/pp-form @pdx/pp-checkbox @pdx/pp-radio @pdx/pp-chip @pdx/pp-dialog @pdx/pp-tree @pdx/pp-select @pdx/pp-menu @pdx/pp-list @pdx/pp-tab @pdx/pp-expansion-panel @pdx/pp-sidenav @pdx/pp-top-navigation
 ```
 
-All component libraries have `@pdx/pp-theme` as a peer dependency. `@pdx/pp-dialog` additionally requires `@pdx/pp-button`. `@pdx/pp-select` requires `@pdx/pp-menu`. `@pdx/pp-menu` requires `@pdx/pp-checkbox`.
+All component libraries have `@pdx/pp-theme` as a peer dependency. Additional peers:
+
+- `@pdx/pp-dialog` requires `@pdx/pp-button`
+- `@pdx/pp-select` requires `@pdx/pp-menu`
+- `@pdx/pp-menu` requires `@pdx/pp-checkbox`
+- `@pdx/pp-form` requires `@pdx/pp-radio` and `@pdx/pp-menu`
+- `@pdx/pp-list` requires `@pdx/pp-checkbox` and `@pdx/pp-radio`
+- `@pdx/pp-top-navigation` requires `@pdx/pp-menu`
+- `@pdx/pp-sidenav` requires `@angular/material` and `@pdx/pp-icons`
 
 ---
 
@@ -110,6 +128,9 @@ Some components provide global styles for overlays and backdrops. Import these i
 
 /* Input global styles */
 @use "@pdx/pp-input/styles";
+
+/* Sidenav tooltip overrides (required until a native PDX tooltip exists) */
+@use "@pdx/pp-sidenav/styles";
 ```
 
 ### 3. Configure angular.json (Alternative)

@@ -2,7 +2,7 @@
 name: pdx
 description: This skill should be used when the user asks to "apply PDX styles", "use PDX libs", "use PDX styling", "make it look like POLYPOINT", "apply POLYPOINT styling", "use POLYPOINT libs", "use POLYPOINT components", "apply pdx", or mentions the POLYPOINT Design Experience design system. Guides usage of @pdx/* Angular component libraries and design tokens to produce UI consistent with the PDX design system.
 metadata:
-  version: "1.3.2"
+  version: "1.4.0"
 ---
 
 # PDX — POLYPOINT Design Experience
@@ -13,46 +13,75 @@ Apply the PDX design system to Angular frontends. PDX provides reusable Angular 
 
 **When a PDX component exists, always use it instead of Angular Material or custom implementations.** Only fall back to Angular Material (with PDX theme applied) for components that do not yet have a PDX equivalent.
 
+## Label rule
+
+PDX form controls (`pp-button`, `pp-icon-button`, `pp-checkbox`, `pp-radio-button`, `pp-input`, `pp-textarea`, `pp-select`, `pp-multiselect`) take their visible text via a `label` input — **they do not project content**. `<pp-checkbox>Text</pp-checkbox>` and `<pp-button>Save</pp-button>` render with an empty label. Always pass `label="..."` (and `id="..."` on `pp-checkbox` / `pp-radio-button` for `for`/`htmlFor` linkage). Exceptions: `pp-chip` falls back to `ng-content` when `label` is unset; `pp-dialog` and `pp-tab` use content projection for **bodies**, not labels.
+
 ## Available PDX Libraries
 
-| Package            | What it provides                                                                           |
-| ------------------ | ------------------------------------------------------------------------------------------ |
-| `@pdx/pp-theme`    | Colors, typography (AkkuratStd), spacing tokens, Material 3 theme, TailwindCSS integration |
-| `@pdx/pp-icons`    | SVG icon webfont (`pp-icon pp-icon-*`)                                                     |
-| `@pdx/pp-button`   | `PPButtonComponent`, `PPIconButtonComponent`, `PPFloatingActionButtonComponent`            |
-| `@pdx/pp-input`    | `PPInputComponent`, `PPTextareaComponent`                                                  |
-| `@pdx/pp-checkbox` | `PPCheckboxComponent` (three-state, ControlValueAccessor)                                  |
-| `@pdx/pp-radio`    | `PPRadioButtonComponent`, `PPRadioGroupComponent`                                          |
-| `@pdx/pp-chip`     | `PPChipComponent`, `PPChipListComponent`                                                   |
-| `@pdx/pp-dialog`   | `PPDialogComponent` (shell for MatDialog)                                                  |
-| `@pdx/pp-select`   | `PPSelectComponent`, `PPMultiselectComponent` (single/multi dropdown)                      |
-| `@pdx/pp-menu`     | `PPMenuComponent`, `PPMenuMultiselectComponent` (standalone dropdown menus)                |
-| `@pdx/pp-tab`      | `PPTabGroupComponent`, `PPTabComponent`, `PPTabContentDirective`                           |
-| `@pdx/pp-tree`     | `PPTreeComponent` (hierarchical data, drag-and-drop, sorting)                              |
+| Package                   | What it provides                                                                                                                                                             |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@pdx/pp-theme`           | Colors, typography (AkkuratStd), spacing tokens, Material 3 theme, TailwindCSS integration                                                                                   |
+| `@pdx/pp-icons`           | SVG icon webfont (`pp-icon pp-icon-*`)                                                                                                                                       |
+| `@pdx/pp-button`          | `PPButtonComponent`, `PPIconButtonComponent`, `PPFloatingActionButtonComponent`                                                                                              |
+| `@pdx/pp-input`           | `PPInputComponent`, `PPTextareaComponent`                                                                                                                                    |
+| `@pdx/pp-form`            | `PPFormComponent`, `PPFormSectionComponent`, `PPFormStackComponent`, `PPFormBlockComponent`, `PPFormTextblockComponent`, `PPFormActionsComponent` (structural form scaffold) |
+| `@pdx/pp-checkbox`        | `PPCheckboxComponent` (three-state, ControlValueAccessor)                                                                                                                    |
+| `@pdx/pp-radio`           | `PPRadioButtonComponent`, `PPRadioGroupComponent`                                                                                                                            |
+| `@pdx/pp-chip`            | `PPChipComponent`, `PPChipListComponent`                                                                                                                                     |
+| `@pdx/pp-dialog`          | `PPDialogComponent` (shell for MatDialog)                                                                                                                                    |
+| `@pdx/pp-select`          | `PPSelectComponent`, `PPMultiselectComponent` (single/multi dropdown)                                                                                                        |
+| `@pdx/pp-menu`            | `PPMenuComponent`, `PPMenuMultiselectComponent` (standalone dropdown menus)                                                                                                  |
+| `@pdx/pp-list`            | `PPListComponent` (listbox with `default`/`single`/`singleRadio`/`multi` variants)                                                                                           |
+| `@pdx/pp-tab`             | `PPTabGroupComponent`, `PPTabComponent`, `PPTabContentDirective`                                                                                                             |
+| `@pdx/pp-expansion-panel` | `PPExpansionPanelComponent`, `PPExpansionPanelItemComponent` (collapsible sections, optional accordion)                                                                      |
+| `@pdx/pp-tree`            | `PPTreeComponent` (hierarchical data, drag-and-drop, sorting)                                                                                                                |
+| `@pdx/pp-sidenav`         | `PPSidenavComponent` + item/group/sub-item (app-shell side navigation)                                                                                                       |
+| `@pdx/pp-top-navigation`  | `PPTopNavigationComponent` (app-shell top navigation with dropdown submenus)                                                                                                 |
 
 ## Component Replacement Rules
 
 Replace Angular Material components with PDX equivalents:
 
-| Instead of                                           | Use                                                        |
-| ---------------------------------------------------- | ---------------------------------------------------------- |
-| `mat-button`, `mat-raised-button`, `mat-flat-button` | `PPButtonComponent`                                        |
-| `mat-icon-button`                                    | `PPIconButtonComponent`                                    |
-| `mat-fab`, `mat-mini-fab`                            | `PPFloatingActionButtonComponent`                          |
-| `mat-form-field` + `matInput`                        | `PPInputComponent`                                         |
-| `mat-form-field` + `<textarea matInput>`             | `PPTextareaComponent`                                      |
-| `mat-checkbox`                                       | `PPCheckboxComponent`                                      |
-| `mat-radio-button` / `mat-radio-group`               | `PPRadioButtonComponent` / `PPRadioGroupComponent`         |
-| `mat-chip` / `mat-chip-set`                          | `PPChipComponent` / `PPChipListComponent`                  |
-| Custom dialog templates                              | `PPDialogComponent` (still opened via `MatDialog` service) |
-| `mat-tree`                                           | `PPTreeComponent`                                          |
-| `mat-select`                                         | `PPSelectComponent`                                        |
-| `mat-select` (multiple)                              | `PPMultiselectComponent`                                   |
-| `mat-menu`                                           | `PPMenuComponent` / `PPMenuMultiselectComponent`           |
-| `mat-tab-group` + `mat-tab`                          | `PPTabGroupComponent` + `PPTabComponent`                   |
-| `mat-icon`, FontAwesome                              | `<span class="pp-icon pp-icon-*">`                         |
+| Instead of                                           | Use                                                                 |
+| ---------------------------------------------------- | ------------------------------------------------------------------- |
+| `mat-button`, `mat-raised-button`, `mat-flat-button` | `PPButtonComponent`                                                 |
+| `mat-icon-button`                                    | `PPIconButtonComponent`                                             |
+| `mat-fab`, `mat-mini-fab`                            | `PPFloatingActionButtonComponent`                                   |
+| `mat-form-field` + `matInput`                        | `PPInputComponent`                                                  |
+| `mat-form-field` + `<textarea matInput>`             | `PPTextareaComponent`                                               |
+| `mat-checkbox`                                       | `PPCheckboxComponent`                                               |
+| `mat-radio-button` / `mat-radio-group`               | `PPRadioButtonComponent` / `PPRadioGroupComponent`                  |
+| `mat-chip` / `mat-chip-set`                          | `PPChipComponent` / `PPChipListComponent`                           |
+| Custom dialog templates                              | `PPDialogComponent` (still opened via `MatDialog` service)          |
+| `mat-tree`                                           | `PPTreeComponent`                                                   |
+| `mat-select`                                         | `PPSelectComponent`                                                 |
+| `mat-select` (multiple)                              | `PPMultiselectComponent`                                            |
+| `mat-menu`                                           | `PPMenuComponent` / `PPMenuMultiselectComponent`                    |
+| `mat-tab-group` + `mat-tab`                          | `PPTabGroupComponent` + `PPTabComponent`                            |
+| `mat-selection-list` / `mat-list`                    | `PPListComponent`                                                   |
+| `mat-expansion-panel`                                | `PPExpansionPanelComponent` + `PPExpansionPanelItemComponent`       |
+| Custom form layout divs / ad-hoc Flex/Grid shells    | `PPFormComponent` (+ section / stack / block / textblock / actions) |
+| `mat-icon`, FontAwesome                              | `<span class="pp-icon pp-icon-*">`                                  |
 
-**No PDX replacement yet** — use Angular Material with pp-theme: autocomplete, datepicker, slide-toggle, progress bar/spinner, snackbar, tooltip, table, paginator, sort, sidenav, toolbar, expansion panel.
+**No PDX replacement yet** — use Angular Material with pp-theme: autocomplete, datepicker, slide-toggle, progress bar/spinner, snackbar, tooltip, table, paginator, sort, `mat-toolbar` (generic container use only), `mat-sidenav` (non-navigation drawer/inspector/filter panel).
+
+## Navigation (app-shell only — not a drop-in replacement)
+
+`@pdx/pp-sidenav` and `@pdx/pp-top-navigation` are **design decisions**, not generic Material swaps. Apply them only when:
+
+1. **A navigation concern is actually present.** The user (or the design) explicitly calls for app-level navigation: a top bar that switches between sections of the app, or a side menu of app areas with nested sub-items. Screenshots showing a bar along the top or a column on the left do **not** automatically imply nav — they may be page headers, inspector panes, filter drawers, etc.
+2. **You are working at the app-shell level.** The component owning the `<router-outlet>` (or a top-level shell component that hosts the outlet). Feature components routed _into_ the shell do not own navigation.
+3. **Existing app-shell markup is being introduced or redesigned.** If the app already has a shell without these, do not swap it out unless asked.
+
+When these conditions are not met, **do not reach for `pp-sidenav` or `pp-top-navigation`.** Specifically:
+
+- `mat-sidenav` used as a drawer (filters, inspector, document outline) → keep `mat-sidenav`, it's not navigation.
+- `mat-toolbar` used as a page header, dialog header, or action bar → keep `mat-toolbar`.
+- A static in-page menu or tab-like switcher inside one feature → use `pp-tab-group`, `pp-menu`, or plain buttons.
+- Converted Delphi forms → never own navigation; see delphi-to-angular skill.
+
+When the conditions **are** met, use the full component family: `PPSidenavComponent` with `PPSidenavItemComponent` + `PPSidenavGroupComponent` + `PPSidenavSubItemComponent`, or `PPTopNavigationComponent` with a `PPTopNavItem[]` array. See [component-inventory.md](references/component-inventory.md) for APIs.
 
 ## Workflow
 

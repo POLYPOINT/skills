@@ -238,7 +238,151 @@ import { PPTextareaComponent } from "@pdx/pp-input";
 
 ---
 
-## @pdx/pp-checkbox (v1.1.0)
+## @pdx/pp-form (v1.0.0)
+
+Structural primitives for assembling form layouts. These components orchestrate layout, grouping, and typography for forms — they do **not** render controls themselves. Compose with `@pdx/pp-input`, `@pdx/pp-checkbox`, etc. for the actual inputs.
+
+### Components
+
+#### PPFormComponent
+
+```typescript
+import { PPFormComponent } from "@pdx/pp-form";
+```
+
+Root container. Ensures unified spacing and styling across its children.
+
+```html
+<pp-form>
+  <!-- sections, blocks, actions -->
+</pp-form>
+```
+
+No inputs.
+
+#### PPFormSectionComponent
+
+```typescript
+import { PPFormSectionComponent } from "@pdx/pp-form";
+```
+
+Semantic region with a header. Supports single- or multi-column layouts.
+
+```html
+<pp-form-section
+  title="Personal Information"
+  description="Please provide your basic contact details."
+  [singleColumn]="false"
+>
+  <!-- pp-form-block -->
+</pp-form-section>
+```
+
+| Input          | Type      | Default  | Description                                       |
+| -------------- | --------- | -------- | ------------------------------------------------- |
+| `title`        | `string`  | required | Section heading                                   |
+| `description`  | `string`  | required | Text below the heading                            |
+| `singleColumn` | `boolean` | `false`  | Force single-column layout (default is multi-col) |
+
+#### PPFormStackComponent
+
+```typescript
+import { PPFormStackComponent } from "@pdx/pp-form";
+```
+
+Arranges children vertically or horizontally.
+
+```html
+<pp-form-stack layout="horizontal">
+  <!-- stacked children -->
+</pp-form-stack>
+```
+
+| Input    | Type                         | Default      | Description       |
+| -------- | ---------------------------- | ------------ | ----------------- |
+| `layout` | `'vertical' \| 'horizontal'` | `'vertical'` | Stack orientation |
+
+#### PPFormBlockComponent
+
+```typescript
+import { PPFormBlockComponent } from "@pdx/pp-form";
+```
+
+Groups related form fields into a visually cohesive block. No inputs.
+
+```html
+<pp-form-block>
+  <!-- pp-input, pp-checkbox, etc. -->
+</pp-form-block>
+```
+
+#### PPFormTextblockComponent
+
+```typescript
+import { PPFormTextblockComponent } from "@pdx/pp-form";
+```
+
+Standardized title + description text.
+
+```html
+<pp-form-textblock
+  title="Account Settings"
+  description="Manage your account preferences."
+  size="lg"
+/>
+```
+
+| Input         | Type           | Default  | Description                                   |
+| ------------- | -------------- | -------- | --------------------------------------------- |
+| `title`       | `string`       | required | Heading                                       |
+| `description` | `string`       | required | Supporting text                               |
+| `size`        | `'sm' \| 'lg'` | `'sm'`   | `'lg'` for section headers, `'sm'` for blocks |
+
+#### PPFormActionsComponent
+
+```typescript
+import { PPFormActionsComponent } from "@pdx/pp-form";
+```
+
+Row for form-level buttons (e.g. Cancel / Save). Use `<pp-button>` children.
+
+```html
+<pp-form-actions alignment="right">
+  <pp-button label="Cancel" variant="outlined" />
+  <pp-button label="Save" variant="filled" />
+</pp-form-actions>
+```
+
+| Input       | Type                            | Default   | Description                         |
+| ----------- | ------------------------------- | --------- | ----------------------------------- |
+| `alignment` | `'left' \| 'center' \| 'right'` | `'right'` | Horizontal alignment of the buttons |
+
+### Canonical composition
+
+```html
+<pp-form>
+  <pp-form-section title="Profile" description="Your contact details.">
+    <pp-form-block>
+      <pp-form-stack layout="horizontal">
+        <pp-input label="First name" [formField]="form.firstName" />
+        <pp-input label="Last name" [formField]="form.lastName" />
+      </pp-form-stack>
+    </pp-form-block>
+  </pp-form-section>
+  <pp-form-actions alignment="right">
+    <pp-button label="Cancel" variant="outlined" />
+    <pp-button label="Save" variant="filled" buttonType="submit" />
+  </pp-form-actions>
+</pp-form>
+```
+
+### Peer Dependencies
+
+`@angular/common`, `@angular/core`, `@pdx/pp-theme`, `@pdx/pp-radio`, `@pdx/pp-menu`
+
+---
+
+## @pdx/pp-checkbox (v1.1.1)
 
 Accessible checkbox with three states, error display, and forms integration.
 
@@ -298,7 +442,7 @@ interface PPCheckboxChangeEvent {
 
 ---
 
-## @pdx/pp-radio (v1.1.0)
+## @pdx/pp-radio (v1.2.1)
 
 Radio buttons for single-choice selections. Standalone or grouped.
 
@@ -693,7 +837,7 @@ interface PPMultiselectChangeEvent {
 
 ---
 
-## @pdx/pp-menu (v1.1.0)
+## @pdx/pp-menu (v1.1.2)
 
 Standalone dropdown menu components for single and multiple selection. Used internally by `@pdx/pp-select` and as the context menu for `@pdx/pp-tree`. Can also be used directly for custom dropdown implementations.
 
@@ -778,7 +922,105 @@ interface PPMenuMultiselectChangeEvent {
 
 ---
 
-## @pdx/pp-tab (v1.0.0)
+## @pdx/pp-list (v2.0.0)
+
+Accessible listbox with four selection variants, keyboard navigation, leading/trailing icons, overline + supporting text per item. Use when you need an in-page list (not a dropdown — use `pp-select`/`pp-menu` for those).
+
+### Components
+
+#### PPListComponent
+
+```typescript
+import {
+  PPListComponent,
+  PPListItem,
+  PPListSelectEvent,
+  ListVariant,
+  ListSize,
+} from "@pdx/pp-list";
+```
+
+```html
+<pp-list
+  [items]="listItems"
+  [variant]="ListVariant.Single"
+  [(selectedIds)]="selectedIds"
+  [ariaLabel]="'Choose an option'"
+  (itemSelect)="onSelect($event)"
+/>
+```
+
+| Input          | Type                                | Default               | Description                                           |
+| -------------- | ----------------------------------- | --------------------- | ----------------------------------------------------- |
+| `items`        | `PPListItem[]`                      | `[]`                  | Items to render (each needs a unique `id` + `label`). |
+| `variant`      | `ListVariant`                       | `ListVariant.Default` | Selection behavior + trailing indicator style.        |
+| `selectedIds`  | `ModelSignal<(string \| number)[]>` | `[]`                  | Selected item ids (see note below).                   |
+| `size`         | `ListSize`                          | `ListSize.Large`      | Item density. `'small'` for compact contexts.         |
+| `ariaLabel`    | `string \| undefined`               | `undefined`           | ARIA label for the `role="listbox"` root.             |
+| `withDividers` | `boolean`                           | `true`                | Show bottom-border dividers between items.            |
+
+**Output:** `itemSelect` emits `PPListSelectEvent` on click / Enter / Space.
+
+`selectedIds` is a `ModelSignal` — bind with `[selectedIds]` or `[(selectedIds)]`, or mutate directly via `componentRef.selectedIds.set([...])` since it's also a `WritableSignal`.
+
+### Models
+
+```typescript
+interface PPListItem {
+  readonly id: string | number;
+  readonly label: string;
+  readonly overline?: string;
+  readonly supportingText?: string;
+  readonly disabled?: boolean;
+  readonly leading?: string; // e.g. 'pp-icon-home'
+  readonly trailing?: string; // e.g. 'pp-icon-angle_right'
+  readonly checkLabel?: string; // only meaningful in the 'multi' variant
+}
+
+interface PPListSelectEvent {
+  readonly id: string | number;
+  readonly item: PPListItem;
+  /**
+   * Selection state after the event. Always `false` in the `default` variant
+   * (which does not track selection). `true` in `single` / `singleRadio`.
+   * Reflects the toggled state in `multi`.
+   */
+  readonly selected: boolean;
+}
+
+enum ListVariant {
+  Default = "default",
+  Single = "single",
+  SingleRadio = "singleRadio",
+  Multi = "multi",
+}
+
+enum ListSize {
+  Large = "large",
+  Small = "small",
+}
+```
+
+### Variants
+
+| Variant       | Behaviour                                                     | Trailing indicator          |
+| ------------- | ------------------------------------------------------------- | --------------------------- |
+| `default`     | Read-only; emits `itemSelect` but never mutates `selectedIds` | None                        |
+| `single`      | Single-select; replaces the current selection                 | Check icon on selected item |
+| `singleRadio` | Single-select; replaces the current selection                 | Radio button on every item  |
+| `multi`       | Multi-select; toggles items in `selectedIds`                  | Checkbox on every item      |
+
+### Keyboard
+
+`ArrowDown` / `ArrowUp` wrap, skip disabled. `Enter` / `Space` activate the focused item.
+
+### Peer Dependencies
+
+`@angular/core`, `@pdx/pp-checkbox`, `@pdx/pp-radio`, `@pdx/pp-theme`
+
+---
+
+## @pdx/pp-tab (v1.1.0)
 
 Secondary tab navigation component with icons, disabled states, content panels, keyboard navigation, and full accessibility.
 
@@ -871,31 +1113,256 @@ Consumer-managed content (without `ppTabContent`):
 
 ---
 
+## @pdx/pp-expansion-panel (v1.0.2)
+
+Collapsible content sections with desktop/mobile layout variants and optional accordion mode (only one item open at a time).
+
+### Components
+
+#### PPExpansionPanelComponent
+
+```typescript
+import {
+  PPExpansionPanelComponent,
+  PPExpansionPanelItemComponent,
+  PanelVariant,
+} from "@pdx/pp-expansion-panel";
+```
+
+Container that groups items and coordinates layout + accordion.
+
+```html
+<pp-expansion-panel variant="desktop" [accordion]="false">
+  <pp-expansion-panel-item title="Section 1" description="First section">
+    <p>Content for section 1</p>
+  </pp-expansion-panel-item>
+</pp-expansion-panel>
+```
+
+| Input       | Type                    | Default     | Description                                                                    |
+| ----------- | ----------------------- | ----------- | ------------------------------------------------------------------------------ |
+| `variant`   | `'desktop' \| 'mobile'` | `'desktop'` | Desktop = title/description horizontal. Mobile = stacked vertical.             |
+| `accordion` | `boolean`               | `false`     | When `true`, opening an item automatically collapses the previously open item. |
+
+#### PPExpansionPanelItemComponent
+
+A single collapsible section with clickable header.
+
+```html
+<pp-expansion-panel-item
+  title="Favorites"
+  description="Your saved items"
+  leadingIcon="pp-icon-heart_outline"
+  [expanded]="true"
+  (opened)="onOpened()"
+  (closed)="onClosed()"
+>
+  <p>Favorite items here</p>
+</pp-expansion-panel-item>
+```
+
+| Input         | Type             | Default | Description                                                                                                        |
+| ------------- | ---------------- | ------- | ------------------------------------------------------------------------------------------------------------------ |
+| `id`          | `string`         | auto    | Stable id (`pp-expansion-panel-item-<n>` if omitted). Provide an explicit value for e2e selectors or deep linking. |
+| `title`       | `string`         | `''`    | Header title                                                                                                       |
+| `description` | `string`         | `''`    | Optional description shown next to the title                                                                       |
+| `leadingIcon` | `string \| null` | `null`  | Icon class (e.g. `'pp-icon-heart_outline'`)                                                                        |
+| `expanded`    | `boolean`        | `false` | Initially expanded                                                                                                 |
+| `disabled`    | `boolean`        | `false` | Disabled (not tabbable)                                                                                            |
+
+**Outputs:** `opened`, `closed` (both `OutputEmitterRef<void>`).
+
+### Peer Dependencies
+
+`@angular/core`, `@pdx/pp-theme`
+
+---
+
+## @pdx/pp-sidenav (v1.0.0)
+
+Two-panel side navigation: a Level 1 icon rail plus an expandable Level 2+ subnavigation panel. **App-shell level** — owned by the root layout that holds the router outlet, not by feature components routed into that outlet.
+
+### Components
+
+```typescript
+import {
+  PPSidenavComponent,
+  PPSidenavItemComponent,
+  PPSidenavItemIconDirective,
+  PPSidenavGroupComponent,
+  PPSidenavSubItemComponent,
+} from "@pdx/pp-sidenav";
+```
+
+```html
+<pp-sidenav [(collapsed)]="isCollapsed" sectionTitle="Settings">
+  <pp-sidenav-item
+    icon="pp-icon-home"
+    label="Dashboard"
+    [selected]="true"
+    (itemSelect)="onNav('dashboard')"
+  >
+    <pp-sidenav-group label="Preferences" [expanded]="true">
+      <pp-sidenav-sub-item label="General" [selected]="true" />
+      <pp-sidenav-sub-item label="Notifications" />
+    </pp-sidenav-group>
+  </pp-sidenav-item>
+  <pp-sidenav-item
+    icon="pp-icon-user_group"
+    label="Accounts"
+    (itemSelect)="onNav('accounts')"
+  />
+</pp-sidenav>
+```
+
+**`PPSidenavComponent`**
+
+| Input          | Type             | Default | Description                                                                   |
+| -------------- | ---------------- | ------- | ----------------------------------------------------------------------------- |
+| `collapsed`    | `boolean`        | `false` | Whether the subnav panel is hidden (icon rail only). Two-way `[(collapsed)]`. |
+| `sectionTitle` | `string \| null` | `null`  | Title at the top of the subnav panel. Falls back to the selected item label.  |
+
+**`PPSidenavItemComponent`** (Level 1 icon item)
+
+| Input            | Type             | Default           | Description                                                                                                                      |
+| ---------------- | ---------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `icon`           | `string \| null` | `null`            | CSS icon class (e.g. `'pp-icon-home'`). When `null`, initials from `label` are shown. `pp-icon` base auto-added for `pp-icon-*`. |
+| `label`          | `string`         | required          | Tooltip text and accessibility label.                                                                                            |
+| `selected`       | `boolean`        | `false`           | Currently active item                                                                                                            |
+| `disabled`       | `boolean`        | `false`           | Disabled                                                                                                                         |
+| `badge`          | `number \| null` | `null`            | Notification badge count. `null` hides it.                                                                                       |
+| `badgeAriaLabel` | `string`         | `'Notifications'` | Accessible suffix for the badge element.                                                                                         |
+
+**Output:** `itemSelect` (`OutputEmitterRef<void>`).
+
+**`PPSidenavItemIconDirective`** (`[ppSidenavItemIcon]`) — structural directive projecting custom icon content (SVG, etc.) into a `pp-sidenav-item`. Replaces both the CSS-class icon and the initials fallback.
+
+**`PPSidenavGroupComponent`**
+
+| Input      | Type      | Default  | Description                       |
+| ---------- | --------- | -------- | --------------------------------- |
+| `label`    | `string`  | required | Group label                       |
+| `expanded` | `boolean` | `false`  | Children visible. Two-way `[()]`. |
+| `selected` | `boolean` | `false`  | Active group                      |
+| `disabled` | `boolean` | `false`  | Disabled                          |
+
+**Outputs:** `expandedChange`, `groupToggle`.
+
+**`PPSidenavSubItemComponent`**
+
+| Input      | Type      | Default  | Description     |
+| ---------- | --------- | -------- | --------------- |
+| `label`    | `string`  | required | Display label   |
+| `selected` | `boolean` | `false`  | Active sub-item |
+| `disabled` | `boolean` | `false`  | Disabled        |
+
+**Output:** `itemSelect` (`OutputEmitterRef<void>`).
+
+### Global styles
+
+```scss
+@use "@pdx/pp-sidenav/styles";
+```
+
+Overrides Angular Material tooltip defaults for the design system. Required until a native PDX tooltip is available.
+
+### Peer Dependencies
+
+`@angular/common`, `@angular/core`, `@angular/material`, `@pdx/pp-theme`, `@pdx/pp-icons`
+
+---
+
+## @pdx/pp-top-navigation (v2.0.0)
+
+Global navigation bar with optional dropdown submenus (rendered via `pp-menu`). **App-shell level** — same scope note as `pp-sidenav` above.
+
+### Components
+
+```typescript
+import {
+  PPTopNavigationComponent,
+  PPTopNavItem,
+  PPTopNavSelectEvent,
+} from "@pdx/pp-top-navigation";
+```
+
+```html
+<pp-top-navigation
+  [items]="navItems"
+  [(selectedId)]="selectedId"
+  (itemSelect)="onItemSelect($event)"
+/>
+```
+
+| Input        | Type                                    | Default | Description                                                                |
+| ------------ | --------------------------------------- | ------- | -------------------------------------------------------------------------- |
+| `items`      | `PPTopNavItem[]`                        | `[]`    | Top-level nav items. Items with `children` render dropdown submenus.       |
+| `selectedId` | `ModelSignal<string \| number \| null>` | `null`  | Two-way `[(selectedId)]` — id of currently selected item (top or submenu). |
+
+**Output:** `itemSelect` emits `PPTopNavSelectEvent` whenever a top-level item or submenu entry is activated.
+
+### Models
+
+```typescript
+interface PPTopNavItem {
+  readonly id: string | number;
+  readonly label: string;
+  readonly disabled?: boolean;
+  readonly icon?: string;
+  readonly children?: PPTopNavItem[];
+}
+
+interface PPTopNavSelectEvent {
+  readonly id: string | number;
+  readonly item: PPTopNavItem;
+  readonly parentItem?: PPTopNavItem;
+}
+```
+
+### Keyboard
+
+`Enter`/`Space` activate or open dropdown. `ArrowLeft`/`ArrowRight` move focus across top-level items (skips disabled). `ArrowDown` focuses first submenu entry. `Escape` closes the open dropdown.
+
+### Outside-click dismissal
+
+A `document:click` host listener always closes any open dropdown when a click lands outside. No opt-out.
+
+### Peer Dependencies
+
+`@angular/core`, `@pdx/pp-menu`
+
+---
+
 ## Component Replacement Map
 
 When a PDX component exists, always use it instead of Angular Material or custom implementations.
 
-| Need             | PDX Component                     | Replaces                                                        |
-| ---------------- | --------------------------------- | --------------------------------------------------------------- |
-| Standard button  | `PPButtonComponent`               | `mat-button`, `mat-raised-button`, `mat-flat-button`            |
-| Icon button      | `PPIconButtonComponent`           | `mat-icon-button`                                               |
-| FAB              | `PPFloatingActionButtonComponent` | `mat-fab`, `mat-mini-fab`                                       |
-| Text input       | `PPInputComponent`                | `mat-form-field` + `matInput`                                   |
-| Textarea         | `PPTextareaComponent`             | `mat-form-field` + `matInput` + `<textarea>`                    |
-| Checkbox         | `PPCheckboxComponent`             | `mat-checkbox`                                                  |
-| Radio button     | `PPRadioButtonComponent`          | `mat-radio-button`                                              |
-| Radio group      | `PPRadioGroupComponent`           | `mat-radio-group`                                               |
-| Chip             | `PPChipComponent`                 | `mat-chip`                                                      |
-| Chip list        | `PPChipListComponent`             | `mat-chip-listbox`, `mat-chip-set`                              |
-| Dialog           | `PPDialogComponent`               | Custom dialog templates (still use `MatDialog` service to open) |
-| Tree             | `PPTreeComponent`                 | `mat-tree`, custom tree implementations                         |
-| Select           | `PPSelectComponent`               | `mat-select`                                                    |
-| Multiselect      | `PPMultiselectComponent`          | `mat-select` (multiple)                                         |
-| Menu             | `PPMenuComponent`                 | `mat-menu`                                                      |
-| Menu multiselect | `PPMenuMultiselectComponent`      | `mat-menu` (multi-select)                                       |
-| Tab group        | `PPTabGroupComponent`             | `mat-tab-group`                                                 |
-| Tab              | `PPTabComponent`                  | `mat-tab`                                                       |
-| Icons            | `pp-icon pp-icon-*`               | `mat-icon`, FontAwesome, other icon libraries                   |
+| Need             | PDX Component                                                       | Replaces                                                        |
+| ---------------- | ------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Standard button  | `PPButtonComponent`                                                 | `mat-button`, `mat-raised-button`, `mat-flat-button`            |
+| Icon button      | `PPIconButtonComponent`                                             | `mat-icon-button`                                               |
+| FAB              | `PPFloatingActionButtonComponent`                                   | `mat-fab`, `mat-mini-fab`                                       |
+| Text input       | `PPInputComponent`                                                  | `mat-form-field` + `matInput`                                   |
+| Textarea         | `PPTextareaComponent`                                               | `mat-form-field` + `matInput` + `<textarea>`                    |
+| Checkbox         | `PPCheckboxComponent`                                               | `mat-checkbox`                                                  |
+| Radio button     | `PPRadioButtonComponent`                                            | `mat-radio-button`                                              |
+| Radio group      | `PPRadioGroupComponent`                                             | `mat-radio-group`                                               |
+| Chip             | `PPChipComponent`                                                   | `mat-chip`                                                      |
+| Chip list        | `PPChipListComponent`                                               | `mat-chip-listbox`, `mat-chip-set`                              |
+| Dialog           | `PPDialogComponent`                                                 | Custom dialog templates (still use `MatDialog` service to open) |
+| Tree             | `PPTreeComponent`                                                   | `mat-tree`, custom tree implementations                         |
+| Select           | `PPSelectComponent`                                                 | `mat-select`                                                    |
+| Multiselect      | `PPMultiselectComponent`                                            | `mat-select` (multiple)                                         |
+| Menu             | `PPMenuComponent`                                                   | `mat-menu`                                                      |
+| Menu multiselect | `PPMenuMultiselectComponent`                                        | `mat-menu` (multi-select)                                       |
+| Tab group        | `PPTabGroupComponent`                                               | `mat-tab-group`                                                 |
+| Tab              | `PPTabComponent`                                                    | `mat-tab`                                                       |
+| List             | `PPListComponent`                                                   | `mat-selection-list`, `mat-list`                                |
+| Expansion panel  | `PPExpansionPanelComponent` + `PPExpansionPanelItemComponent`       | `mat-expansion-panel`                                           |
+| Form scaffold    | `PPFormComponent` (+ section / stack / block / textblock / actions) | Custom form layout divs / ad-hoc Flex/Grid shells               |
+| Icons            | `pp-icon pp-icon-*`                                                 | `mat-icon`, FontAwesome, other icon libraries                   |
+
+`pp-sidenav` and `pp-top-navigation` are **not** in this drop-in table. They are app-shell design decisions — use them only when introducing or redesigning global navigation. See the "Navigation (app-shell only)" section in [../SKILL.md](../SKILL.md) for the applicability rules.
 
 **Components without a PDX replacement yet** — use Angular Material with PDX theme applied:
 
@@ -908,6 +1375,5 @@ When a PDX component exists, always use it instead of Angular Material or custom
 - Table (`mat-table`)
 - Paginator (`mat-paginator`)
 - Sort (`mat-sort`)
-- Sidenav (`mat-sidenav`)
-- Toolbar (`mat-toolbar`)
-- Expansion panel (`mat-expansion-panel`)
+- Toolbar (`mat-toolbar`) — as a generic container, page header, dialog header, etc. (not as app-shell top navigation — for that, see `pp-top-navigation` above)
+- Sidenav (`mat-sidenav`) — as a non-navigation drawer: filter panels, inspector panes, document outlines, etc. (not as app-shell navigation — for that, see `pp-sidenav` above)

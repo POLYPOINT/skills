@@ -339,6 +339,72 @@ Scale: 50 (darkest) to 990 (lightest). 500 is the base value.
 
 ## PDX Component Usage
 
+### pp-form (canonical form scaffold)
+
+Every converted `TForm` wraps its body in `<pp-form>`. Use the structural primitives (`PPFormSectionComponent`, `PPFormStackComponent`, `PPFormBlockComponent`, `PPFormTextblockComponent`, `PPFormActionsComponent`) instead of ad-hoc divs + Tailwind for form layout.
+
+```typescript
+import {
+  PPFormComponent,
+  PPFormSectionComponent,
+  PPFormStackComponent,
+  PPFormBlockComponent,
+  PPFormTextblockComponent,
+  PPFormActionsComponent,
+} from "@pdx/pp-form";
+import { PPButtonComponent } from "@pdx/pp-button";
+import { PPInputComponent } from "@pdx/pp-input";
+
+@Component({
+  imports: [
+    PPFormComponent,
+    PPFormSectionComponent,
+    PPFormStackComponent,
+    PPFormBlockComponent,
+    PPFormTextblockComponent,
+    PPFormActionsComponent,
+    PPButtonComponent,
+    PPInputComponent,
+  ],
+  template: `
+    <pp-form>
+      <pp-form-section
+        title="Personal Information"
+        description="Basic contact details."
+      >
+        <pp-form-block>
+          <pp-form-stack layout="horizontal">
+            <pp-input label="First name" [formField]="editForm.firstName" />
+            <pp-input label="Last name" [formField]="editForm.lastName" />
+          </pp-form-stack>
+        </pp-form-block>
+      </pp-form-section>
+
+      <pp-form-actions alignment="right">
+        <pp-button label="Cancel" variant="outlined" (click)="cancel()" />
+        <pp-button
+          label="Save"
+          variant="filled"
+          buttonType="submit"
+          (click)="save()"
+        />
+      </pp-form-actions>
+    </pp-form>
+  `,
+})
+```
+
+Structural rules:
+
+- `<pp-form>` — outermost wrapper. One per component.
+- `<pp-form-section>` — one per semantic region of the form. Pass `title` + `description`; set `singleColumn` only when fields shouldn't flow into multiple columns.
+- `<pp-form-block>` — groups related fields inside a section. Use one block per logical cluster.
+- `<pp-form-stack layout="horizontal">` — side-by-side arrangement inside a block. Omit or use `"vertical"` for default stacking.
+- `<pp-form-textblock>` — inline title/description pair when a block needs its own heading (e.g. sub-groupings inside a section).
+- `<pp-form-actions>` — footer row for form-level buttons. Defaults to right-aligned.
+
+Do not nest `<pp-form>` inside another `<pp-form>`. Dialog bodies (opened via `MatDialog` → `PPDialogComponent`) still use the same primitives inside the dialog's content projection; `<pp-form-actions>` becomes `<mat-dialog-actions>` in that context (dialog shell owns the footer).
+
 ### pp-button
 
 ```typescript
@@ -347,17 +413,15 @@ import { PPButtonComponent, PPIconButtonComponent } from '@pdx/pp-button'
 @Component({
   imports: [PPButtonComponent, PPIconButtonComponent],
   template: `
-    <pp-button variant="filled" (click)="save()">Save</pp-button>
-    <pp-button variant="outlined" (click)="cancel()">Cancel</pp-button>
-    <pp-button variant="text" size="sm" (click)="reset()">Reset</pp-button>
-    <pp-icon-button (click)="delete()">
-      <i class="pp-icon pp-icon-delete"></i>
-    </pp-icon-button>
+    <pp-button label="Save" variant="filled" (click)="save()" />
+    <pp-button label="Cancel" variant="outlined" (click)="cancel()" />
+    <pp-button label="Reset" variant="text" size="sm" (click)="reset()" />
+    <pp-icon-button icon="pp-icon pp-icon-delete" ariaLabel="Delete" (click)="delete()" />
   `,
 })
 ```
 
-Variants: `filled`, `outlined`, `text`, `tonal`. Sizes: `sm`, `md`, `lg`.
+`pp-button` and `pp-icon-button` take the button text / icon via inputs — they do **not** project content. Use `label="..."` (and `icon="pp-icon pp-icon-*"` on `pp-icon-button`). Variants: `filled`, `outlined`, `text`, `tonal`. Sizes: `sm`, `md`, `lg`.
 
 ### pp-input
 
@@ -384,12 +448,12 @@ import { PPCheckboxComponent } from '@pdx/pp-checkbox'
 @Component({
   imports: [PPCheckboxComponent],
   template: `
-    <pp-checkbox [formField]="form.active">Active</pp-checkbox>
+    <pp-checkbox id="active" label="Active" [formField]="form.active" />
   `,
 })
 ```
 
-Supports `indeterminate`, `error`, and `disabled` states via `CheckboxState` enum (`Selected`, `Unselected`, `Indeterminate`). Implements `ControlValueAccessor` for Signal Forms integration. Inputs: `label`, `error`, `disabled`, `state`. Outputs: `checkboxChange`, `indeterminateChange` (both emit `PPCheckboxChangeEvent`).
+`pp-checkbox` takes its text via the `label` input — it does **not** project content. `<pp-checkbox>Active</pp-checkbox>` renders an empty label. Always pass `label="..."` (and an `id` for the htmlFor linkage). Supports `indeterminate`, `error`, and `disabled` states via `CheckboxState` enum (`Selected`, `Unselected`, `Indeterminate`). Implements `ControlValueAccessor` for Signal Forms integration. Inputs: `id`, `label`, `state`, `error`, `disabled`, `ariaLabel`. Outputs: `checkboxChange`, `indeterminateChange` (both emit `PPCheckboxChangeEvent`).
 
 ### pp-radio
 
@@ -532,6 +596,74 @@ export class SomeComponent {
 
 `PPTabGroupComponent` manages tab selection, sliding indicator animation, keyboard navigation (Arrow keys, Home/End), and optional content panels. `PPTabComponent` inputs: `label`, `icon` (optional, e.g. `'pp-icon-dashboard'`), `disabled`. Use `ppTabContent` directive on `<ng-template>` for tab-managed content panels, or omit it and use `[(selectedIndex)]` two-way binding for consumer-managed content via `@switch`. `fullWidth` input stretches tabs equally.
 
+### pp-list
+
+```typescript
+import {
+  PPListComponent,
+  PPListItem,
+  PPListSelectEvent,
+  ListVariant,
+} from "@pdx/pp-list";
+
+@Component({
+  imports: [PPListComponent],
+  template: `
+    <pp-list
+      [items]="options"
+      [variant]="ListVariant.Multi"
+      [(selectedIds)]="selectedIds"
+      ariaLabel="Choose departments"
+      (itemSelect)="onToggle($event)"
+    />
+  `,
+})
+export class DepartmentListComponent {
+  protected readonly ListVariant = ListVariant;
+  protected readonly options: PPListItem[] = [
+    { id: 1, label: "Surgery", supportingText: "Floor 3" },
+    { id: 2, label: "Radiology" },
+  ];
+  protected readonly selectedIds = signal<(string | number)[]>([]);
+
+  protected onToggle(event: PPListSelectEvent): void {
+    // event.selected reflects the toggled state in 'multi'
+  }
+}
+```
+
+`PPListComponent` replaces `<mat-selection-list>` / `<mat-list>`. Variants: `Default` (read-only), `Single` (replace-on-click), `SingleRadio` (radio indicator), `Multi` (checkbox, toggle). `selectedIds` is a `ModelSignal` — use `[(selectedIds)]` for two-way binding or `.set()` directly from code. Items carry optional `overline`, `supportingText`, `leading`/`trailing` icons, `disabled`, `checkLabel` (multi only). Keyboard: Arrow keys wrap + skip disabled; Enter/Space activate.
+
+### pp-expansion-panel
+
+```typescript
+import {
+  PPExpansionPanelComponent,
+  PPExpansionPanelItemComponent,
+} from "@pdx/pp-expansion-panel";
+
+@Component({
+  imports: [PPExpansionPanelComponent, PPExpansionPanelItemComponent],
+  template: `
+    <pp-expansion-panel [accordion]="true">
+      <pp-expansion-panel-item
+        title="Contract"
+        description="Validity and role"
+        leadingIcon="pp-icon-document"
+        [expanded]="true"
+      >
+        <!-- pp-form-block, pp-input, etc. -->
+      </pp-expansion-panel-item>
+      <pp-expansion-panel-item title="Permissions">
+        <!-- content -->
+      </pp-expansion-panel-item>
+    </pp-expansion-panel>
+  `,
+})
+```
+
+Use `PPExpansionPanelComponent` + `PPExpansionPanelItemComponent` when converting a Delphi `TGroupBox` that collapses or when a section of the form should be optional/progressive. Set `[accordion]="true"` on the container to enforce single-open behaviour. Variants: `desktop` (title + description horizontal) and `mobile` (stacked). Outputs: `opened`, `closed` per item. Prefer this over `<mat-expansion-panel>`.
+
 ### pp-icons
 
 ```html
@@ -556,4 +688,9 @@ Import SCSS: `@use '@pdx/pp-icons/icons'`.
 - Prefer `@pdx/pp-select` over `MatSelectModule` for all selects/dropdowns
 - Prefer `@pdx/pp-menu` over `MatMenuModule` for all menus
 - Prefer `@pdx/pp-tab` over `MatTabsModule` for all tabs
+- Prefer `@pdx/pp-list` over `MatListModule` / `MatSelectionList` for all in-page lists
+- Prefer `@pdx/pp-expansion-panel` over `MatExpansionModule` for all collapsible sections
+- Wrap every converted `TForm` body in `<pp-form>` with `pp-form-section` / `pp-form-block` / `pp-form-stack` / `pp-form-actions` (see [pp-form scaffold](#pp-form-canonical-form-scaffold))
+- Do **not** generate `<pp-sidenav>` or `<pp-top-navigation>` from a form conversion — they belong to the app-shell, not a feature component
 - Use `@pdx/pp-icons` for all icons (not Material Icons)
+- **PDX controls take label text via a `label` input, not content projection.** `pp-button`, `pp-icon-button`, `pp-checkbox`, `pp-radio-button`, `pp-input`, `pp-textarea`, `pp-select`, `pp-multiselect`, `pp-chip`, `pp-top-navigation` items, `pp-list` items, `pp-sidenav-item` and related all expose a `label` input (on the component or inside an item model). `<pp-checkbox>Text</pp-checkbox>` / `<pp-button>Save</pp-button>` render empty — always use `label="..."` and a self-closing or paired tag with no projected text. Exceptions: `pp-chip` accepts `ng-content` as a fallback when `label` is empty; `pp-dialog` and `pp-tab-group` use content projection for bodies (not labels).

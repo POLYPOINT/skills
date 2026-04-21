@@ -95,58 +95,65 @@ end;
 ### choose-month-range.component.ts
 
 ```typescript
-import { Component, inject, signal } from '@angular/core'
-import { form, FormField, required } from '@angular/forms/signals'
-import { PPButtonComponent } from '@pdx/pp-button'
-import { MatDatepickerModule } from '@angular/material/datepicker'
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog'
-import { MatFormFieldModule } from '@angular/material/form-field'
-import { MatInputModule } from '@angular/material/input'
+import { Component, inject, signal } from "@angular/core";
+import { form, FormField, required } from "@angular/forms/signals";
+import { PPButtonComponent } from "@pdx/pp-button";
+import { MatDatepickerModule } from "@angular/material/datepicker";
+import { MatDialogModule, MatDialogRef } from "@angular/material/dialog";
+import { MatFormFieldModule } from "@angular/material/form-field";
+import { MatInputModule } from "@angular/material/input";
 
 interface MonthRangeData {
-  firstMonth: string
-  lastMonth: string
+  firstMonth: string;
+  lastMonth: string;
 }
 
 export interface MonthRangeResult {
-  firstMonth: Temporal.PlainYearMonth
-  lastMonth: Temporal.PlainYearMonth
+  firstMonth: Temporal.PlainYearMonth;
+  lastMonth: Temporal.PlainYearMonth;
 }
 
 @Component({
-  selector: 'app-choose-month-range',
-  imports: [FormField, PPButtonComponent, MatDatepickerModule, MatDialogModule, MatFormFieldModule, MatInputModule],
-  templateUrl: './choose-month-range.component.html',
-  styleUrl: './choose-month-range.component.scss',
-  host: { 'data-testid': 'choose-month-range' },
+  selector: "app-choose-month-range",
+  imports: [
+    FormField,
+    PPButtonComponent,
+    MatDatepickerModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+  ],
+  templateUrl: "./choose-month-range.component.html",
+  styleUrl: "./choose-month-range.component.scss",
+  host: { "data-testid": "choose-month-range" },
 })
 export class ChooseMonthRangeComponent {
-  private readonly dialogRef = inject(MatDialogRef<ChooseMonthRangeComponent>)
+  private readonly dialogRef = inject(MatDialogRef<ChooseMonthRangeComponent>);
 
   private readonly model = signal<MonthRangeData>({
     firstMonth: Temporal.Now.plainDateISO().toPlainYearMonth().toString(),
     lastMonth: Temporal.Now.plainDateISO().toPlainYearMonth().toString(),
-  })
+  });
 
   protected readonly monthRangeForm = form(this.model, (schema) => {
-    required(schema.firstMonth, { message: 'Start month is required' })
-    required(schema.lastMonth, { message: 'End month is required' })
-  })
+    required(schema.firstMonth, { message: "Start month is required" });
+    required(schema.lastMonth, { message: "End month is required" });
+  });
 
   protected confirm(): void {
-    const data = this.model()
-    const first = Temporal.PlainYearMonth.from(data.firstMonth)
-    const last = Temporal.PlainYearMonth.from(data.lastMonth)
+    const data = this.model();
+    const first = Temporal.PlainYearMonth.from(data.firstMonth);
+    const last = Temporal.PlainYearMonth.from(data.lastMonth);
 
     if (Temporal.PlainYearMonth.compare(first, last) > 0) {
-      return
+      return;
     }
 
-    this.dialogRef.close({ firstMonth: first, lastMonth: last })
+    this.dialogRef.close({ firstMonth: first, lastMonth: last });
   }
 
   protected cancel(): void {
-    this.dialogRef.close(null)
+    this.dialogRef.close(null);
   }
 }
 ```
@@ -169,8 +176,8 @@ export class ChooseMonthRangeComponent {
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <pp-button variant="text" (click)="cancel()">Cancel</pp-button>
-  <pp-button variant="filled" (click)="confirm()">OK</pp-button>
+  <pp-button label="Cancel" variant="text" (click)="cancel()" />
+  <pp-button label="OK" variant="filled" (click)="confirm()" />
 </mat-dialog-actions>
 ```
 
@@ -196,35 +203,35 @@ export class ChooseMonthRangeComponent {
 ### choose-month-range.component.spec.ts
 
 ```typescript
-import { ComponentFixture, TestBed } from '@angular/core/testing'
-import { MatDialogRef } from '@angular/material/dialog'
-import { ChooseMonthRangeComponent } from './choose-month-range.component'
+import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { MatDialogRef } from "@angular/material/dialog";
+import { ChooseMonthRangeComponent } from "./choose-month-range.component";
 
-describe('ChooseMonthRangeComponent', () => {
-  let component: ChooseMonthRangeComponent
-  let fixture: ComponentFixture<ChooseMonthRangeComponent>
-  let mockDialogRef: { close: ReturnType<typeof vi.fn> }
+describe("ChooseMonthRangeComponent", () => {
+  let component: ChooseMonthRangeComponent;
+  let fixture: ComponentFixture<ChooseMonthRangeComponent>;
+  let mockDialogRef: { close: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
-    mockDialogRef = { close: vi.fn() }
+    mockDialogRef = { close: vi.fn() };
 
     await TestBed.configureTestingModule({
       imports: [ChooseMonthRangeComponent],
       providers: [{ provide: MatDialogRef, useValue: mockDialogRef }],
-    }).compileComponents()
+    }).compileComponents();
 
-    fixture = TestBed.createComponent(ChooseMonthRangeComponent)
-    component = fixture.componentInstance
-    fixture.detectChanges()
-  })
+    fixture = TestBed.createComponent(ChooseMonthRangeComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
 
-  it('should create', () => {
-    expect(component).toBeTruthy()
-  })
+  it("should create", () => {
+    expect(component).toBeTruthy();
+  });
 
-  it('should close with null on cancel', () => {
-    component['cancel']()
-    expect(mockDialogRef.close).toHaveBeenCalledWith(null)
-  })
-})
+  it("should close with null on cancel", () => {
+    component["cancel"]();
+    expect(mockDialogRef.close).toHaveBeenCalledWith(null);
+  });
+});
 ```

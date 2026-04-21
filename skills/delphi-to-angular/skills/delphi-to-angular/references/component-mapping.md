@@ -2,15 +2,15 @@
 
 ## Layout
 
-| Delphi VCL                   | Angular                                 | Notes                                                                                                                                     |
-| ---------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `TForm` (f\*.pas)            | Routed standalone component             | One component per form, lazy-loaded route                                                                                                 |
-| `TFrame` (fr\*.pas)          | Child component                         | Reusable, data via `input()`                                                                                                              |
-| `TPanel`                     | `<div>` with Tailwind                   | Layout container                                                                                                                          |
-| `TGroupBox`                  | `<mat-expansion-panel>` or `<fieldset>` | Context-dependent                                                                                                                         |
-| `TPageControl` + `TTabSheet` | `<pp-tab-group>` + `<pp-tab>`           | Use `@pdx/pp-tab` `PPTabGroupComponent` + `PPTabComponent`. Two-way bind `[(selectedIndex)]`. Use `ppTabContent` directive for tab panels |
-| `TRzSplitter`                | CSS grid or flexbox                     | No splitter component needed                                                                                                              |
-| `TShape`                     | Tailwind border/divider utilities       |                                                                                                                                           |
+| Delphi VCL                   | Angular                                                                                                           | Notes                                                                                                                                         |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TForm` (f\*.pas)            | Routed standalone component, body wrapped in `<pp-form>`                                                          | One component per form, lazy-loaded route. Use the canonical `<pp-form>` scaffold — see angular-conventions.md.                               |
+| `TFrame` (fr\*.pas)          | Child component                                                                                                   | Reusable, data via `input()`. Typically lives inside a `<pp-form-section>` or `<pp-form-block>`                                               |
+| `TPanel`                     | `<pp-form-block>` inside a form, otherwise `<div>` with Tailwind                                                  | Plain `<div>` only for non-form layout                                                                                                        |
+| `TGroupBox`                  | `<pp-expansion-panel-item>` inside a `<pp-expansion-panel>`; or `<fieldset>` for static, always-visible groupings | Use `<fieldset>` only when the group never collapses. Do **not** use `<mat-expansion-panel>` — see angular-conventions.md pp-expansion-panel. |
+| `TPageControl` + `TTabSheet` | `<pp-tab-group>` + `<pp-tab>`                                                                                     | Use `@pdx/pp-tab` `PPTabGroupComponent` + `PPTabComponent`. Two-way bind `[(selectedIndex)]`. Use `ppTabContent` directive for tab panels     |
+| `TRzSplitter`                | CSS grid or flexbox                                                                                               | No splitter component needed                                                                                                                  |
+| `TShape`                     | Tailwind border/divider utilities                                                                                 |                                                                                                                                               |
 
 ## Inputs (Signal Forms)
 
@@ -29,27 +29,35 @@
 
 ## Data Display
 
-| Delphi VCL           | Angular                                                       | Notes                                                                                                                            |
-| -------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `TDBGrid`            | `<table mat-table>` with `matSort`                            | Column defs per field                                                                                                            |
-| `TVirtualStringTree` | `<pp-tree [data]="treeData" (selectNode)="onSelect($event)">` | Use `@pdx/pp-tree` `PPTreeComponent`. Data via `TreeData[]`. Supports drag-and-drop, sorting, context menu via `PPMenuComponent` |
-| `TListBox`           | `<mat-selection-list>`                                        |                                                                                                                                  |
-| `TLabel`             | `<span>` or `<p>` with Tailwind                               |                                                                                                                                  |
-| `TStatusBar`         | Tailwind-styled footer                                        |                                                                                                                                  |
+| Delphi VCL           | Angular                                                                                 | Notes                                                                                                                                                                           |
+| -------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TDBGrid`            | `<table mat-table>` with `matSort`                                                      | Column defs per field                                                                                                                                                           |
+| `TVirtualStringTree` | `<pp-tree [data]="treeData" (selectNode)="onSelect($event)">`                           | Use `@pdx/pp-tree` `PPTreeComponent`. Data via `TreeData[]`. Supports drag-and-drop, sorting, context menu via `PPMenuComponent`                                                |
+| `TListBox`           | `<pp-list [items]="items" [variant]="ListVariant.Multi" [(selectedIds)]="selectedIds">` | Use `@pdx/pp-list` `PPListComponent`. Variants: `Default` (read-only), `Single`, `SingleRadio`, `Multi`. Choose based on the Delphi multi-select flag. Items as `PPListItem[]`. |
+| `TLabel`             | `<span>` or `<p>` with Tailwind                                                         |                                                                                                                                                                                 |
+| `TStatusBar`         | Tailwind-styled footer                                                                  |                                                                                                                                                                                 |
 
 ## Actions
 
-| Delphi VCL                 | Angular                                                                    | Notes                                                                                                              |
-| -------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `TButton` / `TBitBtn`      | `<pp-button variant="filled">` or `variant="outlined"`                     | Use `@pdx/pp-button` `PPButtonComponent`. Variants: `filled`, `outlined`, `text`, `tonal`. Sizes: `sm`, `md`, `lg` |
-| `TButtonPanel` (OK/Cancel) | `<mat-dialog-actions>` with `<pp-button>` if dialog, form footer otherwise |                                                                                                                    |
-| `TListPanel` (CRUD)        | Toolbar with `<pp-icon-button>`                                            | Use `@pdx/pp-button` `PPIconButtonComponent` for Insert/Edit/Delete                                                |
-| Floating action            | `<pp-fab>`                                                                 | Use `@pdx/pp-button` `PPFloatingActionButtonComponent`                                                             |
-| `TPopupMenu`               | `<pp-menu [items]="items" (itemSelect)="onSelect($event)">`                | Use `@pdx/pp-menu` `PPMenuComponent`. For multi-select: `PPMenuMultiselectComponent`. Items via `PPMenuItem[]`     |
+| Delphi VCL                 | Angular                                                                                                                                | Notes                                                                                                              |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `TButton` / `TBitBtn`      | `<pp-button variant="filled">` or `variant="outlined"`                                                                                 | Use `@pdx/pp-button` `PPButtonComponent`. Variants: `filled`, `outlined`, `text`, `tonal`. Sizes: `sm`, `md`, `lg` |
+| `TButtonPanel` (OK/Cancel) | `<pp-form-actions>` with `<pp-button>` children in a form body; `<mat-dialog-actions>` with `<pp-button>` inside a `PPDialogComponent` | Use `@pdx/pp-form` `PPFormActionsComponent` as the default. `alignment` defaults to `'right'`.                     |
+| `TListPanel` (CRUD)        | Toolbar with `<pp-icon-button>`                                                                                                        | Use `@pdx/pp-button` `PPIconButtonComponent` for Insert/Edit/Delete                                                |
+| Floating action            | `<pp-fab>`                                                                                                                             | Use `@pdx/pp-button` `PPFloatingActionButtonComponent`                                                             |
+| `TPopupMenu`               | `<pp-menu [items]="items" (itemSelect)="onSelect($event)">`                                                                            | Use `@pdx/pp-menu` `PPMenuComponent`. For multi-select: `PPMenuMultiselectComponent`. Items via `PPMenuItem[]`     |
 
 ### Icons
 
 Use `@pdx/pp-icons` for all icons. Apply via CSS class: `<i class="pp-icon pp-icon-<name>"></i>`. Import SCSS: `@use '@pdx/pp-icons/icons'`.
+
+### Shell-level components
+
+`@pdx/pp-sidenav` and `@pdx/pp-top-navigation` are app-shell components, **not** per-form primitives. A converted Delphi form is a feature routed _into_ the saas app's existing shell — it never introduces or replaces navigation.
+
+Do not emit `<pp-sidenav>` or `<pp-top-navigation>` markup from any conversion, even if the Delphi source has a `TMainMenu`, `TTreeView` used as a navigation tree, or a toolbar at the top of the form. Flag such elements in the conversion plan as "shell-level — leave to app-shell team" and move on.
+
+Apply `pp-sidenav` / `pp-top-navigation` only in a separate, explicit task that asks for app-shell navigation work. Do not infer the need from screenshots or from a design that happens to show a bar / column — those may be page headers, filter panels, or inspector panes that stay as plain layout or `mat-sidenav`.
 
 ## Data Layer
 
