@@ -172,10 +172,10 @@ import { PPInputComponent } from "@pdx/pp-input";
 | `label`                   | `string`                                            | required                                     | Field label                        |
 | `inputType`               | `'text' \| 'email' \| 'password' \| 'tel' \| 'url'` | `'text'`                                     | HTML input type                    |
 | `size`                    | `'sm' \| 'lg'`                                      | `'sm'`                                       | Field size                         |
-| `leadingIcon`             | `string`                                            | —                                            | Icon before field                  |
+| `leadingIcon`             | `string \| undefined`                               | `undefined`                                  | Icon before field                  |
 | `trailingIcon`            | `boolean`                                           | `false`                                      | Show trailing icon                 |
-| `helperText`              | `string`                                            | —                                            | Guidance text below field          |
-| `tooltip`                 | `string`                                            | —                                            | Hover hint text                    |
+| `helperText`              | `string \| undefined`                               | `undefined`                                  | Guidance text below field          |
+| `tooltip`                 | `string \| undefined`                               | `undefined`                                  | Hover hint text                    |
 | `required`                | `boolean`                                           | `false`                                      | Shows required marker              |
 | `optional`                | `boolean`                                           | `false`                                      | Shows "(optional)"                 |
 | `invalid`                 | `boolean`                                           | `false`                                      | Error state                        |
@@ -183,9 +183,9 @@ import { PPInputComponent } from "@pdx/pp-input";
 | `readonly`                | `boolean`                                           | `false`                                      | Read-only state                    |
 | `fullWidth`               | `boolean`                                           | `false`                                      | Full-width field                   |
 | `value`                   | `string`                                            | `''`                                         | Current value                      |
-| `id`                      | `string`                                            | —                                            | Unique identifier for the element  |
-| `ariaLabel`               | `string`                                            | —                                            | Accessibility label                |
-| `ariaLabelTrailingButton` | `string`                                            | `'Trailing button for resetting the input.'` | Accessible name for trailing reset |
+| `id`                      | `string \| undefined`                               | `undefined`                                  | Unique identifier for the element  |
+| `ariaLabel`               | `string \| undefined`                               | `undefined`                                  | Accessibility label                |
+| `ariaLabelTrailingButton` | `string \| undefined`                               | `'Trailing button for resetting the input.'` | Accessible name for trailing reset |
 
 **Output:** `inputChange` emits the new value.
 
@@ -205,22 +205,22 @@ import { PPTextareaComponent } from "@pdx/pp-input";
 />
 ```
 
-| Input        | Type      | Default  | Description                   |
-| ------------ | --------- | -------- | ----------------------------- |
-| `label`      | `string`  | required | Field label                   |
-| `autoGrowth` | `boolean` | `false`  | Auto-expanding height         |
-| `resizable`  | `boolean` | `false`  | User-resizable textarea       |
-| `helperText` | `string`  | —        | Guidance text below field     |
-| `tooltip`    | `string`  | —        | Hover hint text               |
-| `required`   | `boolean` | `false`  | Shows required marker         |
-| `optional`   | `boolean` | `false`  | Shows "(optional)"            |
-| `invalid`    | `boolean` | `false`  | Error state                   |
-| `disabled`   | `boolean` | `false`  | Disabled state                |
-| `readonly`   | `boolean` | `false`  | Read-only state               |
-| `fullWidth`  | `boolean` | `false`  | Full-width field              |
-| `value`      | `string`  | `''`     | Current value                 |
-| `id`         | `string`  | —        | Unique identifier for element |
-| `ariaLabel`  | `string`  | —        | Accessibility label           |
+| Input        | Type                  | Default     | Description                   |
+| ------------ | --------------------- | ----------- | ----------------------------- |
+| `label`      | `string`              | required    | Field label                   |
+| `autoGrowth` | `boolean`             | `false`     | Auto-expanding height         |
+| `resizable`  | `boolean`             | `false`     | User-resizable textarea       |
+| `helperText` | `string \| undefined` | `undefined` | Guidance text below field     |
+| `tooltip`    | `string \| undefined` | `undefined` | Hover hint text               |
+| `required`   | `boolean`             | `false`     | Shows required marker         |
+| `optional`   | `boolean`             | `false`     | Shows "(optional)"            |
+| `invalid`    | `boolean`             | `false`     | Error state                   |
+| `disabled`   | `boolean`             | `false`     | Disabled state                |
+| `readonly`   | `boolean`             | `false`     | Read-only state               |
+| `fullWidth`  | `boolean`             | `false`     | Full-width field              |
+| `value`      | `string`              | `''`        | Current value                 |
+| `id`         | `string \| undefined` | `undefined` | Unique identifier for element |
+| `ariaLabel`  | `string \| undefined` | `undefined` | Accessibility label           |
 
 **Output:** `textareaChange` emits the new value.
 
@@ -238,7 +238,7 @@ import { PPTextareaComponent } from "@pdx/pp-input";
 
 ---
 
-## @pdx/pp-form (v1.0.0)
+## @pdx/pp-form (v1.1.0)
 
 Structural primitives for assembling form layouts. These components orchestrate layout, grouping, and typography for forms — they do **not** render controls themselves. Compose with `@pdx/pp-input`, `@pdx/pp-checkbox`, etc. for the actual inputs.
 
@@ -260,6 +260,14 @@ Root container. Ensures unified spacing and styling across its children.
 
 No inputs.
 
+Structural rules:
+
+- **Renders an internal `<form>` element.** The component template is `<form class="pp-form"><ng-content/></form>`. Two consequences:
+  - `<pp-button buttonType="submit">` inside `<pp-form>` will trigger native form submission — wire `(submit)` on the surrounding logic accordingly (typically by handling the click on the submit button, since `<pp-form>` doesn't expose a submit output).
+  - Do **not** nest `<pp-form>` inside another `<form>` element or another `<pp-form>` — nested forms are invalid HTML.
+- **Width-inherits from its parent.** `pp-form` has no intrinsic width; wrap it in a container with a defined width (the stories use `<div class="w-full max-w-201">`). Without it, the form stretches to fill the viewport.
+- One `<pp-form>` per component.
+
 #### PPFormSectionComponent
 
 ```typescript
@@ -278,11 +286,11 @@ Semantic region with a header. Supports single- or multi-column layouts.
 </pp-form-section>
 ```
 
-| Input          | Type      | Default  | Description                                       |
-| -------------- | --------- | -------- | ------------------------------------------------- |
-| `title`        | `string`  | required | Section heading                                   |
-| `description`  | `string`  | required | Text below the heading                            |
-| `singleColumn` | `boolean` | `false`  | Force single-column layout (default is multi-col) |
+| Input          | Type             | Default  | Description                                       |
+| -------------- | ---------------- | -------- | ------------------------------------------------- |
+| `title`        | `string`         | required | Section heading                                   |
+| `description`  | `string \| null` | `null`   | Text below the heading                            |
+| `singleColumn` | `boolean`        | `false`  | Force single-column layout (default is multi-col) |
 
 #### PPFormStackComponent
 
@@ -332,11 +340,11 @@ Standardized title + description text.
 />
 ```
 
-| Input         | Type           | Default  | Description                                   |
-| ------------- | -------------- | -------- | --------------------------------------------- |
-| `title`       | `string`       | required | Heading                                       |
-| `description` | `string`       | required | Supporting text                               |
-| `size`        | `'sm' \| 'lg'` | `'sm'`   | `'lg'` for section headers, `'sm'` for blocks |
+| Input         | Type             | Default  | Description                                   |
+| ------------- | ---------------- | -------- | --------------------------------------------- |
+| `title`       | `string`         | required | Heading                                       |
+| `description` | `string \| null` | `null`   | Supporting text                               |
+| `size`        | `'sm' \| 'lg'`   | `'sm'`   | `'lg'` for section headers, `'sm'` for blocks |
 
 #### PPFormActionsComponent
 
@@ -360,20 +368,24 @@ Row for form-level buttons (e.g. Cancel / Save). Use `<pp-button>` children.
 ### Canonical composition
 
 ```html
-<pp-form>
-  <pp-form-section title="Profile" description="Your contact details.">
-    <pp-form-block>
-      <pp-form-stack layout="horizontal">
-        <pp-input label="First name" [formField]="form.firstName" />
-        <pp-input label="Last name" [formField]="form.lastName" />
-      </pp-form-stack>
-    </pp-form-block>
-  </pp-form-section>
-  <pp-form-actions alignment="right">
-    <pp-button label="Cancel" variant="outlined" />
-    <pp-button label="Save" variant="filled" buttonType="submit" />
-  </pp-form-actions>
-</pp-form>
+<div class="w-full max-w-201">
+  <pp-form>
+    <pp-form-stack>
+      <pp-form-section title="Profile" description="Your contact details.">
+        <pp-form-block>
+          <pp-form-stack layout="horizontal">
+            <pp-input label="First name" [formField]="form.firstName" />
+            <pp-input label="Last name" [formField]="form.lastName" />
+          </pp-form-stack>
+        </pp-form-block>
+      </pp-form-section>
+      <pp-form-actions alignment="right">
+        <pp-button label="Cancel" variant="outlined" />
+        <pp-button label="Save" variant="filled" buttonType="submit" />
+      </pp-form-actions>
+    </pp-form-stack>
+  </pp-form>
+</div>
 ```
 
 ### Peer Dependencies
@@ -404,14 +416,14 @@ import { PPCheckboxComponent, CheckboxState } from "@pdx/pp-checkbox";
 <pp-checkbox id="err" label="Required field" [error]="true" />
 ```
 
-| Input       | Type            | Default      | Description         |
-| ----------- | --------------- | ------------ | ------------------- |
-| `id`        | `string`        | —            | Unique identifier   |
-| `label`     | `string`        | —            | Display label       |
-| `state`     | `CheckboxState` | `Unselected` | Current state       |
-| `error`     | `boolean`       | `false`      | Error state         |
-| `disabled`  | `boolean`       | `false`      | Disabled state      |
-| `ariaLabel` | `string`        | —            | Accessibility label |
+| Input       | Type             | Default      | Description         |
+| ----------- | ---------------- | ------------ | ------------------- |
+| `id`        | `string`         | `''`         | Unique identifier   |
+| `label`     | `string`         | `''`         | Display label       |
+| `state`     | `CheckboxState`  | `Unselected` | Current state       |
+| `error`     | `boolean`        | `false`      | Error state         |
+| `disabled`  | `boolean`        | `false`      | Disabled state      |
+| `ariaLabel` | `string \| null` | `null`       | Accessibility label |
 
 **Outputs:**
 
@@ -458,13 +470,17 @@ import { PPRadioButtonComponent } from "@pdx/pp-radio";
 <pp-radio-button id="opt1" label="Option A" value="a" />
 ```
 
-| Input       | Type               | Default | Description         |
-| ----------- | ------------------ | ------- | ------------------- |
-| `id`        | `string`           | —       | Unique identifier   |
-| `label`     | `string`           | —       | Display label       |
-| `value`     | `string \| number` | —       | Associated value    |
-| `disabled`  | `boolean`          | `false` | Disabled state      |
-| `ariaLabel` | `string`           | —       | Accessibility label |
+| Input             | Type               | Default | Description                                                                |
+| ----------------- | ------------------ | ------- | -------------------------------------------------------------------------- |
+| `id`              | `string`           | `''`    | Unique identifier — set per radio for `for`/`htmlFor` linkage              |
+| `label`           | `string`           | `''`    | Display label                                                              |
+| `value`           | `string \| number` | `''`    | Associated value                                                           |
+| `disabled`        | `boolean`          | `false` | Disabled state                                                             |
+| `checked`         | `boolean`          | `false` | Checked state — only for standalone use; ignored inside a `pp-radio-group` |
+| `ariaLabel`       | `string \| null`   | `null`  | Accessibility label                                                        |
+| `ariaLabelledby`  | `string \| null`   | `null`  | ID of the element labelling this radio button                              |
+| `ariaDescribedby` | `string \| null`   | `null`  | ID of the element describing this radio button                             |
+| `tabIndex`        | `number \| null`   | `null`  | Tab index for keyboard navigation                                          |
 
 **Output:** `radioChange` emits the value.
 
@@ -484,10 +500,10 @@ import { PPRadioGroupComponent, PPRadioOption } from "@pdx/pp-radio";
 
 | Input       | Type               | Default | Description       |
 | ----------- | ------------------ | ------- | ----------------- |
-| `options`   | `PPRadioOption[]`  | —       | Available options |
-| `value`     | `string \| number` | —       | Selected value    |
+| `options`   | `PPRadioOption[]`  | `[]`    | Available options |
+| `value`     | `string \| number` | `''`    | Selected value    |
 | `disabled`  | `boolean`          | `false` | Disable all       |
-| `ariaLabel` | `string`           | —       | Group label       |
+| `ariaLabel` | `string \| null`   | `null`  | Group label       |
 
 **Output:** `valueChange` emits `MatRadioChange`.
 
@@ -535,15 +551,15 @@ import { PPChipComponent } from "@pdx/pp-chip";
 <pp-chip id="info" label="Read-only" [removable]="false" />
 ```
 
-| Input             | Type      | Default | Description                              |
-| ----------------- | --------- | ------- | ---------------------------------------- |
-| `id`              | `string`  | —       | Unique identifier                        |
-| `label`           | `string`  | —       | Display text (or use content projection) |
-| `leadingIcon`     | `string`  | —       | Icon class name                          |
-| `removable`       | `boolean` | `true`  | Show remove button                       |
-| `disabled`        | `boolean` | `false` | Disabled state                           |
-| `ariaLabel`       | `string`  | —       | Accessibility label                      |
-| `removeAriaLabel` | `string`  | —       | Remove button label                      |
+| Input             | Type             | Default | Description                              |
+| ----------------- | ---------------- | ------- | ---------------------------------------- |
+| `id`              | `string`         | `''`    | Unique identifier                        |
+| `label`           | `string`         | `''`    | Display text (or use content projection) |
+| `leadingIcon`     | `string \| null` | `null`  | Icon class name                          |
+| `removable`       | `boolean`        | `true`  | Show remove button                       |
+| `disabled`        | `boolean`        | `false` | Disabled state                           |
+| `ariaLabel`       | `string \| null` | `null`  | Accessibility label                      |
+| `removeAriaLabel` | `string \| null` | `null`  | Remove button label                      |
 
 **Output:** `removed` emits `PPChipRemoveEvent`.
 
@@ -668,13 +684,13 @@ import { PPMenuComponent, PPMenuItem } from "@pdx/pp-menu";
 | Input            | Type                      | Default  | Description                                                                                                                                                                                        |
 | ---------------- | ------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `data`           | `TreeData[]`              | required | Hierarchical data                                                                                                                                                                                  |
-| `selectedId`     | `string`                  | —        | Currently selected node (ModelSignal, supports two-way `[()]`)                                                                                                                                     |
-| `folderMode`     | `boolean`                 | —        | Folder/document icons                                                                                                                                                                              |
-| `showDragButton` | `boolean`                 | —        | Show drag handles                                                                                                                                                                                  |
-| `showAddButton`  | `boolean`                 | —        | Show add child buttons (respects per-node `hideAddButton`)                                                                                                                                         |
-| `showSortButton` | `boolean`                 | —        | Show sort up/down buttons                                                                                                                                                                          |
+| `selectedId`     | `string \| null`          | `null`   | Currently selected node (ModelSignal, supports two-way `[()]`)                                                                                                                                     |
+| `folderMode`     | `boolean`                 | `false`  | Folder/document icons                                                                                                                                                                              |
+| `showDragButton` | `boolean`                 | `false`  | Show drag handles                                                                                                                                                                                  |
+| `showAddButton`  | `boolean`                 | `false`  | Show add child buttons (respects per-node `hideAddButton`)                                                                                                                                         |
+| `showSortButton` | `boolean`                 | `false`  | Show sort up/down buttons                                                                                                                                                                          |
 | `moreMenu`       | `PPMenuComponent \| null` | `null`   | Reference to a `PPMenuComponent` instance for the "more actions" context menu. The tree node toggles `isOpen` and sets `triggerElement` automatically; items and events are owned by the consumer. |
-| `ariaLabel*`     | `string`                  | —        | Various ARIA labels for buttons (drag, add, more, sort up/down, expand, collapse)                                                                                                                  |
+| `ariaLabel*`     | `string \| null`          | `null`   | Various ARIA labels for buttons (drag, add, more, sort up/down, expand, collapse)                                                                                                                  |
 
 **Outputs:**
 

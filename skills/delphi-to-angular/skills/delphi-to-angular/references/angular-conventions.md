@@ -16,9 +16,9 @@
 | PDX select       | `@pdx/pp-select` — `PPSelectComponent`, `PPMultiselectComponent` (with `PPMenuItem`, `PPSelectChangeEvent`) |
 | PDX menu         | `@pdx/pp-menu` — `PPMenuComponent`, `PPMenuMultiselectComponent` (with `PPMenuItem`, `PPMenuSelectEvent`)   |
 | PDX tab          | `@pdx/pp-tab` — `PPTabGroupComponent`, `PPTabComponent`, `PPTabContentDirective`                            |
-| PDX icons        | `@pdx/pp-icons` — Icon webfont, use `<i class="pp-icon pp-icon-<name>">`                                    |
+| PDX icons        | `@pdx/pp-icons` — Icon webfont, use `<span class="pp-icon pp-icon-<name>">`                                 |
 | PDX theme        | `@pdx/pp-theme` — Design tokens, Akkurat font, `--pp-*` CSS variables                                       |
-| Forms            | Angular Signal Forms (`@angular/forms/signals`)                                                             |
+| Forms            | Angular Signal Forms (`@angular/forms/signals`); see Signal Forms Pattern for the `pp-select` exception     |
 | Styling          | TailwindCSS v4 + SCSS (BEM)                                                                                 |
 | Date/time        | Temporal API (native, no polyfill)                                                                          |
 | Unit testing     | Vitest                                                                                                      |
@@ -97,6 +97,8 @@ export class FeatureNameComponent {
 ```
 
 ## Signal Forms Pattern
+
+**Bind PDX inputs with `[formField]` — except `pp-select` / `pp-multiselect`, which use `[formControl]` (legacy reactive forms).** All PDX components implement `ControlValueAccessor`, and `[formField]` bridges to CVA automatically. Mix both APIs in one component when needed: `form(...)` for most fields, a separate `FormControl` for any select.
 
 ```typescript
 import { Component, signal } from "@angular/core";
@@ -367,43 +369,50 @@ import { PPInputComponent } from "@pdx/pp-input";
     PPInputComponent,
   ],
   template: `
-    <pp-form>
-      <pp-form-section
-        title="Personal Information"
-        description="Basic contact details."
-      >
-        <pp-form-block>
-          <pp-form-stack layout="horizontal">
-            <pp-input label="First name" [formField]="editForm.firstName" />
-            <pp-input label="Last name" [formField]="editForm.lastName" />
-          </pp-form-stack>
-        </pp-form-block>
-      </pp-form-section>
+    <div class="w-full max-w-201">
+      <pp-form>
+        <pp-form-stack>
+          <pp-form-section
+            title="Personal Information"
+            description="Basic contact details."
+          >
+            <pp-form-block>
+              <pp-form-stack layout="horizontal">
+                <pp-input label="First name" [formField]="editForm.firstName" />
+                <pp-input label="Last name" [formField]="editForm.lastName" />
+              </pp-form-stack>
+            </pp-form-block>
+          </pp-form-section>
 
-      <pp-form-actions alignment="right">
-        <pp-button label="Cancel" variant="outlined" (click)="cancel()" />
-        <pp-button
-          label="Save"
-          variant="filled"
-          buttonType="submit"
-          (click)="save()"
-        />
-      </pp-form-actions>
-    </pp-form>
+          <pp-form-actions alignment="right">
+            <pp-button label="Cancel" variant="outlined" (click)="cancel()" />
+            <pp-button
+              label="Save"
+              variant="filled"
+              buttonType="submit"
+              (click)="save()"
+            />
+          </pp-form-actions>
+        </pp-form-stack>
+      </pp-form>
+    </div>
   `,
 })
 ```
 
 Structural rules:
 
-- `<pp-form>` — outermost wrapper. One per component.
-- `<pp-form-section>` — one per semantic region of the form. Pass `title` + `description`; set `singleColumn` only when fields shouldn't flow into multiple columns.
+- `<pp-form>` — outermost wrapper. One per component. **Renders an internal `<form>` element** (`<form class="pp-form">…</form>`), so:
+  - `<pp-button buttonType="submit">` inside it triggers native form submission.
+  - Do **not** nest `<pp-form>` inside another `<form>` or another `<pp-form>` — nested forms are invalid HTML.
+- **Wrap `<pp-form>` in a width-constrained parent.** `pp-form` inherits its parent's width and has no intrinsic max-width; without a constraint it stretches to fill the viewport. Use a wrapper such as `<div class="w-full max-w-201">` (matches the PDX story templates).
+- `<pp-form-stack>` — direct child of `<pp-form>`. Wrap section(s) **and** `<pp-form-actions>` together so spacing between them is governed by the stack. Use `layout="horizontal"` for side-by-side arrangement inside a block; omit or use `"vertical"` for default stacking.
+- `<pp-form-section>` — one per semantic region of the form. Pass `title` (required); `description` is optional. Set `singleColumn` only when fields shouldn't flow into multiple columns.
 - `<pp-form-block>` — groups related fields inside a section. Use one block per logical cluster.
-- `<pp-form-stack layout="horizontal">` — side-by-side arrangement inside a block. Omit or use `"vertical"` for default stacking.
 - `<pp-form-textblock>` — inline title/description pair when a block needs its own heading (e.g. sub-groupings inside a section).
-- `<pp-form-actions>` — footer row for form-level buttons. Defaults to right-aligned.
+- `<pp-form-actions>` — footer row for form-level buttons. Defaults to right-aligned. Sits inside the same `<pp-form-stack>` as the section(s), not as a sibling of `<pp-form-section>` directly under `<pp-form>`.
 
-Do not nest `<pp-form>` inside another `<pp-form>`. Dialog bodies (opened via `MatDialog` → `PPDialogComponent`) still use the same primitives inside the dialog's content projection; `<pp-form-actions>` becomes `<mat-dialog-actions>` in that context (dialog shell owns the footer).
+Dialog bodies (opened via `MatDialog` → `PPDialogComponent`) still use the same primitives inside the dialog's content projection; `<pp-form-actions>` becomes `<mat-dialog-actions>` in that context (dialog shell owns the footer).
 
 ### pp-button
 
@@ -667,9 +676,9 @@ Use `PPExpansionPanelComponent` + `PPExpansionPanelItemComponent` when convertin
 ### pp-icons
 
 ```html
-<i class="pp-icon pp-icon-calendar"></i>
-<i class="pp-icon pp-icon-delete"></i>
-<i class="pp-icon pp-icon-edit"></i>
+<span class="pp-icon pp-icon-calendar"></span>
+<span class="pp-icon pp-icon-delete"></span>
+<span class="pp-icon pp-icon-edit"></span>
 ```
 
 Import SCSS: `@use '@pdx/pp-icons/icons'`.
