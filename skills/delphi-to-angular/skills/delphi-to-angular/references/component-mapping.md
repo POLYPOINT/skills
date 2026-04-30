@@ -1,5 +1,7 @@
 # Component Mapping Reference
 
+For PDX component recipes (full usage patterns, layout pitfalls, icon names, width-control rule), see [pdx-recipes.md](pdx-recipes.md). This file is the Delphi → Angular mapping table only.
+
 ## Layout
 
 | Delphi VCL                   | Angular                                                                                                           | Notes                                                                                                                                         |
@@ -14,18 +16,19 @@
 
 ## Inputs (Signal Forms)
 
-| Delphi VCL          | Angular                                                                                                                                    | Notes                                                                                                                                                                                       |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `TEdit`             | `<pp-input label="Label" [formField]="form.field" />`                                                                                      | Use `@pdx/pp-input` `PPInputComponent`. Signal Forms. For unsupported types (e.g. `month`), fall back to `mat-form-field` + `matInput`                                                      |
-| `TMemo`             | `<pp-textarea label="Label" [formField]="form.field" />`                                                                                   | Use `@pdx/pp-input` `PPTextareaComponent`. Signal Forms                                                                                                                                     |
-| `TComboBox`         | `<pp-select label="Label" [options]="options" [formControl]="control" />`                                                                  | Use `@pdx/pp-select` `PPSelectComponent`. Options via `PPMenuItem[]`. For multi-select: `PPMultiselectComponent`. Uses `[formControl]` — see Signal Forms Pattern in angular-conventions.md |
-| `TCheckBox`         | `<pp-checkbox id="field" label="Field Label" [formField]="form.field" />`                                                                  | Use `@pdx/pp-checkbox` `PPCheckboxComponent`. Supports `indeterminate`, `error`, and `disabled` states                                                                                      |
-| `TRadioButton`      | `<pp-radio-group [formField]="form.field" [options]="options" />` or individual `<pp-radio-button id="opt1" label="Option A" value="a" />` | Use `@pdx/pp-radio` `PPRadioGroupComponent` / `PPRadioButtonComponent`. Options via `PPRadioOption[]`. Implements `ControlValueAccessor`                                                    |
-| `TECMonthEdit`      | `<mat-form-field>` + `<input matInput [matDatepicker] [formField]="form.date">`                                                            | Temporal API                                                                                                                                                                                |
-| `TPEPDateNavigator` | Custom date nav component                                                                                                                  | Temporal.PlainDate                                                                                                                                                                          |
-| Form data model     | `signal<FormData>({...})` + `form(model, schema)`                                                                                          |                                                                                                                                                                                             |
-| Filter on change    | `computed()` derived from `form.field().value()`                                                                                           |                                                                                                                                                                                             |
-| Validation          | Schema validators: `required()`, `min()`, `pattern()`, `email()`                                                                           |                                                                                                                                                                                             |
+| Delphi VCL                | Angular                                                                                                                                    | Notes                                                                                                                                                                                       |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TEdit`                   | `<pp-input label="Label" [formField]="form.field" />` (add `[fullWidth]="true"` inside a `pp-form-block`)                                  | Use `@pdx/pp-input` `PPInputComponent`. Signal Forms. Width is context-aware — see pdx-recipes.md. For unsupported types (e.g. `month`), fall back to `mat-form-field` + `matInput`         |
+| `TEdit` `ReadOnly = True` | `<pp-input label="Label" [readonly]="true" [value]="store.fieldName()" />`                                                                 | `[readonly]` is a property binding, not an attribute. Tests assert via `nativeInput.readOnly` (DOM property), not `[readonly]` attribute selectors                                          |
+| `TMemo`                   | `<pp-textarea label="Label" [formField]="form.field" />`                                                                                   | Use `@pdx/pp-input` `PPTextareaComponent`. Signal Forms                                                                                                                                     |
+| `TComboBox`               | `<pp-select label="Label" [options]="options" [formControl]="control" />`                                                                  | Use `@pdx/pp-select` `PPSelectComponent`. Options via `PPMenuItem[]`. For multi-select: `PPMultiselectComponent`. Uses `[formControl]` — see Signal Forms Pattern in angular-conventions.md |
+| `TCheckBox`               | `<pp-checkbox id="field" label="Field Label" [formField]="form.field" />`                                                                  | Use `@pdx/pp-checkbox` `PPCheckboxComponent`. Supports `indeterminate`, `error`, and `disabled` states                                                                                      |
+| `TRadioButton`            | `<pp-radio-group [formField]="form.field" [options]="options" />` or individual `<pp-radio-button id="opt1" label="Option A" value="a" />` | Use `@pdx/pp-radio` `PPRadioGroupComponent` / `PPRadioButtonComponent`. Options via `PPRadioOption[]`. Implements `ControlValueAccessor`                                                    |
+| `TECMonthEdit`            | `<mat-form-field>` + `<input matInput [matDatepicker] [formField]="form.date">`                                                            | Temporal API                                                                                                                                                                                |
+| `TPEPDateNavigator`       | Custom date nav component                                                                                                                  | Temporal.PlainDate                                                                                                                                                                          |
+| Form data model           | `signal<FormData>({...})` + `form(model, schema)`                                                                                          |                                                                                                                                                                                             |
+| Filter on change          | `computed()` derived from `form.field().value()`                                                                                           |                                                                                                                                                                                             |
+| Validation                | `validate(schema.field, ctx => ...)` + `requiredError({...})` for required fields, `{ kind, message }` for custom errors                   | No named validators (`required()`, `minLength()`, etc.) in `@angular/forms/signals` — use the `validate()` callback. See angular-conventions.md § Signal Forms Pattern.                     |
 
 ## Data Display
 
@@ -39,17 +42,18 @@
 
 ## Actions
 
-| Delphi VCL                 | Angular                                                                                                                                | Notes                                                                                                                                                                |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `TButton` / `TBitBtn`      | `<pp-button label="Save" variant="filled" />` (or `variant="outlined"` / `"text"` / `"tonal"`)                                         | Use `@pdx/pp-button` `PPButtonComponent`. `label` is required (`input.required<string>()`). Variants: `filled`, `outlined`, `text`, `tonal`. Sizes: `sm`, `md`, `lg` |
-| `TButtonPanel` (OK/Cancel) | `<pp-form-actions>` with `<pp-button>` children in a form body; `<mat-dialog-actions>` with `<pp-button>` inside a `PPDialogComponent` | Use `@pdx/pp-form` `PPFormActionsComponent` as the default. `alignment` defaults to `'right'`.                                                                       |
-| `TListPanel` (CRUD)        | Toolbar with `<pp-icon-button>`                                                                                                        | Use `@pdx/pp-button` `PPIconButtonComponent` for Insert/Edit/Delete                                                                                                  |
-| Floating action            | `<pp-fab>`                                                                                                                             | Use `@pdx/pp-button` `PPFloatingActionButtonComponent`                                                                                                               |
-| `TPopupMenu`               | `<pp-menu [items]="items" (itemSelect)="onSelect($event)" />`                                                                          | Use `@pdx/pp-menu` `PPMenuComponent`. For multi-select: `PPMenuMultiselectComponent`. Items via `PPMenuItem[]`                                                       |
+| Delphi VCL                                                   | Angular                                                                                                                                | Notes                                                                                                                                                                                               |
+| ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TButton` / `TBitBtn`                                        | `<pp-button label="Save" variant="filled" />` (or `variant="outlined"` / `"text"` / `"tonal"`)                                         | Use `@pdx/pp-button` `PPButtonComponent`. `label` is required (`input.required<string>()`). Variants: `filled`, `outlined`, `text`, `tonal`. Sizes: `sm`, `md`, `lg`                                |
+| `TButtonPanel` (OK/Cancel)                                   | `<pp-form-actions>` with `<pp-button>` children in a form body; `<mat-dialog-actions>` with `<pp-button>` inside a `PPDialogComponent` | Use `@pdx/pp-form` `PPFormActionsComponent` as the default. `alignment` defaults to `'right'`.                                                                                                      |
+| `TListPanel` (CRUD)                                          | Toolbar with `<pp-icon-button>`                                                                                                        | Use `@pdx/pp-button` `PPIconButtonComponent` for Insert/Edit/Delete                                                                                                                                 |
+| `TListPanel` (right-side action panel — opens other dialogs) | `<aside>` next to the form body with `<pp-button>` children, **not** inside `<pp-form-actions>`                                        | These buttons (Assignments, Planning Parameters, Credit, etc.) are sibling navigation, not form actions. Reserve `<pp-form-actions>` for OK/Cancel/Save/Next. See pdx-recipes.md right-rail recipe. |
+| Floating action                                              | `<pp-fab>`                                                                                                                             | Use `@pdx/pp-button` `PPFloatingActionButtonComponent`                                                                                                                                              |
+| `TPopupMenu`                                                 | `<pp-menu [items]="items" (itemSelect)="onSelect($event)" />`                                                                          | Use `@pdx/pp-menu` `PPMenuComponent`. For multi-select: `PPMenuMultiselectComponent`. Items via `PPMenuItem[]`                                                                                      |
 
 ### Icons
 
-Use `@pdx/pp-icons` for all icons. Apply via CSS class on a `<span>` element: `<span class="pp-icon pp-icon-<name>"></span>`. Import SCSS: `@use '@pdx/pp-icons/icons'`.
+Use `@pdx/pp-icons` for all icons via `<span class="pp-icon pp-icon-<name>"></span>`. Icon names use **underscores** (`pp-icon-delete_trash`, `pp-icon-add`, `pp-icon-angle_right`) — never guess hyphenated names. The SCSS is global-only (`@use '@pdx/pp-icons/icons'` in the app's root `styles.scss`); never import it from a component SCSS file. See [pdx-recipes.md](pdx-recipes.md) for the correction table and scope rule.
 
 ### Shell-level components
 
@@ -136,5 +140,21 @@ Apply `pp-sidenav` / `pp-top-navigation` only in a separate, explicit task that 
 | Bemerkung             | Remark / Note       |
 | Bezeichnung           | Description / Label |
 | Gueltig / Gueltigkeit | Valid / Validity    |
+| Knoten                | Node                |
+| Ebene                 | Level               |
+| Rang                  | Rank                |
+| Spital                | Hospital / Company  |
+| Betrieb               | Division            |
+| Bereich               | Area                |
+| Gruppe                | Group               |
+| Kategorie             | Category            |
+| Zwischenknoten        | Intermediate Node   |
+| Hauptknoten           | Root Node           |
+| Reihenfolge           | Sort Order          |
+| Zusatztitel           | Additional Title    |
+| Personalart           | Personnel Type      |
+| Kategorienamen        | Category Names      |
+| Sperren               | Lock                |
+| Entsperren            | Unlock              |
 
-If a German term is not in this glossary, **flag it and ask the user** for the correct English translation before proceeding.
+If a German term is not in this glossary, **flag it and ask the user** for the correct English translation before proceeding. Some domain terms (e.g. `Spital`) carry context the user may want to keep in the English name — confirm rather than translate blindly.

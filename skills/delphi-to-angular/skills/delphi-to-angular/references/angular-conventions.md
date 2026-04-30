@@ -1,34 +1,33 @@
 # Angular Conventions (POLYPOINT saas)
 
+PDX component recipes (buttons, inputs, form scaffold, layout pitfalls, icons, etc.) live in [pdx-recipes.md](pdx-recipes.md). This file covers Angular patterns: component structure, signal store, signal forms, i18n, testing, accessibility, and the post-generate quality passes.
+
 ## Tech Stack
 
-| Concern          | Choice                                                                                                      |
-| ---------------- | ----------------------------------------------------------------------------------------------------------- |
-| Framework        | Angular 21 (zoneless, standalone, signals)                                                                  |
-| Monorepo         | Nx                                                                                                          |
-| Package manager  | Bun                                                                                                         |
-| State management | NgRx Signal Store                                                                                           |
-| UI components    | Angular Material (M3) + PDX component libraries                                                             |
-| PDX buttons      | `@pdx/pp-button` — `PPButtonComponent`, `PPIconButtonComponent`, `PPFloatingActionButtonComponent`          |
-| PDX input        | `@pdx/pp-input` — `PPInputComponent`, `PPTextareaComponent`                                                 |
-| PDX checkbox     | `@pdx/pp-checkbox` — `PPCheckboxComponent` (with `CheckboxState` enum, `PPCheckboxChangeEvent`)             |
-| PDX radio        | `@pdx/pp-radio` — `PPRadioGroupComponent`, `PPRadioButtonComponent` (with `PPRadioOption` interface)        |
-| PDX select       | `@pdx/pp-select` — `PPSelectComponent`, `PPMultiselectComponent` (with `PPMenuItem`, `PPSelectChangeEvent`) |
-| PDX menu         | `@pdx/pp-menu` — `PPMenuComponent`, `PPMenuMultiselectComponent` (with `PPMenuItem`, `PPMenuSelectEvent`)   |
-| PDX tab          | `@pdx/pp-tab` — `PPTabGroupComponent`, `PPTabComponent`, `PPTabContentDirective`                            |
-| PDX icons        | `@pdx/pp-icons` — Icon webfont, use `<span class="pp-icon pp-icon-<name>">`                                 |
-| PDX theme        | `@pdx/pp-theme` — Design tokens, Akkurat font, `--pp-*` CSS variables                                       |
-| Forms            | Angular Signal Forms (`@angular/forms/signals`); see Signal Forms Pattern for the `pp-select` exception     |
-| Styling          | TailwindCSS v4 + SCSS (BEM)                                                                                 |
-| Date/time        | Temporal API (native, no polyfill)                                                                          |
-| Unit testing     | Vitest                                                                                                      |
-| Build            | esbuild + Vite                                                                                              |
-| TypeScript       | Strict mode                                                                                                 |
+| Concern          | Choice                                                                                                  |
+| ---------------- | ------------------------------------------------------------------------------------------------------- |
+| Framework        | Angular 21 (zoneless, standalone, signals)                                                              |
+| Monorepo         | Nx                                                                                                      |
+| Package manager  | Bun                                                                                                     |
+| State management | NgRx Signal Store                                                                                       |
+| UI components    | PDX component libraries (`@pdx/*`) + Angular Material (M3) for components without a PDX equivalent      |
+| Forms            | Angular Signal Forms (`@angular/forms/signals`); `pp-select` / `pp-multiselect` use `[formControl]`     |
+| i18n             | `@ngx-translate/core` — `TranslatePipe`, `TranslateService`, locale JSON files in the app's i18n folder |
+| Styling          | TailwindCSS v4 + SCSS (BEM)                                                                             |
+| Date/time        | `Temporal` (exposed as a **global** — do not import)                                                    |
+| Unit testing     | Vitest                                                                                                  |
+| E2E testing      | Playwright                                                                                              |
+| A11y testing     | `vitest-axe` + a shared `formatA11yViolations` helper from the workspace's testing lib                  |
+| API mocking      | MSW where the workspace has it; otherwise builders in the workspace's shared test-data lib              |
+| Build            | esbuild + Vite                                                                                          |
+| TypeScript       | Strict mode                                                                                             |
 
 ## File Structure
 
+Layout below assumes the typical Nx-style `apps/<app>/src/app/` root. Verify the actual feature root by inspecting an existing feature in the workspace.
+
 ```
-apps/pep/src/app/<feature-name>/
+<app-feature-root>/<feature-name>/
 ├── <feature-name>.component.ts
 ├── <feature-name>.component.html
 ├── <feature-name>.component.scss
@@ -48,6 +47,7 @@ apps/pep/src/app/<feature-name>/
 
 ```typescript
 import {
+  ChangeDetectionStrategy,
   Component,
   computed,
   effect,
@@ -56,21 +56,24 @@ import {
   output,
   signal,
 } from "@angular/core";
+import { TranslatePipe } from "@ngx-translate/core";
 import { SomeStore } from "./some.store";
 
 @Component({
   selector: "app-feature-name",
   imports: [
-    /* Material modules, child components */
+    TranslatePipe,
+    /* PDX components, Material modules, child components */
   ],
   providers: [SomeStore],
   templateUrl: "./feature-name.component.html",
   styleUrl: "./feature-name.component.scss",
   host: { "data-testid": "feature-name" },
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FeatureNameComponent {
-  readonly someId = input.required<string>();
-  readonly selected = output<Item>();
+  public readonly someId = input.required<string>();
+  public readonly selected = output<Item>();
 
   private readonly store = inject(SomeStore);
 
@@ -87,22 +90,62 @@ export class FeatureNameComponent {
 
   constructor() {
     effect(() => {
-      const id = this.someId();
-      if (id != null) {
-        this.store.loadItems({ id });
-      }
+      this.store.loadItems({ id: this.someId() });
     });
   }
 }
 ```
 
+Required pieces:
+
+- **`changeDetection: ChangeDetectionStrategy.OnPush`** on every component.
+- **`host: { 'data-testid': 'feature-name' }`** on every component (gives e2e tests a stable, locale-resilient root selector).
+- **Explicit visibility modifiers** on every class member, including `input()` / `output()`. Use `public` for template- or consumer-facing members, `protected` for template-only members, `private` for internals. Never omit the modifier — a missing modifier is ambiguous.
+
+## Smart vs dumb components
+
+The parent owns the store. Children take a slice via `input()` and emit changes via `output()`.
+
+- **Don't** `inject(FeatureStore)` from a child component that also receives the same data via `input()`. That creates two sources of truth — the input updates lag the store and effects are needed to paper over the gap.
+- **Do** lift store access to the parent and pass typed slices down. If a child needs to mutate, expose an `output()` and let the parent call the typed store method.
+- **Exception:** purely-routed child pages that own their own state may inject the store directly — they're parents in their own right, not children of another component.
+
+```typescript
+// Parent — owns the store
+export class FeatureParentComponent {
+  protected readonly store = inject(FeatureStore);
+}
+```
+
+```html
+<app-personal-info
+  [data]="store.personalInfo()"
+  (save)="store.savePersonalInfo($event)"
+/>
+```
+
+```typescript
+// Child — takes input, emits output, no store
+export class PersonalInfoComponent {
+  public readonly data = input.required<PersonalInfo>();
+  public readonly save = output<PersonalInfo>();
+}
+```
+
+The post-generate convention check flags any child component that both `inject()`s a store and exposes an `input()` for the same data shape.
+
 ## Signal Forms Pattern
 
-**Bind PDX inputs with `[formField]` — except `pp-select` / `pp-multiselect`, which use `[formControl]` (legacy reactive forms).** All PDX components implement `ControlValueAccessor`, and `[formField]` bridges to CVA automatically. Mix both APIs in one component when needed: `form(...)` for most fields, a separate `FormControl` for any select.
+**Bind PDX inputs with `[formField]` — except `pp-select` / `pp-multiselect`, which use `[formControl]` (legacy reactive forms).** All PDX components implement `ControlValueAccessor`, and `[formField]` bridges to CVA automatically. Mix both APIs in one component when needed.
 
 ```typescript
 import { Component, signal } from "@angular/core";
-import { form, FormField, required, minLength } from "@angular/forms/signals";
+import {
+  form,
+  FormField,
+  requiredError,
+  validate,
+} from "@angular/forms/signals";
 import { PPInputComponent } from "@pdx/pp-input";
 
 interface FilterData {
@@ -115,13 +158,20 @@ interface FilterData {
   selector: "app-employee-filter",
   imports: [FormField, PPInputComponent],
   template: `
-    <pp-input label="Last Name" [formField]="filterForm.lastName" />
-
-    <pp-input label="First Name" [formField]="filterForm.firstName" />
+    <pp-input
+      [label]="'employee.last_name' | translate"
+      [formField]="filterForm.lastName"
+      [fullWidth]="true"
+    />
+    <pp-input
+      [label]="'employee.first_name' | translate"
+      [formField]="filterForm.firstName"
+      [fullWidth]="true"
+    />
 
     @if (filterForm.lastName().touched() && filterForm.lastName().invalid()) {
       <ul>
-        @for (error of filterForm.lastName().errors(); track error) {
+        @for (error of filterForm.lastName().errors(); track error.kind) {
           <li>{{ error.message }}</li>
         }
       </ul>
@@ -136,11 +186,28 @@ export class EmployeeFilterComponent {
   });
 
   protected readonly filterForm = form(this.filterModel, (schema) => {
-    required(schema.lastName, { message: "Last name is required" });
-    minLength(schema.lastName, 2, { message: "At least 2 characters" });
+    validate(schema.lastName, (ctx) => {
+      const value = ctx.value();
+      if (!value?.trim()) {
+        return requiredError({ message: "Last name is required" });
+      }
+      if (value.length < 2) {
+        return { kind: "minLength", message: "At least 2 characters" };
+      }
+      return null;
+    });
   });
 }
 ```
+
+Key points:
+
+- Validators are written with **`validate(schema.field, ctx => ...)`** — there is no named `required()`, `minLength()`, `maxLength()`, etc. in `@angular/forms/signals`.
+- Use **`requiredError({ message })`** for required-field errors.
+- Custom errors take the shape **`{ kind: string, message: string }`** (not `{ name }`).
+- Track errors in templates by **`error.kind`**, not `error.name`.
+- Form-level validity is **`form().invalid()`** — call the form signal first, then `.invalid()`.
+- The `maxlength` HTML attribute is **forbidden** on `[formField]` inputs. Use a `validate()` rule instead.
 
 ## Store Pattern
 
@@ -186,6 +253,57 @@ export const SomeStore = signalStore(
 );
 ```
 
+### Optimistic UI mutations
+
+When the user can't tolerate waiting for a server round-trip (tree edits, list reordering, drag-and-drop), follow the snapshot → optimistic update → API call → reconcile / rollback pattern:
+
+```typescript
+addNode: rxMethod<AddNodePayload>(
+  pipe(
+    switchMap((payload) => {
+      const snapshot = store.hierarchy();
+      const tempNodeId = nextTempId();
+      const optimistic = addChildToTree(snapshot, payload, tempNodeId);
+      patchState(store, { hierarchy: optimistic });
+
+      return lockService.withLock(payload.parentId, () =>
+        service.addNode(payload).pipe(
+          tap((serverNode) => {
+            patchState(store, { hierarchy: replaceTempId(store.hierarchy(), tempNodeId, serverNode) });
+          }),
+          catchError((error: Error) => {
+            patchState(store, { hierarchy: snapshot, error: error.message });
+            return EMPTY;
+          }),
+        ),
+      );
+    }),
+  ),
+),
+```
+
+This pattern needs immutable tree helpers — `addChildToTree`, `removeNodeFromTree`, `swapSiblings`, `updateNodeInTree`. Generate them as a sibling file (`<feature>.tree.utils.ts`) when the data shape is hierarchical.
+
+### Implicit locking
+
+When concurrent users edit the same record, locking should be transparent — no "Lock" / "Unlock" UI, just visual indicators of someone else's lock:
+
+```typescript
+// LockService API:
+withLock<T>(resourceId: number, action: () => Observable<T>): Observable<T>
+
+// Every store mutation that touches a lockable resource wraps the API call in withLock:
+lockService.withLock(parentId, () => service.addNode(payload))
+```
+
+- Lock acquired before the API call, released on completion or error via `finalize()`.
+- Other users see lock icons via SSE in real-time.
+- Heartbeat (10 s) + TTL (30 s) auto-releases on disconnect/crash.
+- `navigator.sendBeacon` on `beforeunload` for best-effort release.
+- `visibilitychange` pauses heartbeat when the tab is hidden.
+
+The Delphi codebase typically has explicit Lock/Unlock buttons with a `TPolyRecordLock` field — convert these to implicit locking, **not** to a UI element.
+
 ## Service Pattern
 
 ```typescript
@@ -212,54 +330,210 @@ const MOCK_ITEMS: Item[] = [
 ];
 ```
 
-## Test Pattern (Vitest)
+For mock data large enough to demo the feature, prefer the **MSW + test-data builder** pattern below over inlining `MOCK_ITEMS` arrays.
+
+## i18n & ngx-translate
+
+All user-visible text must go through `TranslatePipe` (template) or `TranslateService.instant()` (TypeScript). **Never hardcode strings** — not German, not English.
+
+```typescript
+import { TranslatePipe, TranslateService } from "@ngx-translate/core";
+
+@Component({
+  imports: [TranslatePipe /* ... */],
+})
+export class FeatureComponent {
+  private readonly translate = inject(TranslateService);
+
+  protected showSavedToast(): void {
+    this.snackBar.open(
+      this.translate.instant("common.saved"),
+      this.translate.instant("common.dismiss"),
+    );
+  }
+}
+```
+
+```html
+<h2>{{ 'hierarchy.title' | translate }}</h2>
+<pp-button [label]="'save' | translate" variant="filled" />
+<pp-form-section [title]="'profile.title' | translate" />
+```
+
+### Locale files (generic discovery)
+
+Translation files live in an `i18n` folder somewhere under the app — commonly `apps/<app>/public/assets/i18n/` (Nx) or `src/assets/i18n/` (CLI). The set of locales (`de-CH`, `en`, `fr`, …) is **project-specific** — discover the folder once and add the new translation key to **every** locale file present:
+
+```bash
+# Search for an i18n directory containing locale JSON files
+find . -type d -name i18n
+```
+
+For each generated feature, add the new keys to **all** locale files found. Use English as the placeholder for any locale you can't translate confidently and flag those as TODO in the conversion summary.
+
+### Key naming
+
+**Match the project's existing key-naming convention** — flat vs nested, snake vs kebab, feature-prefixed or not. Inspect a few existing keys before deciding. If the project already has a shared `common` / `shared` namespace for OK / Cancel / Save, reuse it instead of inventing a new one. If no convention is clear, ask the user. Avoid German keys — if the Delphi term has no agreed English translation, raise it during the analyze phase.
+
+### Locale resolution
+
+Use the workspace's existing translation service to resolve the active language. Don't hardcode `'de-CH'` as a fallback — that's a smell in a multi-language app.
+
+### Testing translated components
+
+Tests bootstrapped with `TranslateModule.forRoot()` resolve a key to itself (no JSON loaded). Assert against the **translation key**, not the translated text:
+
+```typescript
+expect(screen.getByText("hierarchy.no_qualifications")).toBeVisible();
+// NOT: expect(screen.getByText('Keine Qualifikationen')).toBeVisible();
+```
+
+## API Mocking — MSW or shared test-data builders
+
+Search the workspace for an existing MSW setup (look for `mock-api`, `msw/handlers`, `setupWorker`, etc.):
+
+- **If MSW handlers exist anywhere in the workspace**, mirror their pattern: handler files per feature, in-memory `Map`/store seeded once with `getOrInit(id)` for fallback, `http.get/put/post/delete` from `msw`, `HttpResponse.json(...)` / `new HttpResponse(null, { status: 204 })`. Register handlers in the existing index file.
+- **If MSW is not present**, generate fixtures via builders in the workspace's shared test-data lib (search `libs/shared/`, `libs/testing/`, or similar for an existing builder pattern). One builder per feature, exported and shared by the service mock and every spec — no inline duplication.
+
+In either case: **mock data should be realistic and large enough to demo the full feature.** Trees with 10+ nodes across all levels, lists with 4+ items, real-looking domain names. A 2-item mock makes regressions invisible.
+
+## Mat-tree with `childrenAccessor`
+
+When `pp-tree` doesn't expose the feature you need (custom node templates, lazy children loading, deep nesting), drop to Material's `mat-tree` with the `childrenAccessor` API:
+
+```html
+<mat-tree #tree [dataSource]="treeData()" [childrenAccessor]="childrenAccessor">
+  <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding>
+    <button
+      matTreeNodeToggle
+      type="button"
+      [style.visibility]="node.children.length > 0 ? 'visible' : 'hidden'"
+      [attr.aria-label]="(tree.isExpanded(node) ? 'collapse' : 'expand') | translate"
+    >
+      @if (tree.isExpanded(node)) {
+      <i class="pp-icon pp-icon-angle_down"></i>
+      } @else {
+      <i class="pp-icon pp-icon-angle_right"></i>
+      }
+    </button>
+    <app-tree-node [node]="node" />
+  </mat-tree-node>
+</mat-tree>
+```
+
+```typescript
+protected readonly childrenAccessor = (node: TreeNode): TreeNode[] => node.children;
+```
+
+Key rules:
+
+- Use `childrenAccessor` (flat rendering), **not** the nested-tree variant with `matTreeNodeOutlet`. Nested rendering is harder to keep in sync with signal data.
+- Use `matTreeNodePadding` for indentation.
+- Use the `matTreeNodeToggle` directive on the expand/collapse button.
+- Auto-expand on load via `effect()` calling `tree.expand(node)` for each node in the desired set.
+- Do **not** wrap `matTreeNodeOutlet` in `@if` — children silently won't render.
+
+## Accessibility
+
+`angular-eslint/template` rules break the build when violated. Common ones:
+
+- `click-events-have-key-events` — every `(click)` needs `(keydown.enter)` or `(keydown.space)`.
+- `interactive-supports-focus` — clickable elements need `tabindex="0"`.
+- `role-has-required-aria` — `role="treeitem"` needs `aria-selected`, `role="checkbox"` needs `aria-checked`, etc.
+
+Pattern for clickable divs masquerading as widgets:
+
+```html
+<div
+  tabindex="0"
+  role="treeitem"
+  [attr.aria-selected]="isSelected()"
+  (click)="onSelect()"
+  (keydown.enter)="onEdit()"
+  (keydown.space)="onSelect()"
+></div>
+```
+
+For real interactive elements, prefer `<button type="button">` over `<div role="button">` — buttons handle keyboard, focus, and a11y for free.
+
+## Testing patterns
+
+### Vitest spec template (for a translated component)
 
 ```typescript
 import { TestBed } from "@angular/core/testing";
-import { of, throwError } from "rxjs";
-import { SomeService } from "./some.service";
-import { SomeStore } from "./some.store";
+import { provideTranslateService, TranslateModule } from "@ngx-translate/core";
+import { axe } from "vitest-axe";
+// Resolve the import path from the workspace's shared testing lib (search libs/shared/testing/ or equivalent).
+import { formatA11yViolations } from "<workspace-shared-testing>";
+import { SomeComponent } from "./some.component";
 
-describe("SomeStore", () => {
-  let store: InstanceType<typeof SomeStore>;
-  let mockService: { getItems: ReturnType<typeof vi.fn> };
-
+describe("SomeComponent", () => {
   beforeEach(() => {
-    mockService = { getItems: vi.fn() };
-
     TestBed.configureTestingModule({
-      providers: [SomeStore, { provide: SomeService, useValue: mockService }],
+      imports: [SomeComponent, TranslateModule.forRoot()],
+      providers: [provideTranslateService()],
     });
-
-    store = TestBed.inject(SomeStore);
   });
 
-  it("should have correct initial state", () => {
-    expect(store.isLoading()).toBe(false);
-    expect(store.error()).toBeNull();
-    expect(store.items()).toBeNull();
+  it("renders", async () => {
+    const fixture = TestBed.createComponent(SomeComponent);
+    await fixture.whenStable();
+    expect(fixture.nativeElement).toBeTruthy();
   });
 
-  it("should load items successfully", () => {
-    const mockItems = [{ id: "1", name: "Test" }];
-    mockService.getItems.mockReturnValue(of(mockItems));
+  it("has no a11y violations", async () => {
+    const fixture = TestBed.createComponent(SomeComponent);
+    await fixture.whenStable();
+    const results = await axe(fixture.nativeElement);
+    expect(results.violations, formatA11yViolations(results)).toHaveLength(0);
+  }, 15000);
+});
+```
 
-    store.loadItems({ id: "1" });
+The `formatA11yViolations` import comes from the workspace's shared testing lib — search `libs/shared/testing/` (or similar) and use whatever helper it exports.
 
-    expect(store.items()).toEqual(mockItems);
-    expect(store.isLoading()).toBe(false);
+### Test patterns — what to do and what to avoid
+
+| Wrong                                  | Correct                                                |
+| -------------------------------------- | ------------------------------------------------------ |
+| `fixture.detectChanges()`              | `await fixture.whenStable()`                           |
+| `it('...', (done) => { ... done() })`  | `it('...', async () => { await firstValueFrom(...) })` |
+| `expect(x!.prop)` (non-null assertion) | `expect(x?.prop)` or `if (x) { expect(x.prop) }`       |
+
+Prefer reading the component's own form model (`fixture.componentInstance['formModel']()`) over scraping the DOM with `querySelectorAll('input').map(i => i.value)`.
+
+### Resilient e2e selectors
+
+Generated tests must survive locale changes. The e2e runner often serves English by default, so any selector that matches a German label or translated string fails non-deterministically.
+
+- **Always emit `data-testid`** on every interactive surface that tests will touch:
+  - tabs (`tab-personal`, `tab-address`)
+  - action buttons (`btn-cancel`, `btn-ok`, `btn-photo`)
+  - every form input (`address-last-name`, `address-postal-code`)
+  - the host element (already enforced via `host: { 'data-testid': 'feature-name' }`)
+- **Selector rules:**
+  - `getByTestId(...)` first.
+  - `getByText` / `getByRole({ name })` only for content that is **not** i18n-driven (data values from mock seeds — employee name, postal code, abbreviation).
+  - **Never** query by translation key, translated label, or aria-label that comes from a translation.
+  - PDX inputs bind `[value]` as a property, not an attribute → use `getByTestId('field').locator('input')` + `toHaveValue(...)`.
+  - For `pp-list` items: pp-list automatically renders `id="pp-list-item-<id>"` and `[attr.data-id]`. Use those for stable per-row targeting (no need for custom testids per row).
+  - Readonly check: PDX `pp-input` may not propagate `readonly` to the native input as an HTML attribute; assert via `nativeInput.readOnly` (DOM property), not the `[readonly]` attribute selector.
+
+```typescript
+test("saves personal info", async ({ page }) => {
+  // If the project uses cookie-based mock auth in e2e, set the expected cookie here.
+  // Inspect an existing e2e spec for the cookie name / value / domain.
+  // await page.context().addCookies([{ name: '<auth-cookie>', value: '<mock-token>', domain: 'localhost', path: '/' }]);
+  await page.goto("/#/employee/1");
+  await expect(page.getByTestId("employee-detail")).toBeVisible({
+    timeout: 10000,
   });
 
-  it("should handle errors", () => {
-    mockService.getItems.mockReturnValue(
-      throwError(() => new Error("Server error")),
-    );
+  await page.getByTestId("address-last-name").locator("input").fill("Müller");
+  await page.getByTestId("btn-save").click();
 
-    store.loadItems({ id: "1" });
-
-    expect(store.error()).toBe("Server error");
-    expect(store.isLoading()).toBe(false);
-  });
+  await expect(page.getByTestId("btn-save")).toBeDisabled();
 });
 ```
 
@@ -289,16 +563,11 @@ describe("SomeStore", () => {
 }
 ```
 
-- BEM blocks named after domain concept (`.filter`, `.employee-list`), not the component
-- `:host { display: block; }` on every component
-
-### Tailwind for utilities
-
-```html
-<div class="filter__input truncate pl-4 text-left">{{ node.name }}</div>
-```
-
-Mix BEM (structure) and Tailwind (decoration) in the same element.
+- BEM blocks named after the domain concept (`.filter`, `.employee-list`), not the component.
+- `:host { display: block; }` on every component.
+- Mix BEM (structure) and Tailwind (decoration) on the same element: `<div class="filter__input truncate pl-4 text-left">{{ node.name }}</div>`.
+- **SCSS budget:** under 8 KB (error) / under 4 KB (warning) per component. Never `@use` a large package's stylesheet from a component — use Tailwind utilities for decoration.
+- **Never** `@use '@pdx/pp-icons/icons'` in a component — that import is global-only (see [pdx-recipes.md](pdx-recipes.md)).
 
 ### pp-theme colors
 
@@ -315,20 +584,7 @@ background: var(--mat-sys-surface-container);
 color: #717479;
 ```
 
-| Variable prefix             | Usage                       |
-| --------------------------- | --------------------------- |
-| `--pp-primary-*` (50-990)   | Brand teal, primary actions |
-| `--pp-secondary-*`          | Secondary UI elements       |
-| `--pp-tertiary-*`           | Muted teal-gray accents     |
-| `--pp-neutral-*`            | Text, borders, backgrounds  |
-| `--pp-neutral-variant-*`    | Subtle variant grays        |
-| `--pp-error-*`              | Error states                |
-| `--pp-success-*`            | Success states              |
-| `--pp-info-*`               | Informational               |
-| `--pp-warning-*`            | Warning states              |
-| `--pp-black` / `--pp-white` | Pure black and white        |
-
-Scale: 50 (darkest) to 990 (lightest). 500 is the base value.
+Scale: 50 (darkest) to 990 (lightest). 500 is the base.
 
 ## Route Pattern
 
@@ -339,367 +595,70 @@ Scale: 50 (darkest) to 990 (lightest). 500 is the base value.
 },
 ```
 
-## PDX Component Usage
+Add the route to the existing routes file (typically `app.routes.ts` — verify in the target workspace). Lazy-load every feature.
 
-### pp-form (canonical form scaffold)
+## Dialogs
 
-Every converted `TForm` wraps its body in `<pp-form>`. Use the structural primitives (`PPFormSectionComponent`, `PPFormStackComponent`, `PPFormBlockComponent`, `PPFormTextblockComponent`, `PPFormActionsComponent`) instead of ad-hoc divs + Tailwind for form layout.
-
-```typescript
-import {
-  PPFormComponent,
-  PPFormSectionComponent,
-  PPFormStackComponent,
-  PPFormBlockComponent,
-  PPFormTextblockComponent,
-  PPFormActionsComponent,
-} from "@pdx/pp-form";
-import { PPButtonComponent } from "@pdx/pp-button";
-import { PPInputComponent } from "@pdx/pp-input";
-
-@Component({
-  imports: [
-    PPFormComponent,
-    PPFormSectionComponent,
-    PPFormStackComponent,
-    PPFormBlockComponent,
-    PPFormTextblockComponent,
-    PPFormActionsComponent,
-    PPButtonComponent,
-    PPInputComponent,
-  ],
-  template: `
-    <div class="w-full max-w-201">
-      <pp-form>
-        <pp-form-stack>
-          <pp-form-section
-            title="Personal Information"
-            description="Basic contact details."
-          >
-            <pp-form-block>
-              <pp-form-stack layout="horizontal">
-                <pp-input label="First name" [formField]="editForm.firstName" />
-                <pp-input label="Last name" [formField]="editForm.lastName" />
-              </pp-form-stack>
-            </pp-form-block>
-          </pp-form-section>
-
-          <pp-form-actions alignment="right">
-            <pp-button label="Cancel" variant="outlined" (click)="cancel()" />
-            <pp-button
-              label="Save"
-              variant="filled"
-              buttonType="submit"
-              (click)="save()"
-            />
-          </pp-form-actions>
-        </pp-form-stack>
-      </pp-form>
-    </div>
-  `,
-})
-```
-
-Structural rules:
-
-- `<pp-form>` — outermost wrapper. One per component. **Renders an internal `<form>` element** (`<form class="pp-form">…</form>`), so:
-  - `<pp-button buttonType="submit">` inside it triggers native form submission.
-  - Do **not** nest `<pp-form>` inside another `<form>` or another `<pp-form>` — nested forms are invalid HTML.
-- **Wrap `<pp-form>` in a width-constrained parent.** `pp-form` inherits its parent's width and has no intrinsic max-width; without a constraint it stretches to fill the viewport. Use a wrapper such as `<div class="w-full max-w-201">` (matches the PDX story templates).
-- `<pp-form-stack>` — direct child of `<pp-form>`. Wrap section(s) **and** `<pp-form-actions>` together so spacing between them is governed by the stack. Use `layout="horizontal"` for side-by-side arrangement inside a block; omit or use `"vertical"` for default stacking.
-- `<pp-form-section>` — one per semantic region of the form. Pass `title` (required); `description` is optional. Set `singleColumn` only when fields shouldn't flow into multiple columns.
-- `<pp-form-block>` — groups related fields inside a section. Use one block per logical cluster.
-- `<pp-form-textblock>` — inline title/description pair when a block needs its own heading (e.g. sub-groupings inside a section).
-- `<pp-form-actions>` — footer row for form-level buttons. Defaults to right-aligned. Sits inside the same `<pp-form-stack>` as the section(s), not as a sibling of `<pp-form-section>` directly under `<pp-form>`.
-
-Dialog bodies (opened via `MatDialog` → `PPDialogComponent`) still use the same primitives inside the dialog's content projection; `<pp-form-actions>` becomes `<mat-dialog-actions>` in that context (dialog shell owns the footer).
-
-### pp-button
+Open via `MatDialog` with explicit dimensions:
 
 ```typescript
-import { PPButtonComponent, PPIconButtonComponent } from '@pdx/pp-button'
-
-@Component({
-  imports: [PPButtonComponent, PPIconButtonComponent],
-  template: `
-    <pp-button label="Save" variant="filled" (click)="save()" />
-    <pp-button label="Cancel" variant="outlined" (click)="cancel()" />
-    <pp-button label="Reset" variant="text" size="sm" (click)="reset()" />
-    <pp-icon-button icon="pp-icon pp-icon-delete" ariaLabel="Delete" (click)="delete()" />
-  `,
-})
+this.dialog.open(SomeDialogComponent, {
+  width: "36rem", // standard dialog
+  // width: '48rem',       // wide dialog (grids/tables)
+  // height: '80vh',       // tall dialog (scrollable content)
+  data: { id, mode: "edit" },
+});
 ```
 
-`pp-button` and `pp-icon-button` take the button text / icon via inputs — they do **not** project content. Use `label="..."` (and `icon="pp-icon pp-icon-*"` on `pp-icon-button`). Variants: `filled`, `outlined`, `text`, `tonal`. Sizes: `sm`, `md`, `lg`.
-
-### pp-input
-
-```typescript
-import { PPInputComponent, PPTextareaComponent } from '@pdx/pp-input'
-
-@Component({
-  imports: [PPInputComponent, PPTextareaComponent],
-  template: `
-    <pp-input label="Email" inputType="email" [formField]="form.email" />
-    <pp-input label="Search" leadingIcon="pp-icon-search" size="sm" />
-    <pp-textarea label="Notes" [formField]="form.notes" [autoGrowth]="true" />
-  `,
-})
-```
-
-`PPInputComponent` replaces `mat-form-field` + `matInput` for text fields. Supported input types: `text`, `email`, `password`, `tel`, `url`. For unsupported types (e.g. `month`, `date`), fall back to `mat-form-field` + `matInput`. `PPTextareaComponent` replaces `mat-form-field` + `<textarea matInput>`. Both implement `ControlValueAccessor` for Signal Forms. Inputs: `label` (required), `inputType`, `size` (`sm`/`lg`), `leadingIcon`, `trailingIcon`, `helperText`, `tooltip`, `required`, `optional`, `invalid`, `disabled`, `readonly`, `fullWidth`, `value`. Output: `inputChange` / `textareaChange`.
-
-### pp-checkbox
-
-```typescript
-import { PPCheckboxComponent } from '@pdx/pp-checkbox'
-
-@Component({
-  imports: [PPCheckboxComponent],
-  template: `
-    <pp-checkbox id="active" label="Active" [formField]="form.active" />
-  `,
-})
-```
-
-`pp-checkbox` takes its text via the `label` input — it does **not** project content. `<pp-checkbox>Active</pp-checkbox>` renders an empty label. Always pass `label="..."` (and an `id` for the htmlFor linkage). Supports `indeterminate`, `error`, and `disabled` states via `CheckboxState` enum (`Selected`, `Unselected`, `Indeterminate`). Implements `ControlValueAccessor` for Signal Forms integration. Inputs: `id`, `label`, `state`, `error`, `disabled`, `ariaLabel`. Outputs: `checkboxChange`, `indeterminateChange` (both emit `PPCheckboxChangeEvent`).
-
-### pp-radio
-
-```typescript
-import {
-  PPRadioGroupComponent,
-  PPRadioButtonComponent,
-  PPRadioOption,
-} from "@pdx/pp-radio";
-
-@Component({
-  imports: [PPRadioGroupComponent],
-  template: `
-    <pp-radio-group [formField]="form.status" [options]="statusOptions" />
-  `,
-})
-export class SomeComponent {
-  protected readonly statusOptions: PPRadioOption[] = [
-    { id: "active", label: "Active", value: "active" },
-    { id: "inactive", label: "Inactive", value: "inactive" },
-  ];
-}
-```
-
-`PPRadioGroupComponent` accepts an `options: PPRadioOption[]` input and renders radio buttons automatically. Use individual `PPRadioButtonComponent` elements when custom layout is needed. Both implement `ControlValueAccessor`. Value type: `string | number`. `PPRadioOption` interface: `{ id: string, label: string, value: string | number, disabled?: boolean, ariaLabel?: string | null }`.
-
-### pp-select
-
-```typescript
-import { PPSelectComponent, PPMultiselectComponent } from "@pdx/pp-select";
-import { PPMenuItem } from "@pdx/pp-menu";
-
-@Component({
-  imports: [PPSelectComponent, PPMultiselectComponent],
-  template: `
-    <pp-select
-      label="Department"
-      [options]="departmentOptions"
-      [formControl]="departmentControl"
-    />
-    <pp-multiselect
-      label="Skills"
-      [options]="skillOptions"
-      [formControl]="skillsControl"
-    />
-  `,
-})
-export class SomeComponent {
-  protected readonly departmentControl = new FormControl<string>("");
-  protected readonly skillsControl = new FormControl<string[]>([]);
-
-  protected readonly departmentOptions: PPMenuItem[] = [
-    { id: "1", label: "Engineering" },
-    { id: "2", label: "Design" },
-  ];
-  protected readonly skillOptions: PPMenuItem[] = [
-    { id: "ts", label: "TypeScript" },
-    { id: "angular", label: "Angular" },
-  ];
-}
-```
-
-`PPSelectComponent` is a single-selection dropdown. `PPMultiselectComponent` is multi-selection (displays comma-separated labels with ellipsis). Both implement `ControlValueAccessor`. Options via `PPMenuItem[]` (`{ id: string | number, label: string, supportingText?: string }`). Sizes: `'large'` (default, 2.5rem), `'small'` (2rem). Inputs: `label` (required), `options`, `value`/`values`, `isDisabled`, `isError`, `size`, `icon`, `supportingText`, `ariaLabel`. Output: `selectionChange` emits `PPSelectChangeEvent` / `PPMultiselectChangeEvent`.
-
-### pp-menu
-
-```typescript
-import { PPMenuComponent, PPMenuMultiselectComponent, PPMenuItem } from '@pdx/pp-menu'
-
-@Component({
-  imports: [PPMenuComponent],
-  template: `
-    <pp-menu
-      [items]="menuItems"
-      [selectedId]="selectedId"
-      [isOpen]="isOpen"
-      [ariaLabel]="'Choose action'"
-      (itemSelect)="onSelect($event.id)"
-    />
-  `,
-})
-```
-
-`PPMenuComponent` is a standalone single-select dropdown listbox. `PPMenuMultiselectComponent` is a multi-select variant with leading checkboxes. Both are presentational — open/close state is managed by the parent. Used internally by `@pdx/pp-select` and as the context menu for `@pdx/pp-tree`. Can also be composed directly for custom dropdown UIs. Items via `PPMenuItem[]`. Sizes: `'large'`, `'small'`. Supports fixed positioning via `triggerElement` ModelSignal for use cases where the menu is placed outside the trigger's DOM subtree.
-
-### pp-tree
-
-```typescript
-import { PPTreeComponent, TreeData } from '@pdx/pp-tree'
-import { PPMenuComponent, PPMenuItem } from '@pdx/pp-menu'
-
-@Component({
-  imports: [PPTreeComponent, PPMenuComponent],
-  template: `
-    <pp-tree
-      [data]="treeData"
-      [(selectedId)]="selectedNodeId"
-      [showAddButton]="true"
-      [moreMenu]="contextMenu"
-      (selectNode)="onSelect($event)"
-      (addNode)="onAdd($event)"
-    />
-    <pp-menu #contextMenu [items]="menuItems()" (itemSelect)="onMenuAction($event)" />
-  `,
-})
-```
-
-`PPTreeComponent` displays hierarchical data with selection, expansion, drag-and-drop reordering, sorting, and context menus. Data via `TreeData[]` (`{ id: string, label: string, icon?: string, children?: TreeData[], isDisabled?: boolean, isExpanded?: boolean, hideAddButton?: boolean }`). The `moreMenu` input accepts a `PPMenuComponent` reference — the tree node toggles `isOpen` and sets `triggerElement` automatically; items and event handling are owned by the consumer. Peer deps: `@angular/core`, `@pdx/pp-menu`, `@pdx/pp-theme`.
-
-### pp-tab
-
-```typescript
-import {
-  PPTabGroupComponent,
-  PPTabComponent,
-  PPTabContentDirective,
-} from "@pdx/pp-tab";
-
-@Component({
-  imports: [PPTabGroupComponent, PPTabComponent, PPTabContentDirective],
-  template: `
-    <pp-tab-group [(selectedIndex)]="activeTab">
-      <pp-tab label="Overview" icon="pp-icon-dashboard">
-        <ng-template ppTabContent>
-          <p>Overview content</p>
-        </ng-template>
-      </pp-tab>
-      <pp-tab label="Settings" icon="pp-icon-settings_gears">
-        <ng-template ppTabContent>
-          <p>Settings content</p>
-        </ng-template>
-      </pp-tab>
-    </pp-tab-group>
-  `,
-})
-export class SomeComponent {
-  protected activeTab = 0;
-}
-```
-
-`PPTabGroupComponent` manages tab selection, sliding indicator animation, keyboard navigation (Arrow keys, Home/End), and optional content panels. `PPTabComponent` inputs: `label`, `icon` (optional, e.g. `'pp-icon-dashboard'`), `disabled`. Use `ppTabContent` directive on `<ng-template>` for tab-managed content panels, or omit it and use `[(selectedIndex)]` two-way binding for consumer-managed content via `@switch`. `fullWidth` input stretches tabs equally.
-
-### pp-list
-
-```typescript
-import {
-  PPListComponent,
-  PPListItem,
-  PPListSelectEvent,
-  ListVariant,
-} from "@pdx/pp-list";
-
-@Component({
-  imports: [PPListComponent],
-  template: `
-    <pp-list
-      [items]="options"
-      [variant]="ListVariant.Multi"
-      [(selectedIds)]="selectedIds"
-      ariaLabel="Choose departments"
-      (itemSelect)="onToggle($event)"
-    />
-  `,
-})
-export class DepartmentListComponent {
-  protected readonly ListVariant = ListVariant;
-  protected readonly options: PPListItem[] = [
-    { id: 1, label: "Surgery", supportingText: "Floor 3" },
-    { id: 2, label: "Radiology" },
-  ];
-  protected readonly selectedIds = signal<(string | number)[]>([]);
-
-  protected onToggle(event: PPListSelectEvent): void {
-    // event.selected reflects the toggled state in 'multi'
-  }
-}
-```
-
-`PPListComponent` replaces `<mat-selection-list>` / `<mat-list>`. Variants: `Default` (read-only), `Single` (replace-on-click), `SingleRadio` (radio indicator), `Multi` (checkbox, toggle). `selectedIds` is a `ModelSignal` — use `[(selectedIds)]` for two-way binding or `.set()` directly from code. Items carry optional `overline`, `supportingText`, `leading`/`trailing` icons, `disabled`, `checkLabel` (multi only). Keyboard: Arrow keys wrap + skip disabled; Enter/Space activate.
-
-### pp-expansion-panel
-
-```typescript
-import {
-  PPExpansionPanelComponent,
-  PPExpansionPanelItemComponent,
-} from "@pdx/pp-expansion-panel";
-
-@Component({
-  imports: [PPExpansionPanelComponent, PPExpansionPanelItemComponent],
-  template: `
-    <pp-expansion-panel [accordion]="true">
-      <pp-expansion-panel-item
-        title="Contract"
-        description="Validity and role"
-        leadingIcon="pp-icon-document"
-        [expanded]="true"
-      >
-        <!-- pp-form-block, pp-input, etc. -->
-      </pp-expansion-panel-item>
-      <pp-expansion-panel-item title="Permissions">
-        <!-- content -->
-      </pp-expansion-panel-item>
-    </pp-expansion-panel>
-  `,
-})
-```
-
-Use `PPExpansionPanelComponent` + `PPExpansionPanelItemComponent` when converting a Delphi `TGroupBox` that collapses or when a section of the form should be optional/progressive. Set `[accordion]="true"` on the container to enforce single-open behaviour. Variants: `desktop` (title + description horizontal) and `mobile` (stacked). Outputs: `opened`, `closed` per item. Prefer this over `<mat-expansion-panel>`.
-
-### pp-icons
-
-```html
-<span class="pp-icon pp-icon-calendar"></span>
-<span class="pp-icon pp-icon-delete"></span>
-<span class="pp-icon pp-icon-edit"></span>
-```
-
-Import SCSS: `@use '@pdx/pp-icons/icons'`.
+Wrap the dialog body in `<pp-dialog>` (see [pdx-recipes.md](pdx-recipes.md)). Use `<mat-dialog-actions>` (not `<pp-form-actions>`) inside `<pp-dialog>` — the dialog shell owns its footer.
 
 ## General Rules
 
-- Single quotes, no semicolons (enforced by Prettier)
-- `null` over `undefined` for intentional "no value"
-- Temporal API for all date/time: `Temporal.PlainDate.from(...)`, `Temporal.Now.plainDateISO()`
-- `data-testid` attributes on host elements
-- `protected` for template-bound members, `private` for internal
-- Prefer `@pdx/pp-button` over `MatButtonModule` for all buttons
-- Prefer `@pdx/pp-input` over `MatFormFieldModule` + `MatInputModule` for text inputs and textareas (fall back to Material for unsupported input types like `month`)
-- Prefer `@pdx/pp-checkbox` over `MatCheckboxModule` for all checkboxes
-- Prefer `@pdx/pp-radio` over `MatRadioModule` for all radio buttons
-- Prefer `@pdx/pp-select` over `MatSelectModule` for all selects/dropdowns
-- Prefer `@pdx/pp-menu` over `MatMenuModule` for all menus
-- Prefer `@pdx/pp-tab` over `MatTabsModule` for all tabs
-- Prefer `@pdx/pp-list` over `MatListModule` / `MatSelectionList` for all in-page lists
-- Prefer `@pdx/pp-expansion-panel` over `MatExpansionModule` for all collapsible sections
-- Wrap every converted `TForm` body in `<pp-form>` with `pp-form-section` / `pp-form-block` / `pp-form-stack` / `pp-form-actions` (see [pp-form scaffold](#pp-form-canonical-form-scaffold))
-- Do **not** generate `<pp-sidenav>` or `<pp-top-navigation>` from a form conversion — they belong to the app-shell, not a feature component
-- Use `@pdx/pp-icons` for all icons (not Material Icons)
-- **PDX controls take label text via a `label` input, not content projection.** `pp-button`, `pp-icon-button`, `pp-checkbox`, `pp-radio-button`, `pp-input`, `pp-textarea`, `pp-select`, `pp-multiselect`, `pp-chip`, `pp-top-navigation` items, `pp-list` items, `pp-sidenav-item` and related all expose a `label` input (on the component or inside an item model). `<pp-checkbox>Text</pp-checkbox>` / `<pp-button>Save</pp-button>` render empty — always use `label="..."` and a self-closing or paired tag with no projected text. Exceptions: `pp-chip` accepts `ng-content` as a fallback when `label` is empty; `pp-dialog` and `pp-tab-group` use content projection for bodies (not labels).
+- **Semicolons everywhere** (Prettier enforces them — there is no semicolon-free style in this project).
+- Single quotes.
+- `null` over `undefined` for intentional "no value". Reserve `undefined` for language/framework semantics (`Array.find()` no match, uninitialized variables).
+- **`Temporal` is exposed as a global. Do not import it.** Use `Temporal.PlainDate.from(...)`, `Temporal.Now.plainDateISO()` directly.
+- **Visibility modifiers on every class member**, including `input()` / `output()`. `public` for outward-facing, `protected` for template-only, `private` for internals.
+- **No `@use '@pdx/pp-icons/icons'` in component SCSS** — it's a global-only import.
+- **Named constants over magic literals.** Don't write `?? '1'` or `?? 'personal'`; declare a `const DEFAULT_EMPLOYEE_ID = 1` or look up the canonical default in the workspace.
+- **Comments explain WHY, never WHAT.** Strip `// Sync store -> local signals` style comments. Keep cross-references to the Delphi source and workaround justifications.
+- **No dead code.** Don't `inject(Service)` if the service isn't used yet — emit a `// TODO: inject Service when wiring …` comment instead.
+
+## Reuse pass — search before generating
+
+Before writing a new helper, search the workspace's shared libraries for an existing one. Common candidates:
+
+- **Test-data builders** — search `libs/shared/test-data/` (or similar) for `build<Feature>(...)` builders. Reuse before adding a new one.
+- **Translation / locale resolution** — search `libs/shared/translations/` (or similar) for the canonical service. Use `service.language()` rather than hardcoding `'de-CH'`.
+- **A11y test helpers** — search `libs/shared/testing/` (or similar) for `formatA11yViolations` or equivalent.
+- **Snack-bar duration constants** — search for `SNACK_DURATION_*` constants. Reuse if found; flag for promotion to a shared lib if duplicated across features.
+- **Date / Temporal helpers** — `parseIsoPlainDate`, `formatPlainDate`, etc. Extract to `libs/shared/` once a second feature needs the same one.
+
+The aim: zero duplication of cross-feature utilities. The reuse pass runs **before** generating new code, not after.
+
+## Post-generate quality passes
+
+After generating components, services, and stores, run two passes before declaring done.
+
+### Signal-store / reactivity lint pass
+
+Scan generated code for these anti-patterns and rewrite them:
+
+- **Mirror signal + sync effect.** `signal('') + effect(() => mirror.set(store.x()))` is a delayed copy. Either bind the template directly to `store.x()`, or use `computed()`.
+- **Two-way constant maps.** `TAB_INDEX_BY_ID: Record<…> = {…}` paired with `TAB_ID_BY_INDEX: …[] = […]` — keep one source of truth, derive the other.
+- **`computed()` with zero signal deps.** `computed(() => GENDER_OPTIONS.map(...))` where the body reads only constants is just a cached field — and the cache hides locale changes from `translate.instant()` calls. Demote to a `readonly` field, or read a real signal inside.
+- **State writes inside `effect()` without `untracked()`.** When an effect calls `signal.set(...)` or `FormControl.setValue(...)`, wrap in `untracked(() => ...)` to keep the writer out of dependency tracking.
+- **Granular dirty flags when only the union is consumed.** If no one outside the store reads `isPersonalInfoDirty` / `isAddressDirty` separately, default to a single `isDirty` derived from a current-vs-loaded comparison.
+- **Store exposing raw objects when only a label is consumed.** Move formatting into the store as a single computed (`internalIdsLabel: string`) instead of computing it in every consumer.
+
+### Convention check pass
+
+- **Every class member has a visibility modifier**, including `input()` / `output()`.
+- **Named constants over magic literals** (`?? '1'`, `?? 'personal'`, `'' as null sentinel`).
+- **No dead injections** — every `inject()` is actually used. If something is parked for later wiring, comment as `// TODO: …` instead.
+- **Comments explain WHY**, not WHAT. Strip narrating comments; keep Delphi-cross-reference comments and workaround justifications.
+- **Smart-vs-dumb component check** — no child component has both `inject(FeatureStore)` and an `input()` for the same data shape. If it does, lift store access to the parent and pass a slice via `input()`.
+
+## Validation
+
+After generation, read `package.json` for the project's validation script (e.g. `bun run check:strict`, `bun run check`, `npm run validate`). Run it once and address any failures before reporting done. The script typically runs format, lint, test, build, and e2e in one shot.

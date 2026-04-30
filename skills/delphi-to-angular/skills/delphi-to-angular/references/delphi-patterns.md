@@ -6,12 +6,12 @@ Main modules: `delphi/pep/` (PEP) and `delphi/rap/` (RAP)
 
 ## File Naming
 
-| Prefix | Type | File pair | Example |
-|---|---|---|---|
-| `f` | Form | `.dfm` + `.pas` | `fEditMitarbeiter.dfm/.pas` |
-| `fr` | Frame | `.dfm` + `.pas` | `frMitarbGuthaben.dfm/.pas` |
-| `dm` | Data Module | `.dfm` + `.pas` | `dmPepDB.dfm/.pas` |
-| `intf` | Interface | `.pas` only | `intfPersonaldaten.pas` |
+| Prefix | Type        | File pair       | Example                     |
+| ------ | ----------- | --------------- | --------------------------- |
+| `f`    | Form        | `.dfm` + `.pas` | `fEditMitarbeiter.dfm/.pas` |
+| `fr`   | Frame       | `.dfm` + `.pas` | `frMitarbGuthaben.dfm/.pas` |
+| `dm`   | Data Module | `.dfm` + `.pas` | `dmPepDB.dfm/.pas`          |
+| `intf` | Interface   | `.pas` only     | `intfPersonaldaten.pas`     |
 
 - `.dfm` = visual design (component tree, properties, layout, embedded SQL)
 - `.pas` = code-behind (event handlers, business logic, state)
@@ -47,6 +47,7 @@ object fEditMitarb: TfEditMitarb         <- form name : class name
 ```
 
 Key things to extract from DFM:
+
 - **Component tree**: nesting = parent/child layout
 - **TDataSource.DataSet**: links a data-aware control to a query
 - **TOraQuery.SQL.Strings**: the SQL that fetches data
@@ -84,20 +85,61 @@ type
 ```
 
 Key things to extract from PAS:
+
 - **Published controls**: match 1:1 with DFM component names
 - **F-prefixed fields**: become `signal()` in Angular
 - **i-prefixed fields**: interface dependencies, inform the service/store design
-- **Sync* methods**: become `computed()` — they derive UI state from data
-- **Apply*Filter methods**: become `computed()` signal filtering
+- **Sync\* methods**: become `computed()` — they derive UI state from data
+- **Apply\*Filter methods**: become `computed()` signal filtering
 - **Event handlers**: map to template events or reactive patterns
 
 ## Common Base Classes
 
-| Class | Purpose |
-|---|---|
-| `TDBParForm` | Base for all modal dialog forms |
-| `TPolyFrame` | Base for frames, includes High-DPI scaling |
-| `TDataModule` | Base for data access modules |
+| Class         | Purpose                                    |
+| ------------- | ------------------------------------------ |
+| `TDBParForm`  | Base for all modal dialog forms            |
+| `TPolyFrame`  | Base for frames, includes High-DPI scaling |
+| `TDataModule` | Base for data access modules               |
+
+### Always read the base class
+
+Many forms inherit from a domain-specific base (e.g. `TfKnotenGen`, `TfMitarbBase`). The base class typically defines:
+
+- Common fields (title, name, export codes).
+- Common tabs (Description, Export/Import, Additional Info).
+- Common validation (duplicate-title check, concurrency).
+
+When the parent form derives from anything other than `TForm` / `TDBParForm` / `TFrame` / `TDataModule`, **read the base PAS file before designing the conversion**. Otherwise the conversion ends up missing fields, tabs, or validation that the base contributed.
+
+In Angular, base-class behaviour usually maps to **a single component with conditional sections per rank/role**, not separate components per subclass.
+
+## DFM `inherited` keyword
+
+When a form's DFM starts with:
+
+```
+inherited fMitarbDetail: TfMitarbDetail
+  ClientWidth = 920
+  ...
+```
+
+the `inherited` keyword means: **properties from the parent DFM are merged with this DFM, not shadowed.** A field declared in the parent DFM is still present in the child unless the child explicitly redefines it. When converting, treat the merged set as the source of truth — read both the parent DFM and the inheriting DFM, and combine the field list.
+
+## ShowModal tracing — discover sub-dialogs early
+
+The `ShowModal` call (or `Application.CreateForm` followed by `Show`) is how a Delphi form opens another form modally. Each `ShowModal` target becomes a separate Angular dialog component in the conversion plan.
+
+During analyze, grep the PAS for every `ShowModal` and `CreateForm` and trace what each one opens. Example:
+
+```
+fDefFlexHierarchie.pas
+├── ShowDefinition → fSpital / fGrp / fKatDef / fZwiEbene  (rank-dependent)
+├── peHinzufuegenClick → fNode  (new node input)
+├── KategorienDefinieren → fDefKatTyp  (category names)
+└── PEPNavBtnPrintClick → fHierarchListe  (print)
+```
+
+List every traced sub-dialog under a **Connected dialogs** section in the conversion plan, with a one-line role per dialog. Each becomes its own Angular dialog component opened via `MatDialog.open(..., { width: '36rem', /* … */ })`.
 
 ## Data Flow Pattern
 
@@ -111,6 +153,7 @@ TEdit.OnChange
 ```
 
 In Angular this becomes:
+
 ```
 form.field().value() changes (signal)
   -> computed() filters source array
@@ -120,13 +163,13 @@ form.field().value() changes (signal)
 
 ## Lifecycle
 
-| Delphi Event | When | Angular Equivalent |
-|---|---|---|
-| `FormCreate` | Component instantiated | `constructor()` or field initializers |
-| `FormShow` | Component visible, data loads | `effect()` reacting to inputs |
-| User interaction | Events fire | Template events + signal updates |
-| `FormCloseQuery` | Before close, validate | `canDeactivate` guard |
-| `FormDestroy` | Cleanup | `DestroyRef` / `takeUntilDestroyed` |
+| Delphi Event     | When                          | Angular Equivalent                    |
+| ---------------- | ----------------------------- | ------------------------------------- |
+| `FormCreate`     | Component instantiated        | `constructor()` or field initializers |
+| `FormShow`       | Component visible, data loads | `effect()` reacting to inputs         |
+| User interaction | Events fire                   | Template events + signal updates      |
+| `FormCloseQuery` | Before close, validate        | `canDeactivate` guard                 |
+| `FormDestroy`    | Cleanup                       | `DestroyRef` / `takeUntilDestroyed`   |
 
 ## File Encoding
 

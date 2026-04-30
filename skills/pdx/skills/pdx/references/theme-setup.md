@@ -216,18 +216,18 @@ PDX icons use a webfont with CSS classes:
 
 ```html
 <span class="pp-icon pp-icon-add"></span>
-<span class="pp-icon pp-icon-edit"></span>
-<span class="pp-icon pp-icon-delete"></span>
+<span class="pp-icon pp-icon-edit_filled"></span>
+<span class="pp-icon pp-icon-delete_trash"></span>
 <span class="pp-icon pp-icon-search"></span>
 <span class="pp-icon pp-icon-close"></span>
 ```
 
-Pattern: `pp-icon pp-icon-<icon-name>`
+Pattern: `pp-icon pp-icon-<icon-name>`. Icon names use **underscores**, not hyphens — see the correction table in [component-inventory.md](component-inventory.md).
 
 For icon-only buttons, always provide an `aria-label`:
 
 ```html
-<pp-icon-button icon="pp-icon pp-icon-edit" ariaLabel="Edit item" />
+<pp-icon-button icon="pp-icon pp-icon-edit_filled" ariaLabel="Edit item" />
 ```
 
 ---

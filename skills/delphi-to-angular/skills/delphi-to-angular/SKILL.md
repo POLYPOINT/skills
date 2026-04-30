@@ -5,7 +5,7 @@ argument-hint: "[analyze|generate] [path/to/file.dfm] [screenshot-path]"
 disable-model-invocation: true
 compatibility: Designed for Claude Code. Uses argument-hint and disable-model-invocation Claude Code extensions.
 metadata:
-  version: "1.5.1"
+  version: "1.6.0"
 ---
 
 # Delphi-to-Angular Conversion
@@ -46,6 +46,17 @@ From the PAS `uses` clause, resolve referenced files from the same directory as 
 - Read any frames referenced (`fr*.pas` + `.dfm`)
 - Read any interface files (`intf*.pas`) to understand data contracts
 - Read any data modules (`dm*.pas` + `.dfm`) for SQL queries
+- **Read the base class.** If the form derives from a domain-specific base (`TfKnotenGen`, `TfMitarbBase`, etc. — anything beyond `TForm` / `TDBParForm` / `TFrame` / `TDataModule`), open the base PAS + DFM. Base classes typically contribute fields, tabs, and validation that the child silently inherits. See [references/delphi-patterns.md](references/delphi-patterns.md) for `inherited` DFM merging and base-class reading.
+- **Trace every `ShowModal` and `CreateForm` call** in the PAS. Each one opens a sub-dialog that needs its own Angular dialog component. List the targets up front so the conversion plan accounts for them.
+
+### Step 2.5: Reuse pass
+
+Before designing new helpers, search the workspace for existing utilities:
+
+- `libs/shared/` (or wherever the workspace keeps shared libs) for builders, translation services, a11y helpers, snack-duration constants, date/Temporal helpers, etc.
+- The most-similar existing feature in the app (e.g. an already-converted hierarchy or detail dialog) for tree helpers, lock services, or domain-specific utilities.
+
+Reuse before generating. The point is **zero duplication of cross-feature utilities**.
 
 ### Step 3: Parse DFM structure
 
@@ -85,27 +96,40 @@ Present the conversion plan in this format:
 1. <ComponentName> (<routed|child|dialog>, <purpose>)
    - Mapped from: <Delphi class> (<base class>)
    - Layout: <Delphi layout> -> <Angular layout approach>
-   - Contains: <child components, material components>
+   - Contains: <child components, PDX components>
 
 2. <ChildComponentName> (child, <purpose>)
    ...
+
+### Connected dialogs
+
+For each `ShowModal` / `CreateForm` target traced from the PAS, list the resulting Angular dialog component:
+
+1. <DialogComponentName> — opens from <event/button>, <purpose>
+2. ...
+
+### Reused utilities
+
+List anything found in the reuse-pass that the generated code will import (test-data builders, translation service, lock service, tree helpers, etc.) so the plan doesn't re-invent them.
 
 ### Store
 
 - <StoreName> (signalStore)
   - State: { <property>: <type>, ... }
   - Methods: <method1>, <method2>, ...
+  - Optimistic UI: <yes/no — list mutations that need snapshot/rollback>
+  - Locking: <yes/no — list resources wrapped in withLock>
 
 ### Service
 
 - <ServiceName>
-  - <method>(params) -> mocked, TODO: <HTTP method> <endpoint path>
+  - <method>(params) -> mocked via MSW / test-data builder, TODO: <HTTP method> <endpoint path>
   - ...
 
 ### Form model (if applicable)
 
 - <formName>: signal<{ <field>: <type>, ... }>
-  - Validation: <rules>
+  - Validation: <validate() rules>
   - Drives: <what computed signals depend on it>
 
 ### Route
@@ -115,6 +139,7 @@ Present the conversion plan in this format:
 ### Translation decisions needed
 
 - "<German term>" -> "<proposed English>"?
+- (List any term not in the glossary — wait for user confirmation before generating.)
 ```
 
 **Wait for user approval before proceeding to generate.**
@@ -127,34 +152,52 @@ Present the conversion plan in this format:
 
 ### Target location
 
-All files go into: `apps/pep/src/app/<feature-name>/`
+All files go under the workspace's main app feature directory — typically `apps/<app>/src/app/<feature-name>/`. Verify the exact path by inspecting an existing feature in the same workspace.
 
-For Angular conventions, code patterns, and styling rules, see [references/angular-conventions.md](references/angular-conventions.md).
+For Angular conventions, code patterns, and styling rules, see [references/angular-conventions.md](references/angular-conventions.md). For PDX component recipes (buttons, inputs, form scaffold, layout pitfalls, icons), see [references/pdx-recipes.md](references/pdx-recipes.md).
 
 ### Step 1: Create feature directory
 
 ```bash
-mkdir -p apps/pep/src/app/<feature-name>
+mkdir -p <app-feature-root>/<feature-name>
 ```
 
 And subdirectories for any child components.
 
 ### Step 2: Generate files in dependency order
 
-Generate each file following the patterns in [references/angular-conventions.md](references/angular-conventions.md):
+Generate each file following the patterns in [references/angular-conventions.md](references/angular-conventions.md). Apply the **smart-vs-dumb component rule**: the parent owns the store; children take a slice via `input()` and emit via `output()`. A child must not both `inject(FeatureStore)` and receive an `input()` for the same data.
 
-1. **TypeScript interfaces** — for the data model (from Delphi field types and interface contracts)
-2. **Service** (`<feature>.service.ts`) — `@Injectable({ providedIn: 'root' })`, mock data with TODO endpoint comments
-3. **Service spec** (`<feature>.service.spec.ts`) — Vitest, mock HttpClient
-4. **Store** (`<feature>.store.ts`) — `signalStore(withState(...), withMethods(...))`, `rxMethod` for async
-5. **Store spec** (`<feature>.store.spec.ts`) — Vitest, mock service
-6. **Child components** (if any) — bottom-up, each with .ts, .html, .scss, .spec.ts
-7. **Parent component** (`<feature>.component.ts`, `.html`, `.scss`) — imports children, wires store
-8. **Parent spec** (`<feature>.component.spec.ts`) — Vitest
+1. **TypeScript interfaces** — for the data model (from Delphi field types and interface contracts).
+2. **Service** (`<feature>.service.ts`) — `@Injectable({ providedIn: 'root' })`, with TODO endpoint comments.
+3. **Service spec** (`<feature>.service.spec.ts`) — Vitest, mock HttpClient.
+4. **Store** (`<feature>.store.ts`) — `signalStore(withState(...), withMethods(...))`, `rxMethod` for async. Apply optimistic UI / locking patterns where the Delphi source needs them (see angular-conventions.md).
+5. **Store spec** (`<feature>.store.spec.ts`) — Vitest, mock service.
+6. **Tree / immutable helpers** if applicable (`<feature>.tree.utils.ts`) — pure functions for `addChildToTree`, `removeNodeFromTree`, etc.
+7. **Child components** (dumb) — bottom-up, each with .ts, .html, .scss, .spec.ts. `data-testid` on every interactive surface.
+8. **Parent component** (`<feature>.component.ts`, `.html`, `.scss`) — imports children, wires store, owns `data-testid` host attribute.
+9. **Parent spec** (`<feature>.component.spec.ts`) — Vitest. Include the axe a11y assertion (see angular-conventions.md).
+
+### Step 2.5: Generate translation keys
+
+For every user-visible string the new components introduce, add a translation key under a feature namespace (`hierarchy.title`, `hierarchy.add_child`).
+
+1. Discover the workspace's i18n folder once. The folder is commonly under `apps/<app>/public/assets/i18n/` in Nx layouts and `src/assets/i18n/` in classic Angular CLI layouts — search for an `i18n` directory containing locale JSON files (`find . -type d -name i18n`, or grep for an existing translation key).
+2. List every locale file present (`de-CH.json`, `en.json`, `fr.json`, etc.).
+3. Add the new key to **every** locale file. Use English as the placeholder for any locale you can't translate confidently and note those as TODO in the final summary.
+
+Do not hardcode any user-visible string in templates or TypeScript — `TranslatePipe` for templates, `TranslateService.instant(...)` for snackbars / dynamic labels.
+
+### Step 2.6: Generate mock API / fixtures
+
+Search the workspace for an existing MSW setup (`mock-api`, `msw/handlers`, `setupWorker`).
+
+- **If MSW exists**, mirror the existing handler pattern: handler file per feature, in-memory store seeded with realistic fixtures, registered in the existing index file. Realistic data: 10+ tree nodes, 4+ list items, real-looking domain names.
+- **If MSW is not present**, generate a builder in the workspace's shared test-data lib (`libs/shared/test-data/` or similar — discover the location), exported and shared by the service mock and every spec. No inline duplication.
 
 ### Step 3: Add route
 
-Add a lazy-loaded route to `apps/pep/src/app/app.routes.ts`:
+Add a lazy-loaded route to the workspace's main routes file (typically `app.routes.ts` — find it by inspecting an existing routed feature):
 
 ```typescript
 {
@@ -163,18 +206,43 @@ Add a lazy-loaded route to `apps/pep/src/app/app.routes.ts`:
 },
 ```
 
-### Step 4: Validate
+### Step 4: Generate e2e + a11y tests
 
-```bash
-bun run lint
-bun run test
-```
+For every routed feature, generate a paired e2e spec at the workspace's e2e app (typically `apps/<app>-e2e/src/<feature>.spec.ts` — find it by inspecting an existing e2e spec). At minimum:
 
-Fix any lint errors or test failures before presenting the result.
+- route loads and the host testid is visible
+- every top-level testid renders
+- no console errors on initial load
+- if the project uses cookie-based mock auth in e2e, set the cookie the e2e harness expects — inspect existing e2e specs in the workspace for the cookie name, value, and domain.
 
-### Step 5: Present result
+Selectors must be locale-resilient: `getByTestId(...)` first; never query by translation key, translated label, or aria-label that comes from a translation.
 
-List all generated files with a one-line description of each. Highlight any decisions made during generation and any TODO items that need backend work.
+For every component spec, include the axe a11y assertion (see the spec template in angular-conventions.md). Project policy is zero a11y violations.
+
+### Step 5: Post-generate quality passes
+
+Run two lint passes over the generated code before reporting done. Both are documented in [references/angular-conventions.md](references/angular-conventions.md).
+
+- **Signal-store / reactivity lint pass.** Catch mirror-signal+effect copies, dep-less `computed()`, missing `untracked()` around state writes inside `effect()`, granular dirty flags no one reads, and stores exposing raw objects when only a label is consumed.
+- **Convention check pass.** Visibility modifiers on every member (including `input()` / `output()`), named constants over magic literals, no dead injections, comments explain WHY not WHAT, smart-vs-dumb component check (no child both `inject()`s a store and exposes an `input()` for the same data).
+
+### Step 6: Validate
+
+Read `package.json` for the project's validation script and run it. Common names:
+
+- `bun run check:strict`
+- `bun run check`
+- `npm run validate`
+
+Fix any failures (format, lint, test, build, e2e) before presenting the result. If no validation script is defined, fall back to `bun run lint && bun run test`.
+
+### Step 7: Present result
+
+List all generated files with a one-line description of each. Highlight:
+
+- Decisions made during generation (translation choices, optimistic UI scope, locking applied).
+- TODO items that need backend work (HTTP endpoints, real auth).
+- Locales that received the English placeholder rather than a real translation.
 
 ---
 
@@ -182,9 +250,10 @@ List all generated files with a one-line description of each. Highlight any deci
 
 ### Reference Files
 
-- **[references/component-mapping.md](references/component-mapping.md)** — Delphi VCL to Angular component mapping tables and German-English domain glossary. Load during analyze phase.
-- **[references/angular-conventions.md](references/angular-conventions.md)** — saas repo code conventions, complete code patterns for components, stores, services, tests, and styling. Load during generate phase.
-- **[references/delphi-patterns.md](references/delphi-patterns.md)** — P2 Delphi codebase structure, file naming, DFM/PAS anatomy. Load during analyze phase.
+- **[references/component-mapping.md](references/component-mapping.md)** — Delphi VCL → Angular component mapping tables and German-English domain glossary. Load during analyze phase.
+- **[references/delphi-patterns.md](references/delphi-patterns.md)** — P2 Delphi codebase structure, file naming, DFM/PAS anatomy, `inherited` keyword, base-class reading, ShowModal tracing. Load during analyze phase.
+- **[references/angular-conventions.md](references/angular-conventions.md)** — Angular patterns (component, store, signal forms, i18n, testing, a11y, smart-vs-dumb components, optimistic UI, locking, mat-tree, post-generate lint passes). Load during generate phase.
+- **[references/pdx-recipes.md](references/pdx-recipes.md)** — PDX component recipes, icon naming, layout pitfalls, width-control rule, two-column layout, right-rail aside. Load during generate phase.
 
 ### Example Files
 

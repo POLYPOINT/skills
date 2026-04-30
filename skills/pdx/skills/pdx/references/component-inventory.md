@@ -82,11 +82,38 @@ SVG icon set packaged as a webfont. No Angular dependencies.
 
 ```html
 <span class="pp-icon pp-icon-add"></span>
-<span class="pp-icon pp-icon-edit"></span>
-<span class="pp-icon pp-icon-delete"></span>
+<span class="pp-icon pp-icon-edit_filled"></span>
+<span class="pp-icon pp-icon-delete_trash"></span>
 ```
 
 CSS class pattern: `pp-icon pp-icon-<icon-name>`
+
+### Naming convention
+
+Icon names use **underscores**, not hyphens. Always look up the actual name in the generated `icons.css` (or `icons.json`) before using one — guessed hyphenated names (e.g. `pp-icon-delete`, `pp-icon-chevron-right`) silently render an empty box.
+
+| Common guess (wrong)    | Actual name            |
+| ----------------------- | ---------------------- |
+| `pp-icon-delete`        | `pp-icon-delete_trash` |
+| `pp-icon-edit`          | `pp-icon-edit_filled`  |
+| `pp-icon-plus`          | `pp-icon-add`          |
+| `pp-icon-chevron-right` | `pp-icon-angle_right`  |
+| `pp-icon-chevron-down`  | `pp-icon-angle_down`   |
+| `pp-icon-chevron-up`    | `pp-icon-angle_up`     |
+| `pp-icon-chevron-left`  | `pp-icon-angle_left`   |
+
+`pp-icon-search` and `pp-icon-refresh` happen to match common guesses, but assume nothing — verify each name.
+
+### SCSS scope
+
+Import the icon stylesheet **once globally** (typically in the app's root `styles.scss`):
+
+```scss
+// styles.scss — global only
+@use "@pdx/pp-icons/icons";
+```
+
+Never import it from a per-component SCSS file. The compiled CSS contains every icon class plus `@font-face` declarations — well over the typical 8KB component-style budget.
 
 ---
 
@@ -105,7 +132,7 @@ import { PPButtonComponent } from "@pdx/pp-button";
 ```html
 <pp-button label="Save" variant="filled" size="md" />
 <pp-button label="Cancel" variant="outlined" />
-<pp-button label="Delete" variant="text" icon="pp-icon pp-icon-delete" />
+<pp-button label="Delete" variant="text" icon="pp-icon pp-icon-delete_trash" />
 <pp-button
   label="Submit"
   variant="filled"
@@ -151,6 +178,15 @@ Prominent FAB for primary screen actions. Supports fixed positioning.
 ## @pdx/pp-input (v2.0.0)
 
 Text inputs and textareas with validation, helper text, tooltips, and forms integration.
+
+### Width control
+
+Inputs render at their **natural width** by default. Pick the width strategy from the surrounding container:
+
+- **Inside a `pp-form-block` / column layout that should fill its column** — set `[fullWidth]="true"` so the input stretches to the block width.
+- **Standalone, in a toolbar / narrow filter / inline search** — leave `fullWidth` off and pick `size="sm"` (default) or `size="lg"` for the intrinsic width that fits the container.
+
+Don't blanket-apply `fullWidth` everywhere — a full-width input inside a narrow toolbar visually overflows; a natural-width input inside a 30 rem form-block looks broken. Same rule applies to `pp-textarea`.
 
 ### Components
 
@@ -387,6 +423,14 @@ Row for form-level buttons (e.g. Cancel / Save). Use `<pp-button>` children.
   </pp-form>
 </div>
 ```
+
+### Layout pitfalls
+
+The PDX form primitives have a few hard-coded sizing constraints that can clip or wrap content unexpectedly. Detect them up front rather than fighting CSS at the end.
+
+- **`pp-form-block` has `min-width: 14.375rem` (230 px).** Two blocks side by side inside a `pp-form-stack layout="horizontal"` need at least **508 px** of available width to render in one row (`230 + 48 gap + 230`). When the surrounding column is narrower (e.g. tabs share space with a 12 rem photo column on the right), the second block wraps under the first. Inspect the available width along the layout chain (`max-width` + `grid-template-columns` + nested stacks). If the room is `< 508 px`, either stack the blocks vertically (drop `layout="horizontal"`), or apply a scoped `min-width: 0` override so the block can shrink below its built-in floor.
+- **`pp-form-actions` is a hard 2-column grid** (`grid-template-columns: repeat(2, 9.375rem)`). Adding a third button inside `pp-form-actions` silently wraps it onto a new row. For >2 actions, generate a custom flex action bar (e.g. a `<div>` with `display: flex` and a spacer between secondary and primary buttons) instead of forcing everything through `pp-form-actions`. Reserve `pp-form-actions` for the canonical Cancel + Save / OK pair.
+- **No nested `<header>` inside `pp-form`.** `pp-form-section` already renders a `<header>` for its title block. Adding another `<header>` descendant for a section banner produces two banner landmarks on the page — an axe / a11y violation. Use `<div class="…__header">` with appropriate styling for any visual section header inside a PDX form.
 
 ### Peer Dependencies
 

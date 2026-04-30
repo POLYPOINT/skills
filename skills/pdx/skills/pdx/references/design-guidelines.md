@@ -296,6 +296,8 @@ Forms are not a single component but a flexible composition of multiple elements
 - Apply consistent spacing and clear alignment.
 - Use consistent patterns across the application.
 
+> **Layout pitfalls:** before building a multi-column or many-button form, see the **Layout pitfalls** section under `@pdx/pp-form` in [component-inventory.md](component-inventory.md) — `pp-form-block` has a 230 px min-width (so two side-by-side blocks need ≥ 508 px), `pp-form-actions` is a hard 2-column grid (so > 2 buttons need a custom flex action bar), and nested `<header>` elements inside `pp-form` produce duplicate-banner a11y violations.
+
 ---
 
 ## Chips
