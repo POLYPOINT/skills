@@ -112,23 +112,13 @@ List the user-visible strings that need a translation key, without prescribing a
 ### choose-month-range.component.ts
 
 ```typescript
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-  signal,
-} from "@angular/core";
-import {
-  form,
-  FormField,
-  requiredError,
-  validate,
-} from "@angular/forms/signals";
-import { MatDialogModule, MatDialogRef } from "@angular/material/dialog";
-import { MatFormFieldModule } from "@angular/material/form-field";
-import { MatInputModule } from "@angular/material/input";
-import { TranslatePipe } from "@ngx-translate/core";
-import { PPButtonComponent } from "@pdx/pp-button";
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { form, FormField, requiredError, validate } from '@angular/forms/signals';
+import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { TranslatePipe } from '@ngx-translate/core';
+import { PPButtonComponent } from '@pdx/pp-button';
 
 interface MonthRangeData {
   firstMonth: string;
@@ -141,24 +131,15 @@ export interface MonthRangeResult {
 }
 
 @Component({
-  selector: "app-choose-month-range",
-  imports: [
-    FormField,
-    PPButtonComponent,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    TranslatePipe,
-  ],
-  templateUrl: "./choose-month-range.component.html",
-  styleUrl: "./choose-month-range.component.scss",
-  host: { "data-testid": "choose-month-range" },
+  selector: 'app-choose-month-range',
+  imports: [FormField, PPButtonComponent, MatDialogModule, MatFormFieldModule, MatInputModule, TranslatePipe],
+  templateUrl: './choose-month-range.component.html',
+  styleUrl: './choose-month-range.component.scss',
+  host: { 'data-testid': 'choose-month-range' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChooseMonthRangeComponent {
-  private readonly dialogRef = inject(
-    MatDialogRef<ChooseMonthRangeComponent, MonthRangeResult | null>,
-  );
+  private readonly dialogRef = inject(MatDialogRef<ChooseMonthRangeComponent, MonthRangeResult | null>);
 
   private readonly model = signal<MonthRangeData>({
     firstMonth: Temporal.Now.plainDateISO().toPlainYearMonth().toString(),
@@ -170,7 +151,7 @@ export class ChooseMonthRangeComponent {
       const value = ctx.value();
       if (!value?.trim()) {
         return requiredError({
-          message: "choose_month_range.first_month_required",
+          message: 'choose_month_range.first_month_required',
         });
       }
       return null;
@@ -180,7 +161,7 @@ export class ChooseMonthRangeComponent {
       const value = ctx.value();
       if (!value?.trim()) {
         return requiredError({
-          message: "choose_month_range.last_month_required",
+          message: 'choose_month_range.last_month_required',
         });
       }
       return null;
@@ -216,29 +197,17 @@ Notes:
 ### choose-month-range.component.html
 
 ```html
-<h2 mat-dialog-title data-testid="choose-month-range-title">
-  {{ 'choose_month_range.title' | translate }}
-</h2>
+<h2 mat-dialog-title data-testid="choose-month-range-title">{{ 'choose_month_range.title' | translate }}</h2>
 
 <mat-dialog-content class="month-range">
   <mat-form-field class="month-range__field">
     <mat-label>{{ 'choose_month_range.from' | translate }}</mat-label>
-    <input
-      matInput
-      type="month"
-      data-testid="choose-month-range-from"
-      [formField]="monthRangeForm.firstMonth"
-    />
+    <input matInput type="month" data-testid="choose-month-range-from" [formField]="monthRangeForm.firstMonth" />
   </mat-form-field>
 
   <mat-form-field class="month-range__field">
     <mat-label>{{ 'choose_month_range.to' | translate }}</mat-label>
-    <input
-      matInput
-      type="month"
-      data-testid="choose-month-range-to"
-      [formField]="monthRangeForm.lastMonth"
-    />
+    <input matInput type="month" data-testid="choose-month-range-to" [formField]="monthRangeForm.lastMonth" />
   </mat-form-field>
 </mat-dialog-content>
 
@@ -289,15 +258,15 @@ No `@use '@pdx/pp-icons/icons';` — that import is global-only (in the app's ro
 ### choose-month-range.component.spec.ts
 
 ```typescript
-import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { MatDialogRef } from "@angular/material/dialog";
-import { provideTranslateService, TranslateModule } from "@ngx-translate/core";
-import { axe } from "vitest-axe";
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatDialogRef } from '@angular/material/dialog';
+import { provideTranslateService, TranslateModule } from '@ngx-translate/core';
+import { axe } from 'vitest-axe';
 // Path varies per workspace — resolve from the shared testing lib.
-import { formatA11yViolations } from "<workspace-shared-testing>";
-import { ChooseMonthRangeComponent } from "./choose-month-range.component";
+import { formatA11yViolations } from '<workspace-shared-testing>';
+import { ChooseMonthRangeComponent } from './choose-month-range.component';
 
-describe("ChooseMonthRangeComponent", () => {
+describe('ChooseMonthRangeComponent', () => {
   let component: ChooseMonthRangeComponent;
   let fixture: ComponentFixture<ChooseMonthRangeComponent>;
   let mockDialogRef: { close: ReturnType<typeof vi.fn> };
@@ -307,10 +276,7 @@ describe("ChooseMonthRangeComponent", () => {
 
     await TestBed.configureTestingModule({
       imports: [ChooseMonthRangeComponent, TranslateModule.forRoot()],
-      providers: [
-        { provide: MatDialogRef, useValue: mockDialogRef },
-        provideTranslateService(),
-      ],
+      providers: [{ provide: MatDialogRef, useValue: mockDialogRef }, provideTranslateService()],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ChooseMonthRangeComponent);
@@ -318,19 +284,17 @@ describe("ChooseMonthRangeComponent", () => {
     await fixture.whenStable();
   });
 
-  it("renders the dialog title key (TranslateModule.forRoot resolves keys to themselves)", () => {
-    const title = fixture.nativeElement.querySelector(
-      '[data-testid="choose-month-range-title"]',
-    );
-    expect(title?.textContent?.trim()).toBe("choose_month_range.title");
+  it('renders the dialog title key (TranslateModule.forRoot resolves keys to themselves)', () => {
+    const title = fixture.nativeElement.querySelector('[data-testid="choose-month-range-title"]');
+    expect(title?.textContent?.trim()).toBe('choose_month_range.title');
   });
 
-  it("closes with null on cancel", () => {
-    component["cancel"]();
+  it('closes with null on cancel', () => {
+    component['cancel']();
     expect(mockDialogRef.close).toHaveBeenCalledWith(null);
   });
 
-  it("has no a11y violations", async () => {
+  it('has no a11y violations', async () => {
     const results = await axe(fixture.nativeElement);
     expect(results.violations, formatA11yViolations(results)).toHaveLength(0);
   }, 15000);

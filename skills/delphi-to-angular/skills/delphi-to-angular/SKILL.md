@@ -1,11 +1,11 @@
 ---
 name: delphi-to-angular
-description: Use when converting Delphi VCL views (.dfm/.pas) from the P2 codebase to Angular components. Handles forms, frames, data modules, grids, trees, tabs, and dialogs. Produces full Angular features (component + store + service + tests) matching the POLYPOINT saas repo stack.
-argument-hint: "[analyze|generate] [path/to/file.dfm] [screenshot-path]"
+description: Use when converting Delphi VCL views (.dfm/.pas) from the P2 codebase to Angular components. Handles forms, frames, data modules, grids, trees, tabs, and dialogs. Produces Angular components plus any needed store, service, mocks, routes, and tests matching the POLYPOINT saas repo stack.
+argument-hint: '[analyze|generate] [path/to/file.dfm] [screenshot-path]'
 disable-model-invocation: true
 compatibility: Designed for Claude Code. Uses argument-hint and disable-model-invocation Claude Code extensions.
 metadata:
-  version: "1.6.0"
+  version: '1.6.1'
 ---
 
 # Delphi-to-Angular Conversion
@@ -166,13 +166,15 @@ And subdirectories for any child components.
 
 ### Step 2: Generate files in dependency order
 
-Generate each file following the patterns in [references/angular-conventions.md](references/angular-conventions.md). Apply the **smart-vs-dumb component rule**: the parent owns the store; children take a slice via `input()` and emit via `output()`. A child must not both `inject(FeatureStore)` and receive an `input()` for the same data.
+Generate the files required by the approved conversion plan, following the patterns in [references/angular-conventions.md](references/angular-conventions.md). Component files, component specs, SCSS placeholders, and translation keys are mandatory for generated UI. Store, service, mocks, route, and e2e files are generated only when the plan calls for async data, routed navigation, backend interaction, or routed feature coverage.
+
+Apply the **smart-vs-dumb component rule**: the parent owns the store when a store exists; children take a slice via `input()` and emit via `output()`. A child must not both `inject(FeatureStore)` and receive an `input()` for the same data.
 
 1. **TypeScript interfaces** — for the data model (from Delphi field types and interface contracts).
-2. **Service** (`<feature>.service.ts`) — `@Injectable({ providedIn: 'root' })`, with TODO endpoint comments.
-3. **Service spec** (`<feature>.service.spec.ts`) — Vitest, mock HttpClient.
-4. **Store** (`<feature>.store.ts`) — `signalStore(withState(...), withMethods(...))`, `rxMethod` for async. Apply optimistic UI / locking patterns where the Delphi source needs them (see angular-conventions.md).
-5. **Store spec** (`<feature>.store.spec.ts`) — Vitest, mock service.
+2. **Service** (`<feature>.service.ts`) — only when backend/data access is needed; `@Injectable({ providedIn: 'root' })`, with TODO endpoint comments.
+3. **Service spec** (`<feature>.service.spec.ts`) — only when a service is generated; Vitest, mock HttpClient.
+4. **Store** (`<feature>.store.ts`) — only when shared/async feature state is needed; `signalStore(withState(...), withMethods(...))`, `rxMethod` for async. Apply optimistic UI / locking patterns where the Delphi source needs them (see angular-conventions.md).
+5. **Store spec** (`<feature>.store.spec.ts`) — only when a store is generated; Vitest, mock service or builder.
 6. **Tree / immutable helpers** if applicable (`<feature>.tree.utils.ts`) — pure functions for `addChildToTree`, `removeNodeFromTree`, etc.
 7. **Child components** (dumb) — bottom-up, each with .ts, .html, .scss, .spec.ts. `data-testid` on every interactive surface.
 8. **Parent component** (`<feature>.component.ts`, `.html`, `.scss`) — imports children, wires store, owns `data-testid` host attribute.
@@ -190,14 +192,14 @@ Do not hardcode any user-visible string in templates or TypeScript — `Translat
 
 ### Step 2.6: Generate mock API / fixtures
 
-Search the workspace for an existing MSW setup (`mock-api`, `msw/handlers`, `setupWorker`).
+If the generated feature has service-backed data, search the workspace for an existing MSW setup (`mock-api`, `msw/handlers`, `setupWorker`).
 
 - **If MSW exists**, mirror the existing handler pattern: handler file per feature, in-memory store seeded with realistic fixtures, registered in the existing index file. Realistic data: 10+ tree nodes, 4+ list items, real-looking domain names.
 - **If MSW is not present**, generate a builder in the workspace's shared test-data lib (`libs/shared/test-data/` or similar — discover the location), exported and shared by the service mock and every spec. No inline duplication.
 
 ### Step 3: Add route
 
-Add a lazy-loaded route to the workspace's main routes file (typically `app.routes.ts` — find it by inspecting an existing routed feature):
+For routed features only, add a lazy-loaded route to the workspace's main routes file (typically `app.routes.ts` — find it by inspecting an existing routed feature):
 
 ```typescript
 {
@@ -208,7 +210,7 @@ Add a lazy-loaded route to the workspace's main routes file (typically `app.rout
 
 ### Step 4: Generate e2e + a11y tests
 
-For every routed feature, generate a paired e2e spec at the workspace's e2e app (typically `apps/<app>-e2e/src/<feature>.spec.ts` — find it by inspecting an existing e2e spec). At minimum:
+For every routed feature, generate a paired e2e spec at the workspace's e2e app (typically `apps/<app>-e2e/src/<feature>.spec.ts` — find it by inspecting an existing e2e spec). Dialog-only child components do not need their own e2e spec unless the approved plan explicitly asks for one. At minimum:
 
 - route loads and the host testid is visible
 - every top-level testid renders

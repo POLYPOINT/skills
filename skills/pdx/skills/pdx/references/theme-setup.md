@@ -105,17 +105,17 @@ In the project's main stylesheet (e.g. `styles.scss`):
 
 ```scss
 /* PDX theme: colors, typography, Material 3 theme, TailwindCSS */
-@use "@pdx/pp-theme/scss/index";
+@use '@pdx/pp-theme/scss/index';
 
 /* PDX icons */
-@use "@pdx/pp-icons/icons";
+@use '@pdx/pp-icons/icons';
 ```
 
 Or using CSS imports (e.g. in `styles.css` or `angular.json` styles array):
 
 ```css
-@import "@pdx/pp-theme/css/index.css";
-@import "@pdx/pp-icons/icons.css";
+@import '@pdx/pp-theme/css/index.css';
+@import '@pdx/pp-icons/icons.css';
 ```
 
 ### 2. Import Component-Specific Global Styles
@@ -124,13 +124,13 @@ Some components provide global styles for overlays and backdrops. Import these i
 
 ```scss
 /* Dialog overlay and backdrop styles */
-@use "@pdx/pp-dialog/styles";
+@use '@pdx/pp-dialog/styles';
 
 /* Input global styles */
-@use "@pdx/pp-input/styles";
+@use '@pdx/pp-input/styles';
 
 /* Sidenav tooltip overrides (required until a native PDX tooltip exists) */
-@use "@pdx/pp-sidenav/styles";
+@use '@pdx/pp-sidenav/styles';
 ```
 
 ### 3. Configure angular.json (Alternative)
@@ -139,11 +139,7 @@ Instead of SCSS imports, styles can be added to the `angular.json` styles array:
 
 ```json
 {
-  "styles": [
-    "@pdx/pp-theme/css/index.css",
-    "@pdx/pp-icons/icons.css",
-    "src/styles.scss"
-  ]
+  "styles": ["@pdx/pp-theme/css/index.css", "@pdx/pp-icons/icons.css", "src/styles.scss"]
 }
 ```
 
@@ -154,7 +150,7 @@ Instead of SCSS imports, styles can be added to the `angular.json` styles array:
 ### In SCSS
 
 ```scss
-@use "@pdx/pp-theme/scss/color/colors" as *;
+@use '@pdx/pp-theme/scss/color/colors' as *;
 
 .my-element {
   color: $pp-primary;
@@ -183,9 +179,7 @@ Instead of SCSS imports, styles can be added to the `angular.json` styles array:
 ### With TailwindCSS
 
 ```html
-<div class="text-pp-primary-500 bg-pp-secondary-980 border-pp-secondary-900">
-  Content
-</div>
+<div class="text-pp-primary-500 bg-pp-secondary-980 border-pp-secondary-900">Content</div>
 ```
 
 ---
@@ -196,7 +190,7 @@ The AkkuratStd font is loaded automatically by the theme. Apply it globally:
 
 ```scss
 body {
-  font-family: "AkkuratStd", sans-serif;
+  font-family: 'AkkuratStd', sans-serif;
 }
 ```
 
@@ -237,10 +231,10 @@ For icon-only buttons, always provide an `aria-label`:
 All PDX components are standalone. Import them directly in component imports:
 
 ```typescript
-import { Component } from "@angular/core";
-import { PPButtonComponent } from "@pdx/pp-button";
-import { PPInputComponent } from "@pdx/pp-input";
-import { PPCheckboxComponent } from "@pdx/pp-checkbox";
+import { Component } from '@angular/core';
+import { PPButtonComponent } from '@pdx/pp-button';
+import { PPInputComponent } from '@pdx/pp-input';
+import { PPCheckboxComponent } from '@pdx/pp-checkbox';
 
 @Component({
   standalone: true,
@@ -256,12 +250,12 @@ export class MyFormComponent {}
 
 ### Forms Integration
 
-Form components implement `ControlValueAccessor` and work with reactive forms:
+Form components implement `ControlValueAccessor`. In POLYPOINT Angular apps, prefer Signal Forms with `[formField]` for PDX controls where supported. Use `[formControl]` for `pp-select` / `pp-multiselect` and when integrating with existing reactive forms.
 
 ```typescript
-import { FormGroup, FormControl, ReactiveFormsModule } from "@angular/forms";
-import { PPInputComponent } from "@pdx/pp-input";
-import { PPCheckboxComponent } from "@pdx/pp-checkbox";
+import { FormGroup, FormControl, ReactiveFormsModule } from '@angular/forms';
+import { PPInputComponent } from '@pdx/pp-input';
+import { PPCheckboxComponent } from '@pdx/pp-checkbox';
 
 @Component({
   standalone: true,
@@ -269,17 +263,13 @@ import { PPCheckboxComponent } from "@pdx/pp-checkbox";
   template: `
     <form [formGroup]="form">
       <pp-input label="Email" formControlName="email" inputType="email" />
-      <pp-checkbox
-        id="newsletter"
-        label="Subscribe"
-        formControlName="subscribe"
-      />
+      <pp-checkbox id="newsletter" label="Subscribe" formControlName="subscribe" />
     </form>
   `,
 })
 export class MyFormComponent {
-  form = new FormGroup({
-    email: new FormControl(""),
+  public readonly form = new FormGroup({
+    email: new FormControl(''),
     subscribe: new FormControl(false),
   });
 }
@@ -290,8 +280,9 @@ export class MyFormComponent {
 Open dialogs using Angular Material's `MatDialog` service, but wrap content in `PPDialogComponent`:
 
 ```typescript
-import { inject } from "@angular/core";
-import { MatDialog } from "@angular/material/dialog";
+import { inject } from '@angular/core';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { PPDialogComponent } from '@pdx/pp-dialog';
 
 // In the parent component:
 const dialog = inject(MatDialog);
@@ -302,23 +293,19 @@ dialog.open(ConfirmDialogComponent);
   standalone: true,
   imports: [PPDialogComponent],
   template: `
-    <pp-dialog
-      title="Confirm"
-      confirmButtonTitle="Delete"
-      (confirm)="onConfirm()"
-      (dismiss)="onDismiss()"
-    >
+    <pp-dialog title="Confirm" confirmButtonTitle="Delete" (confirm)="onConfirm()" (dismiss)="onDismiss()">
       <p>Are you sure?</p>
     </pp-dialog>
   `,
 })
 export class ConfirmDialogComponent {
-  private dialogRef = inject(MatDialogRef);
+  private readonly dialogRef = inject(MatDialogRef);
 
-  onConfirm() {
+  protected onConfirm(): void {
     this.dialogRef.close(true);
   }
-  onDismiss() {
+
+  protected onDismiss(): void {
     this.dialogRef.close(false);
   }
 }

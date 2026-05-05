@@ -46,29 +46,20 @@ Layout below assumes the typical Nx-style `apps/<app>/src/app/` root. Verify the
 ## Component Pattern
 
 ```typescript
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  effect,
-  inject,
-  input,
-  output,
-  signal,
-} from "@angular/core";
-import { TranslatePipe } from "@ngx-translate/core";
-import { SomeStore } from "./some.store";
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
+import { SomeStore } from './some.store';
 
 @Component({
-  selector: "app-feature-name",
+  selector: 'app-feature-name',
   imports: [
     TranslatePipe,
     /* PDX components, Material modules, child components */
   ],
   providers: [SomeStore],
-  templateUrl: "./feature-name.component.html",
-  styleUrl: "./feature-name.component.scss",
-  host: { "data-testid": "feature-name" },
+  templateUrl: './feature-name.component.html',
+  styleUrl: './feature-name.component.scss',
+  host: { 'data-testid': 'feature-name' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FeatureNameComponent {
@@ -77,15 +68,13 @@ export class FeatureNameComponent {
 
   private readonly store = inject(SomeStore);
 
-  private readonly filter = signal("");
+  private readonly filter = signal('');
 
   protected readonly isLoading = this.store.isLoading;
   protected readonly items = this.store.items;
   protected readonly filteredItems = computed(() => {
     const term = this.filter().toLowerCase();
-    return (
-      this.items()?.filter((i) => i.name.toLowerCase().includes(term)) ?? []
-    );
+    return this.items()?.filter((i) => i.name.toLowerCase().includes(term)) ?? [];
   });
 
   constructor() {
@@ -118,10 +107,7 @@ export class FeatureParentComponent {
 ```
 
 ```html
-<app-personal-info
-  [data]="store.personalInfo()"
-  (save)="store.savePersonalInfo($event)"
-/>
+<app-personal-info [data]="store.personalInfo()" (save)="store.savePersonalInfo($event)" />
 ```
 
 ```typescript
@@ -139,14 +125,9 @@ The post-generate convention check flags any child component that both `inject()
 **Bind PDX inputs with `[formField]` — except `pp-select` / `pp-multiselect`, which use `[formControl]` (legacy reactive forms).** All PDX components implement `ControlValueAccessor`, and `[formField]` bridges to CVA automatically. Mix both APIs in one component when needed.
 
 ```typescript
-import { Component, signal } from "@angular/core";
-import {
-  form,
-  FormField,
-  requiredError,
-  validate,
-} from "@angular/forms/signals";
-import { PPInputComponent } from "@pdx/pp-input";
+import { Component, signal } from '@angular/core';
+import { form, FormField, requiredError, validate } from '@angular/forms/signals';
+import { PPInputComponent } from '@pdx/pp-input';
 
 interface FilterData {
   lastName: string;
@@ -155,19 +136,11 @@ interface FilterData {
 }
 
 @Component({
-  selector: "app-employee-filter",
+  selector: 'app-employee-filter',
   imports: [FormField, PPInputComponent],
   template: `
-    <pp-input
-      [label]="'employee.last_name' | translate"
-      [formField]="filterForm.lastName"
-      [fullWidth]="true"
-    />
-    <pp-input
-      [label]="'employee.first_name' | translate"
-      [formField]="filterForm.firstName"
-      [fullWidth]="true"
-    />
+    <pp-input [label]="'employee.last_name' | translate" [formField]="filterForm.lastName" [fullWidth]="true" />
+    <pp-input [label]="'employee.first_name' | translate" [formField]="filterForm.firstName" [fullWidth]="true" />
 
     @if (filterForm.lastName().touched() && filterForm.lastName().invalid()) {
       <ul>
@@ -180,19 +153,19 @@ interface FilterData {
 })
 export class EmployeeFilterComponent {
   private readonly filterModel = signal<FilterData>({
-    lastName: "",
-    firstName: "",
-    personnelNumber: "",
+    lastName: '',
+    firstName: '',
+    personnelNumber: '',
   });
 
   protected readonly filterForm = form(this.filterModel, (schema) => {
     validate(schema.lastName, (ctx) => {
       const value = ctx.value();
       if (!value?.trim()) {
-        return requiredError({ message: "Last name is required" });
+        return requiredError({ message: 'Last name is required' });
       }
       if (value.length < 2) {
-        return { kind: "minLength", message: "At least 2 characters" };
+        return { kind: 'minLength', message: 'At least 2 characters' };
       }
       return null;
     });
@@ -212,11 +185,11 @@ Key points:
 ## Store Pattern
 
 ```typescript
-import { inject } from "@angular/core";
-import { patchState, signalStore, withMethods, withState } from "@ngrx/signals";
-import { rxMethod } from "@ngrx/signals/rxjs-interop";
-import { catchError, EMPTY, pipe, switchMap, tap } from "rxjs";
-import { SomeService } from "./some.service";
+import { inject } from '@angular/core';
+import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
+import { rxMethod } from '@ngrx/signals/rxjs-interop';
+import { catchError, EMPTY, pipe, switchMap, tap } from 'rxjs';
+import { SomeService } from './some.service';
 
 type SomeState = {
   isLoading: boolean;
@@ -235,9 +208,7 @@ export const SomeStore = signalStore(
   withMethods((store, service = inject(SomeService)) => ({
     loadItems: rxMethod<{ id: string }>(
       pipe(
-        tap(() =>
-          patchState(store, { isLoading: true, items: null, error: null }),
-        ),
+        tap(() => patchState(store, { isLoading: true, items: null, error: null })),
         switchMap(({ id }) =>
           service.getItems(id).pipe(
             tap((items) => patchState(store, { isLoading: false, items })),
@@ -307,12 +278,12 @@ The Delphi codebase typically has explicit Lock/Unlock buttons with a `TPolyReco
 ## Service Pattern
 
 ```typescript
-import { HttpClient } from "@angular/common/http";
-import { inject, Injectable } from "@angular/core";
-import { Observable, of } from "rxjs";
-import { AppConfigService } from "../shared/app-config.service";
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { Observable, of } from 'rxjs';
+import { AppConfigService } from '../shared/app-config.service';
 
-@Injectable({ providedIn: "root" })
+@Injectable({ providedIn: 'root' })
 export class SomeService {
   private readonly appConfig = inject(AppConfigService);
   private readonly http = inject(HttpClient);
@@ -325,8 +296,8 @@ export class SomeService {
 }
 
 const MOCK_ITEMS: Item[] = [
-  { id: "1", name: "Item 1" },
-  { id: "2", name: "Item 2" },
+  { id: '1', name: 'Item 1' },
+  { id: '2', name: 'Item 2' },
 ];
 ```
 
@@ -337,7 +308,7 @@ For mock data large enough to demo the feature, prefer the **MSW + test-data bui
 All user-visible text must go through `TranslatePipe` (template) or `TranslateService.instant()` (TypeScript). **Never hardcode strings** — not German, not English.
 
 ```typescript
-import { TranslatePipe, TranslateService } from "@ngx-translate/core";
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 @Component({
   imports: [TranslatePipe /* ... */],
@@ -346,10 +317,7 @@ export class FeatureComponent {
   private readonly translate = inject(TranslateService);
 
   protected showSavedToast(): void {
-    this.snackBar.open(
-      this.translate.instant("common.saved"),
-      this.translate.instant("common.dismiss"),
-    );
+    this.snackBar.open(this.translate.instant('common.saved'), this.translate.instant('common.dismiss'));
   }
 }
 ```
@@ -384,7 +352,7 @@ Use the workspace's existing translation service to resolve the active language.
 Tests bootstrapped with `TranslateModule.forRoot()` resolve a key to itself (no JSON loaded). Assert against the **translation key**, not the translated text:
 
 ```typescript
-expect(screen.getByText("hierarchy.no_qualifications")).toBeVisible();
+expect(screen.getByText('hierarchy.no_qualifications')).toBeVisible();
 // NOT: expect(screen.getByText('Keine Qualifikationen')).toBeVisible();
 ```
 
@@ -461,14 +429,14 @@ For real interactive elements, prefer `<button type="button">` over `<div role="
 ### Vitest spec template (for a translated component)
 
 ```typescript
-import { TestBed } from "@angular/core/testing";
-import { provideTranslateService, TranslateModule } from "@ngx-translate/core";
-import { axe } from "vitest-axe";
+import { TestBed } from '@angular/core/testing';
+import { provideTranslateService, TranslateModule } from '@ngx-translate/core';
+import { axe } from 'vitest-axe';
 // Resolve the import path from the workspace's shared testing lib (search libs/shared/testing/ or equivalent).
-import { formatA11yViolations } from "<workspace-shared-testing>";
-import { SomeComponent } from "./some.component";
+import { formatA11yViolations } from '<workspace-shared-testing>';
+import { SomeComponent } from './some.component';
 
-describe("SomeComponent", () => {
+describe('SomeComponent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [SomeComponent, TranslateModule.forRoot()],
@@ -476,13 +444,13 @@ describe("SomeComponent", () => {
     });
   });
 
-  it("renders", async () => {
+  it('renders', async () => {
     const fixture = TestBed.createComponent(SomeComponent);
     await fixture.whenStable();
     expect(fixture.nativeElement).toBeTruthy();
   });
 
-  it("has no a11y violations", async () => {
+  it('has no a11y violations', async () => {
     const fixture = TestBed.createComponent(SomeComponent);
     await fixture.whenStable();
     const results = await axe(fixture.nativeElement);
@@ -521,19 +489,19 @@ Generated tests must survive locale changes. The e2e runner often serves English
   - Readonly check: PDX `pp-input` may not propagate `readonly` to the native input as an HTML attribute; assert via `nativeInput.readOnly` (DOM property), not the `[readonly]` attribute selector.
 
 ```typescript
-test("saves personal info", async ({ page }) => {
+test('saves personal info', async ({ page }) => {
   // If the project uses cookie-based mock auth in e2e, set the expected cookie here.
   // Inspect an existing e2e spec for the cookie name / value / domain.
   // await page.context().addCookies([{ name: '<auth-cookie>', value: '<mock-token>', domain: 'localhost', path: '/' }]);
-  await page.goto("/#/employee/1");
-  await expect(page.getByTestId("employee-detail")).toBeVisible({
+  await page.goto('/#/employee/1');
+  await expect(page.getByTestId('employee-detail')).toBeVisible({
     timeout: 10000,
   });
 
-  await page.getByTestId("address-last-name").locator("input").fill("Müller");
-  await page.getByTestId("btn-save").click();
+  await page.getByTestId('address-last-name').locator('input').fill('Müller');
+  await page.getByTestId('btn-save').click();
 
-  await expect(page.getByTestId("btn-save")).toBeDisabled();
+  await expect(page.getByTestId('btn-save')).toBeDisabled();
 });
 ```
 
@@ -603,10 +571,10 @@ Open via `MatDialog` with explicit dimensions:
 
 ```typescript
 this.dialog.open(SomeDialogComponent, {
-  width: "36rem", // standard dialog
+  width: '36rem', // standard dialog
   // width: '48rem',       // wide dialog (grids/tables)
   // height: '80vh',       // tall dialog (scrollable content)
-  data: { id, mode: "edit" },
+  data: { id, mode: 'edit' },
 });
 ```
 

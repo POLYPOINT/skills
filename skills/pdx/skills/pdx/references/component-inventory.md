@@ -15,25 +15,25 @@ Foundational design system theme. Provides colors, typography, spacing, and desi
 **CSS (recommended for most projects):**
 
 ```css
-@import "@pdx/pp-theme/css/index.css";
+@import '@pdx/pp-theme/css/index.css';
 ```
 
 **Individual imports:**
 
 ```css
-@import "@pdx/pp-theme/css/font/fonts.css";
-@import "@pdx/pp-theme/css/tailwind/tailwind.css";
-@import "@pdx/pp-theme/css/angular-material/material.css";
+@import '@pdx/pp-theme/css/font/fonts.css';
+@import '@pdx/pp-theme/css/tailwind/tailwind.css';
+@import '@pdx/pp-theme/css/angular-material/material.css';
 ```
 
 **SCSS:**
 
 ```scss
-@use "@pdx/pp-theme/scss/index";
+@use '@pdx/pp-theme/scss/index';
 /* Or individual: */
-@use "@pdx/pp-theme/scss/font/fonts";
-@use "@pdx/pp-theme/scss/color/colors";
-@use "@pdx/pp-theme/scss/angular-material/material";
+@use '@pdx/pp-theme/scss/font/fonts';
+@use '@pdx/pp-theme/scss/color/colors';
+@use '@pdx/pp-theme/scss/angular-material/material';
 ```
 
 **TypeScript color data:**
@@ -73,11 +73,11 @@ SVG icon set packaged as a webfont. No Angular dependencies.
 ### Usage
 
 ```scss
-@use "@pdx/pp-icons/icons";
+@use '@pdx/pp-icons/icons';
 ```
 
 ```css
-@import "@pdx/pp-icons/icons.css";
+@import '@pdx/pp-icons/icons.css';
 ```
 
 ```html
@@ -110,7 +110,7 @@ Import the icon stylesheet **once globally** (typically in the app's root `style
 
 ```scss
 // styles.scss — global only
-@use "@pdx/pp-icons/icons";
+@use '@pdx/pp-icons/icons';
 ```
 
 Never import it from a per-component SCSS file. The compiled CSS contains every icon class plus `@font-face` declarations — well over the typical 8KB component-style budget.
@@ -126,19 +126,14 @@ Buttons for all user interaction needs: standard buttons, icon buttons, and floa
 #### PPButtonComponent
 
 ```typescript
-import { PPButtonComponent } from "@pdx/pp-button";
+import { PPButtonComponent } from '@pdx/pp-button';
 ```
 
 ```html
 <pp-button label="Save" variant="filled" size="md" />
 <pp-button label="Cancel" variant="outlined" />
 <pp-button label="Delete" variant="text" icon="pp-icon pp-icon-delete_trash" />
-<pp-button
-  label="Submit"
-  variant="filled"
-  [fullWidth]="true"
-  buttonType="submit"
-/>
+<pp-button label="Submit" variant="filled" [fullWidth]="true" buttonType="submit" />
 <pp-button label="Warning" variant="tonal" />
 ```
 
@@ -156,7 +151,7 @@ import { PPButtonComponent } from "@pdx/pp-button";
 #### PPIconButtonComponent
 
 ```typescript
-import { PPIconButtonComponent } from "@pdx/pp-button";
+import { PPIconButtonComponent } from '@pdx/pp-button';
 ```
 
 Compact icon-only button for toolbars and inline actions. Always provide `ariaLabel`.
@@ -164,7 +159,7 @@ Compact icon-only button for toolbars and inline actions. Always provide `ariaLa
 #### PPFloatingActionButtonComponent
 
 ```typescript
-import { PPFloatingActionButtonComponent } from "@pdx/pp-button";
+import { PPFloatingActionButtonComponent } from '@pdx/pp-button';
 ```
 
 Prominent FAB for primary screen actions. Supports fixed positioning.
@@ -193,7 +188,7 @@ Don't blanket-apply `fullWidth` everywhere — a full-width input inside a narro
 #### PPInputComponent
 
 ```typescript
-import { PPInputComponent } from "@pdx/pp-input";
+import { PPInputComponent } from '@pdx/pp-input';
 ```
 
 ```html
@@ -230,15 +225,11 @@ import { PPInputComponent } from "@pdx/pp-input";
 #### PPTextareaComponent
 
 ```typescript
-import { PPTextareaComponent } from "@pdx/pp-input";
+import { PPTextareaComponent } from '@pdx/pp-input';
 ```
 
 ```html
-<pp-textarea
-  label="Comments"
-  [autoGrowth]="true"
-  helperText="Tell us what you think"
-/>
+<pp-textarea label="Comments" [autoGrowth]="true" helperText="Tell us what you think" />
 ```
 
 | Input        | Type                  | Default     | Description                   |
@@ -265,7 +256,7 @@ import { PPTextareaComponent } from "@pdx/pp-input";
 ### Global Styles
 
 ```scss
-@use "@pdx/pp-input/styles";
+@use '@pdx/pp-input/styles';
 ```
 
 ### Peer Dependencies
@@ -283,7 +274,7 @@ Structural primitives for assembling form layouts. These components orchestrate 
 #### PPFormComponent
 
 ```typescript
-import { PPFormComponent } from "@pdx/pp-form";
+import { PPFormComponent } from '@pdx/pp-form';
 ```
 
 Root container. Ensures unified spacing and styling across its children.
@@ -307,7 +298,7 @@ Structural rules:
 #### PPFormSectionComponent
 
 ```typescript
-import { PPFormSectionComponent } from "@pdx/pp-form";
+import { PPFormSectionComponent } from '@pdx/pp-form';
 ```
 
 Semantic region with a header. Supports single- or multi-column layouts.
@@ -331,7 +322,7 @@ Semantic region with a header. Supports single- or multi-column layouts.
 #### PPFormStackComponent
 
 ```typescript
-import { PPFormStackComponent } from "@pdx/pp-form";
+import { PPFormStackComponent } from '@pdx/pp-form';
 ```
 
 Arranges children vertically or horizontally.
@@ -349,7 +340,7 @@ Arranges children vertically or horizontally.
 #### PPFormBlockComponent
 
 ```typescript
-import { PPFormBlockComponent } from "@pdx/pp-form";
+import { PPFormBlockComponent } from '@pdx/pp-form';
 ```
 
 Groups related form fields into a visually cohesive block. No inputs.
@@ -363,17 +354,13 @@ Groups related form fields into a visually cohesive block. No inputs.
 #### PPFormTextblockComponent
 
 ```typescript
-import { PPFormTextblockComponent } from "@pdx/pp-form";
+import { PPFormTextblockComponent } from '@pdx/pp-form';
 ```
 
 Standardized title + description text.
 
 ```html
-<pp-form-textblock
-  title="Account Settings"
-  description="Manage your account preferences."
-  size="lg"
-/>
+<pp-form-textblock title="Account Settings" description="Manage your account preferences." size="lg" />
 ```
 
 | Input         | Type             | Default  | Description                                   |
@@ -385,7 +372,7 @@ Standardized title + description text.
 #### PPFormActionsComponent
 
 ```typescript
-import { PPFormActionsComponent } from "@pdx/pp-form";
+import { PPFormActionsComponent } from '@pdx/pp-form';
 ```
 
 Row for form-level buttons (e.g. Cancel / Save). Use `<pp-button>` children.
@@ -447,16 +434,12 @@ Accessible checkbox with three states, error display, and forms integration.
 #### PPCheckboxComponent
 
 ```typescript
-import { PPCheckboxComponent, CheckboxState } from "@pdx/pp-checkbox";
+import { PPCheckboxComponent, CheckboxState } from '@pdx/pp-checkbox';
 ```
 
 ```html
 <pp-checkbox id="terms" label="Accept terms" />
-<pp-checkbox
-  id="all"
-  label="Select all"
-  [state]="CheckboxState.Indeterminate"
-/>
+<pp-checkbox id="all" label="Select all" [state]="CheckboxState.Indeterminate" />
 <pp-checkbox id="err" label="Required field" [error]="true" />
 ```
 
@@ -507,7 +490,7 @@ Radio buttons for single-choice selections. Standalone or grouped.
 #### PPRadioButtonComponent
 
 ```typescript
-import { PPRadioButtonComponent } from "@pdx/pp-radio";
+import { PPRadioButtonComponent } from '@pdx/pp-radio';
 ```
 
 ```html
@@ -531,15 +514,11 @@ import { PPRadioButtonComponent } from "@pdx/pp-radio";
 #### PPRadioGroupComponent
 
 ```typescript
-import { PPRadioGroupComponent, PPRadioOption } from "@pdx/pp-radio";
+import { PPRadioGroupComponent, PPRadioOption } from '@pdx/pp-radio';
 ```
 
 ```html
-<pp-radio-group
-  [options]="options"
-  [value]="selected"
-  (valueChange)="onSelect($event)"
-/>
+<pp-radio-group [options]="options" [value]="selected" (valueChange)="onSelect($event)" />
 ```
 
 | Input       | Type               | Default | Description       |
@@ -581,16 +560,11 @@ Compact chips for filters, tags, and selections.
 #### PPChipComponent
 
 ```typescript
-import { PPChipComponent } from "@pdx/pp-chip";
+import { PPChipComponent } from '@pdx/pp-chip';
 ```
 
 ```html
-<pp-chip
-  id="tag1"
-  label="Angular"
-  [removable]="true"
-  (removed)="onRemove($event)"
-/>
+<pp-chip id="tag1" label="Angular" [removable]="true" (removed)="onRemove($event)" />
 <pp-chip id="cat1" label="Frontend" leadingIcon="pp-icon pp-icon-code" />
 <pp-chip id="info" label="Read-only" [removable]="false" />
 ```
@@ -610,7 +584,7 @@ import { PPChipComponent } from "@pdx/pp-chip";
 #### PPChipListComponent
 
 ```typescript
-import { PPChipListComponent } from "@pdx/pp-chip";
+import { PPChipListComponent } from '@pdx/pp-chip';
 ```
 
 Container for managing multiple chips.
@@ -637,7 +611,7 @@ Responsive dialog shell for wrapping custom content. Works with Angular Material
 #### PPDialogComponent
 
 ```typescript
-import { PPDialogComponent } from "@pdx/pp-dialog";
+import { PPDialogComponent } from '@pdx/pp-dialog';
 ```
 
 ```html
@@ -682,7 +656,7 @@ Inside `MyDialogComponent` template, wrap content in `<pp-dialog>`.
 ### Global Styles
 
 ```scss
-@use "@pdx/pp-dialog/styles";
+@use '@pdx/pp-dialog/styles';
 ```
 
 Provides overlay and backdrop styling.
@@ -702,8 +676,8 @@ Flexible tree component for hierarchical data. Supports selection, expansion, dr
 #### PPTreeComponent
 
 ```typescript
-import { PPTreeComponent, TreeData } from "@pdx/pp-tree";
-import { PPMenuComponent, PPMenuItem } from "@pdx/pp-menu";
+import { PPTreeComponent, TreeData } from '@pdx/pp-tree';
+import { PPMenuComponent, PPMenuItem } from '@pdx/pp-menu';
 ```
 
 ```html
@@ -718,11 +692,7 @@ import { PPMenuComponent, PPMenuItem } from "@pdx/pp-menu";
   (treeChange)="onTreeUpdate($event)"
 />
 
-<pp-menu
-  #contextMenu
-  [items]="menuItems()"
-  (itemSelect)="onMenuAction($event)"
-/>
+<pp-menu #contextMenu [items]="menuItems()" (itemSelect)="onMenuAction($event)" />
 ```
 
 | Input            | Type                      | Default  | Description                                                                                                                                                                                        |
@@ -762,12 +732,12 @@ interface TreeData {
 interface NodeMoveEvent {
   nodeId: string;
   targetId: string;
-  position: "before" | "after" | "inside";
+  position: 'before' | 'after' | 'inside';
 }
 
 interface NodeSortEvent {
   nodeId: string;
-  direction: "up" | "down";
+  direction: 'up' | 'down';
 }
 ```
 
@@ -786,26 +756,17 @@ Accessible dropdown fields for single and multiple selection. Floating label ani
 #### PPSelectComponent
 
 ```typescript
-import { PPSelectComponent } from "@pdx/pp-select";
+import { PPSelectComponent } from '@pdx/pp-select';
 ```
 
 ```html
-<pp-select
-  label="Country"
-  [options]="countryOptions"
-  [value]="selectedId"
-  (selectionChange)="onSelect($event.id)"
-/>
+<pp-select label="Country" [options]="countryOptions" [value]="selectedId" (selectionChange)="onSelect($event.id)" />
 ```
 
 Reactive form integration:
 
 ```html
-<pp-select
-  label="Country"
-  [options]="countryOptions"
-  [formControl]="countryControl"
-/>
+<pp-select label="Country" [options]="countryOptions" [formControl]="countryControl" />
 ```
 
 | Input            | Type                  | Default     | Description                                             |
@@ -827,7 +788,7 @@ Reactive form integration:
 #### PPMultiselectComponent
 
 ```typescript
-import { PPMultiselectComponent } from "@pdx/pp-select";
+import { PPMultiselectComponent } from '@pdx/pp-select';
 ```
 
 ```html
@@ -842,11 +803,7 @@ import { PPMultiselectComponent } from "@pdx/pp-select";
 Reactive form integration:
 
 ```html
-<pp-multiselect
-  label="Countries"
-  [options]="countryOptions"
-  [formControl]="countriesControl"
-/>
+<pp-multiselect label="Countries" [options]="countryOptions" [formControl]="countriesControl" />
 ```
 
 | Input            | Type                            | Default     | Description                                             |
@@ -870,7 +827,7 @@ Reactive form integration:
 `PPMenuItem` is defined in and must be imported from `@pdx/pp-menu`:
 
 ```typescript
-import { PPMenuItem } from "@pdx/pp-menu";
+import { PPMenuItem } from '@pdx/pp-menu';
 
 interface PPMenuItem {
   readonly id: string | number;
@@ -906,7 +863,7 @@ Standalone dropdown menu components for single and multiple selection. Used inte
 #### PPMenuComponent
 
 ```typescript
-import { PPMenuComponent, PPMenuItem } from "@pdx/pp-menu";
+import { PPMenuComponent, PPMenuItem } from '@pdx/pp-menu';
 ```
 
 ```html
@@ -934,7 +891,7 @@ import { PPMenuComponent, PPMenuItem } from "@pdx/pp-menu";
 #### PPMenuMultiselectComponent
 
 ```typescript
-import { PPMenuMultiselectComponent } from "@pdx/pp-menu";
+import { PPMenuMultiselectComponent } from '@pdx/pp-menu';
 ```
 
 ```html
@@ -991,13 +948,7 @@ Accessible listbox with four selection variants, keyboard navigation, leading/tr
 #### PPListComponent
 
 ```typescript
-import {
-  PPListComponent,
-  PPListItem,
-  PPListSelectEvent,
-  ListVariant,
-  ListSize,
-} from "@pdx/pp-list";
+import { PPListComponent, PPListItem, PPListSelectEvent, ListVariant, ListSize } from '@pdx/pp-list';
 ```
 
 ```html
@@ -1049,15 +1000,15 @@ interface PPListSelectEvent {
 }
 
 enum ListVariant {
-  Default = "default",
-  Single = "single",
-  SingleRadio = "singleRadio",
-  Multi = "multi",
+  Default = 'default',
+  Single = 'single',
+  SingleRadio = 'singleRadio',
+  Multi = 'multi',
 }
 
 enum ListSize {
-  Large = "large",
-  Small = "small",
+  Large = 'large',
+  Small = 'small',
 }
 ```
 
@@ -1089,11 +1040,7 @@ Secondary tab navigation component with icons, disabled states, content panels, 
 #### PPTabGroupComponent
 
 ```typescript
-import {
-  PPTabGroupComponent,
-  PPTabComponent,
-  PPTabContentDirective,
-} from "@pdx/pp-tab";
+import { PPTabGroupComponent, PPTabComponent, PPTabContentDirective } from '@pdx/pp-tab';
 ```
 
 ```html
@@ -1182,11 +1129,7 @@ Collapsible content sections with desktop/mobile layout variants and optional ac
 #### PPExpansionPanelComponent
 
 ```typescript
-import {
-  PPExpansionPanelComponent,
-  PPExpansionPanelItemComponent,
-  PanelVariant,
-} from "@pdx/pp-expansion-panel";
+import { PPExpansionPanelComponent, PPExpansionPanelItemComponent, PanelVariant } from '@pdx/pp-expansion-panel';
 ```
 
 Container that groups items and coordinates layout + accordion.
@@ -1251,27 +1194,18 @@ import {
   PPSidenavItemIconDirective,
   PPSidenavGroupComponent,
   PPSidenavSubItemComponent,
-} from "@pdx/pp-sidenav";
+} from '@pdx/pp-sidenav';
 ```
 
 ```html
 <pp-sidenav [(collapsed)]="isCollapsed" sectionTitle="Settings">
-  <pp-sidenav-item
-    icon="pp-icon-home"
-    label="Dashboard"
-    [selected]="true"
-    (itemSelect)="onNav('dashboard')"
-  >
+  <pp-sidenav-item icon="pp-icon-home" label="Dashboard" [selected]="true" (itemSelect)="onNav('dashboard')">
     <pp-sidenav-group label="Preferences" [expanded]="true">
       <pp-sidenav-sub-item label="General" [selected]="true" />
       <pp-sidenav-sub-item label="Notifications" />
     </pp-sidenav-group>
   </pp-sidenav-item>
-  <pp-sidenav-item
-    icon="pp-icon-user_group"
-    label="Accounts"
-    (itemSelect)="onNav('accounts')"
-  />
+  <pp-sidenav-item icon="pp-icon-user_group" label="Accounts" (itemSelect)="onNav('accounts')" />
 </pp-sidenav>
 ```
 
@@ -1321,7 +1255,7 @@ import {
 ### Global styles
 
 ```scss
-@use "@pdx/pp-sidenav/styles";
+@use '@pdx/pp-sidenav/styles';
 ```
 
 Overrides Angular Material tooltip defaults for the design system. Required until a native PDX tooltip is available.
@@ -1339,19 +1273,11 @@ Global navigation bar with optional dropdown submenus (rendered via `pp-menu`). 
 ### Components
 
 ```typescript
-import {
-  PPTopNavigationComponent,
-  PPTopNavItem,
-  PPTopNavSelectEvent,
-} from "@pdx/pp-top-navigation";
+import { PPTopNavigationComponent, PPTopNavItem, PPTopNavSelectEvent } from '@pdx/pp-top-navigation';
 ```
 
 ```html
-<pp-top-navigation
-  [items]="navItems"
-  [(selectedId)]="selectedId"
-  (itemSelect)="onItemSelect($event)"
-/>
+<pp-top-navigation [items]="navItems" [(selectedId)]="selectedId" (itemSelect)="onItemSelect($event)" />
 ```
 
 | Input        | Type                                    | Default | Description                                                                |
