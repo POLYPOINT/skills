@@ -2,7 +2,7 @@
 name: pdx
 description: This skill should be used when the user asks to "apply PDX styles", "use PDX libs", "use PDX styling", "make it look like POLYPOINT", "apply POLYPOINT styling", "use POLYPOINT libs", "use POLYPOINT components", "apply pdx", or mentions the POLYPOINT Design Experience design system. Guides usage of @pdx/* Angular component libraries and design tokens to produce UI consistent with the PDX design system.
 metadata:
-  version: '1.5.1'
+  version: '1.6.0'
 ---
 
 # PDX — POLYPOINT Design Experience
@@ -48,6 +48,9 @@ Width control for `pp-input` / `pp-textarea` is **context-aware**: use `[fullWid
 | `@pdx/pp-tree`            | `PPTreeComponent` (hierarchical data, drag-and-drop, sorting)                                                                                                                |
 | `@pdx/pp-sidenav`         | `PPSidenavComponent` + item/group/sub-item (app-shell side navigation)                                                                                                       |
 | `@pdx/pp-top-navigation`  | `PPTopNavigationComponent` (app-shell top navigation with dropdown submenus)                                                                                                 |
+| `@pdx/pp-button-toggle`   | `PPButtonToggleComponent`, `PPButtonToggleGroupComponent` (segmented control / view-mode toggle)                                                                             |
+| `@pdx/pp-slide-toggle`    | `PPSlideToggleComponent` (on/off switch with optional label, ControlValueAccessor)                                                                                           |
+| `@pdx/pp-paginator`       | `PPPaginatorComponent` (page navigation + page-size selector)                                                                                                                |
 
 ## Component Replacement Rules
 
@@ -73,8 +76,11 @@ Replace Angular Material components with PDX equivalents:
 | `mat-expansion-panel`                                | `PPExpansionPanelComponent` + `PPExpansionPanelItemComponent`       |
 | Custom form layout divs / ad-hoc Flex/Grid shells    | `PPFormComponent` (+ section / stack / block / textblock / actions) |
 | `mat-icon`, FontAwesome                              | `<span class="pp-icon pp-icon-*">`                                  |
+| `mat-button-toggle` / `mat-button-toggle-group`      | `PPButtonToggleComponent` / `PPButtonToggleGroupComponent`          |
+| `mat-slide-toggle`                                   | `PPSlideToggleComponent`                                            |
+| `mat-paginator`                                      | `PPPaginatorComponent`                                              |
 
-**No PDX replacement yet** — use Angular Material with pp-theme: autocomplete, datepicker, slide-toggle, progress bar/spinner, snackbar, tooltip, table, paginator, sort, `mat-toolbar` (generic container use only), `mat-sidenav` (non-navigation drawer/inspector/filter panel).
+**No PDX replacement yet** — use Angular Material with pp-theme: autocomplete, datepicker, progress bar/spinner, snackbar, tooltip, table, sort, `mat-toolbar` (generic container use only), `mat-sidenav` (non-navigation drawer/inspector/filter panel).
 
 ## Navigation (app-shell only — not a drop-in replacement)
 

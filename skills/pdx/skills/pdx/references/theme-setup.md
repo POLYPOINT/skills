@@ -37,6 +37,7 @@ When using Bun as the package manager, add all `@pdx/*` packages to `trustedDepe
     "@pdx/pp-theme",
     "@pdx/pp-icons",
     "@pdx/pp-button",
+    "@pdx/pp-button-toggle",
     "@pdx/pp-input",
     "@pdx/pp-form",
     "@pdx/pp-checkbox",
@@ -50,12 +51,15 @@ When using Bun as the package manager, add all `@pdx/*` packages to `trustedDepe
     "@pdx/pp-tab",
     "@pdx/pp-expansion-panel",
     "@pdx/pp-sidenav",
-    "@pdx/pp-top-navigation"
+    "@pdx/pp-slide-toggle",
+    "@pdx/pp-top-navigation",
+    "@pdx/pp-paginator"
   ],
   "minimumReleaseAgeExcludes": [
     "@pdx/pp-theme",
     "@pdx/pp-icons",
     "@pdx/pp-button",
+    "@pdx/pp-button-toggle",
     "@pdx/pp-input",
     "@pdx/pp-form",
     "@pdx/pp-checkbox",
@@ -69,7 +73,9 @@ When using Bun as the package manager, add all `@pdx/*` packages to `trustedDepe
     "@pdx/pp-tab",
     "@pdx/pp-expansion-panel",
     "@pdx/pp-sidenav",
-    "@pdx/pp-top-navigation"
+    "@pdx/pp-slide-toggle",
+    "@pdx/pp-top-navigation",
+    "@pdx/pp-paginator"
   ]
 }
 ```
@@ -82,7 +88,7 @@ Install the theme and icon packages first, then component libraries as needed:
 
 ```bash
 npm install @pdx/pp-theme @pdx/pp-icons
-npm install @pdx/pp-button @pdx/pp-input @pdx/pp-form @pdx/pp-checkbox @pdx/pp-radio @pdx/pp-chip @pdx/pp-dialog @pdx/pp-tree @pdx/pp-select @pdx/pp-menu @pdx/pp-list @pdx/pp-tab @pdx/pp-expansion-panel @pdx/pp-sidenav @pdx/pp-top-navigation
+npm install @pdx/pp-button @pdx/pp-button-toggle @pdx/pp-input @pdx/pp-form @pdx/pp-checkbox @pdx/pp-radio @pdx/pp-chip @pdx/pp-dialog @pdx/pp-tree @pdx/pp-select @pdx/pp-menu @pdx/pp-list @pdx/pp-tab @pdx/pp-expansion-panel @pdx/pp-sidenav @pdx/pp-slide-toggle @pdx/pp-top-navigation @pdx/pp-paginator
 ```
 
 All component libraries have `@pdx/pp-theme` as a peer dependency. Additional peers:
@@ -94,6 +100,9 @@ All component libraries have `@pdx/pp-theme` as a peer dependency. Additional pe
 - `@pdx/pp-list` requires `@pdx/pp-checkbox` and `@pdx/pp-radio`
 - `@pdx/pp-top-navigation` requires `@pdx/pp-menu`
 - `@pdx/pp-sidenav` requires `@angular/material` and `@pdx/pp-icons`
+- `@pdx/pp-paginator` requires `@pdx/pp-menu`
+- `@pdx/pp-slide-toggle` requires `@angular/forms`
+- `@pdx/pp-button-toggle` only requires `@pdx/pp-theme` (no extra peers)
 
 ---
 

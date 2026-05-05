@@ -51,7 +51,7 @@ Import the icon stylesheet **once globally** (typically in the app's root `style
 
 ```scss
 // styles.scss — global only
-@use "@pdx/pp-icons/icons";
+@use '@pdx/pp-icons/icons';
 ```
 
 Never import it from a per-component SCSS file. The compiled CSS contains every icon class plus `@font-face` declarations — well over the typical 8KB component-style budget.
@@ -63,11 +63,7 @@ Never import it from a per-component SCSS file. The compiled CSS contains every 
 <pp-button label="Cancel" variant="outlined" (click)="cancel()" />
 <pp-button label="Reset" variant="text" size="sm" (click)="reset()" />
 <pp-button label="New" icon="pp-icon-add" variant="filled" (click)="create()" />
-<pp-icon-button
-  icon="pp-icon pp-icon-delete_trash"
-  ariaLabel="Delete"
-  (click)="delete()"
-/>
+<pp-icon-button icon="pp-icon pp-icon-delete_trash" ariaLabel="Delete" (click)="delete()" />
 ```
 
 Variants: `filled`, `outlined`, `text`, `tonal`. Sizes: `sm`, `md`, `lg`.
@@ -89,11 +85,7 @@ Inputs render at their **natural width** by default. Pick the width strategy fro
 - **Inside a `pp-form-block` / column layout that should fill its column** — set `[fullWidth]="true"` so the input stretches:
   ```html
   <pp-form-block>
-    <pp-input
-      label="First name"
-      [formField]="editForm.firstName"
-      [fullWidth]="true"
-    />
+    <pp-input label="First name" [formField]="editForm.firstName" [fullWidth]="true" />
   </pp-form-block>
   ```
 - **Standalone, in a toolbar / narrow filter / inline search** — leave `fullWidth` off and pick `size="sm"` (default) or `size="lg"`:
@@ -108,11 +100,7 @@ Don't blanket-apply `fullWidth` everywhere — a full-width input inside a narro
 For Delphi `ReadOnly = True` text fields, pass `[readonly]="true"`:
 
 ```html
-<pp-input
-  label="Personnel number"
-  [readonly]="true"
-  [value]="store.personnelNumber()"
-/>
+<pp-input label="Personnel number" [readonly]="true" [value]="store.personnelNumber()" />
 ```
 
 The binding is a property, not an attribute. In tests, assert via `nativeInput.readOnly` (DOM property), not `[readonly]` attribute selectors.
@@ -157,16 +145,8 @@ protected readonly departmentOptions: PPMenuItem[] = [
 ```
 
 ```html
-<pp-select
-  label="Department"
-  [options]="departmentOptions"
-  [formControl]="departmentControl"
-/>
-<pp-multiselect
-  label="Skills"
-  [options]="skillOptions"
-  [formControl]="skillsControl"
-/>
+<pp-select label="Department" [options]="departmentOptions" [formControl]="departmentControl" />
+<pp-multiselect label="Skills" [options]="skillOptions" [formControl]="skillsControl" />
 ```
 
 `pp-select` and `pp-multiselect` use **`[formControl]`** (legacy reactive forms), not `[formField]`. Mix Signal Forms (`form()` + `[formField]`) with a separate `FormControl` for any select in the same component. Sizes: `'large'` (default, 2.5rem), `'small'` (2rem).
@@ -200,11 +180,7 @@ Variants: `Default` (read-only), `Single` (replace-on-click), `SingleRadio` (rad
 ## pp-menu
 
 ```typescript
-import {
-  PPMenuComponent,
-  PPMenuMultiselectComponent,
-  PPMenuItem,
-} from "@pdx/pp-menu";
+import { PPMenuComponent, PPMenuMultiselectComponent, PPMenuItem } from '@pdx/pp-menu';
 ```
 
 ```html
@@ -222,11 +198,7 @@ import {
 ## pp-tab
 
 ```typescript
-import {
-  PPTabGroupComponent,
-  PPTabComponent,
-  PPTabContentDirective,
-} from "@pdx/pp-tab";
+import { PPTabGroupComponent, PPTabComponent, PPTabContentDirective } from '@pdx/pp-tab';
 ```
 
 ```html
@@ -249,8 +221,8 @@ For consumer-managed content (no `ppTabContent` directive), use `[(selectedIndex
 ## pp-tree
 
 ```typescript
-import { PPTreeComponent, TreeData } from "@pdx/pp-tree";
-import { PPMenuComponent, PPMenuItem } from "@pdx/pp-menu";
+import { PPTreeComponent, TreeData } from '@pdx/pp-tree';
+import { PPMenuComponent, PPMenuItem } from '@pdx/pp-menu';
 ```
 
 ```html
@@ -262,11 +234,7 @@ import { PPMenuComponent, PPMenuItem } from "@pdx/pp-menu";
   (selectNode)="onSelect($event)"
   (addNode)="onAdd($event)"
 />
-<pp-menu
-  #contextMenu
-  [items]="menuItems()"
-  (itemSelect)="onMenuAction($event)"
-/>
+<pp-menu #contextMenu [items]="menuItems()" (itemSelect)="onMenuAction($event)" />
 ```
 
 `PPTreeComponent` displays hierarchical data with selection, expansion, drag-and-drop reordering, sorting, and context menus. Data via `TreeData[]`. The `moreMenu` input accepts a `PPMenuComponent` reference — the tree node toggles `isOpen` and sets `triggerElement` automatically.
@@ -293,6 +261,79 @@ When `pp-tree` doesn't expose a feature you need (custom node templates, lazy lo
 
 Use when converting a Delphi `TGroupBox` that collapses or when a section of the form should be optional/progressive. Set `[accordion]="true"` for single-open behaviour. Variants: `desktop` (title + description horizontal), `mobile` (stacked). Prefer this over `<mat-expansion-panel>`.
 
+## pp-slide-toggle
+
+```typescript
+import { PPSlideToggleComponent } from '@pdx/pp-slide-toggle';
+```
+
+```html
+<pp-slide-toggle id="notifications" [label]="'notifications' | translate" [formField]="form.notifications" />
+<pp-slide-toggle [label]="'auto_save' | translate" labelPosition="before" size="sm" [(checked)]="autoSave" />
+```
+
+On/off switch for binary settings. Implements `ControlValueAccessor` — bind via `[formField]` for Signal Forms, `[formControl]` / `formControlName` for reactive forms, or two-way `[(checked)]` for non-form usage. Sizes: `'lg'` (default, 52×32) and `'sm'` (34×20). `labelPosition` can be `'before'` (left) or `'after'` (right, default).
+
+**Do not blanket-replace `TCheckBox`.** Many Delphi checkboxes are opt-in choices (terms acceptance, multi-select filters) — those stay as `pp-checkbox`. Use `pp-slide-toggle` only when the semantics are "this setting is on/off" (notifications enabled, dark mode, auto-save).
+
+## pp-button-toggle / pp-button-toggle-group
+
+```typescript
+import {
+  PPButtonToggleGroupComponent,
+  PPButtonToggleComponent,
+  PPButtonToggleSelectEvent,
+} from '@pdx/pp-button-toggle';
+```
+
+```html
+<pp-button-toggle-group
+  [(selectedValue)]="viewMode"
+  [ariaLabel]="'view_mode' | translate"
+  (selectionChange)="onViewModeChange($event)"
+>
+  <pp-button-toggle value="day" size="large">{{ 'day' | translate }}</pp-button-toggle>
+  <pp-button-toggle value="week" size="large">{{ 'week' | translate }}</pp-button-toggle>
+  <pp-button-toggle value="month" size="large">{{ 'month' | translate }}</pp-button-toggle>
+</pp-button-toggle-group>
+```
+
+Segmented control for mutually-exclusive _visual_ choices: view-mode pickers, density toggles, on-screen segmented filters. Sizes: `'small'` (32 px) and `'large'` (40 px, default). Two-way bind `[(selectedValue)]` or listen to `selectionChange` (`{ value: string }`). Keyboard: ArrowLeft / ArrowRight cycle focus across children.
+
+**Not a `ControlValueAccessor`.** Wire to a signal/state directly. For form-integrated single-choice (radio semantics), prefer `pp-radio-group`. Maps from Delphi `TRadioGroup` styled as toggle buttons or a `TSpeedButton` group with `GroupIndex`.
+
+**Children take label via content projection**, not a `label` input — `<pp-button-toggle value="day">Day</pp-button-toggle>`. This is the exception to the PDX label rule.
+
+## pp-paginator
+
+```typescript
+import { PPPaginatorComponent, PPPaginatorPageEvent } from '@pdx/pp-paginator';
+```
+
+```html
+<pp-paginator
+  [length]="store.totalItems()"
+  [(pageIndex)]="store.pageIndex"
+  [(pageSize)]="store.pageSize"
+  [ariaLabel]="'pagination' | translate"
+  [previousPageLabel]="'pagination.previous' | translate"
+  [nextPageLabel]="'pagination.next' | translate"
+  [pageSizeLabel]="'pagination.items_per_page' | translate"
+  [pageLabel]="'pagination.page' | translate"
+  (page)="onPage($event)"
+/>
+```
+
+```typescript
+protected onPage(event: PPPaginatorPageEvent): void {
+  this.store.loadPage(event.pageIndex, event.pageSize);
+}
+```
+
+Pair with `mat-table` for paged table conversions. **`pageIndex` is zero-based** (Material convention) — visible page labels in the UI are 1-based. **Page-size options are hard-coded** to `[10, 25, 50, 100]` in v1.0.1; not configurable. Pass translation keys for every ARIA label so screen readers respect the user's locale.
+
+Use `[hidePageSize]="true"` when the page size is fixed by product requirements and the dropdown adds noise.
+
 ## pp-form scaffold
 
 Every converted `TForm` body wraps in `<pp-form>`. Use the structural primitives (`PPFormSectionComponent`, `PPFormStackComponent`, `PPFormBlockComponent`, `PPFormTextblockComponent`, `PPFormActionsComponent`) instead of ad-hoc divs + Tailwind for form layout.
@@ -305,47 +346,27 @@ import {
   PPFormBlockComponent,
   PPFormTextblockComponent,
   PPFormActionsComponent,
-} from "@pdx/pp-form";
-import { PPButtonComponent } from "@pdx/pp-button";
-import { PPInputComponent } from "@pdx/pp-input";
+} from '@pdx/pp-form';
+import { PPButtonComponent } from '@pdx/pp-button';
+import { PPInputComponent } from '@pdx/pp-input';
 ```
 
 ```html
 <div class="w-full max-w-201">
   <pp-form>
     <pp-form-stack>
-      <pp-form-section
-        [title]="'profile.title' | translate"
-        [description]="'profile.description' | translate"
-      >
+      <pp-form-section [title]="'profile.title' | translate" [description]="'profile.description' | translate">
         <pp-form-block>
           <pp-form-stack layout="horizontal">
-            <pp-input
-              [label]="'profile.first_name' | translate"
-              [formField]="editForm.firstName"
-              [fullWidth]="true"
-            />
-            <pp-input
-              [label]="'profile.last_name' | translate"
-              [formField]="editForm.lastName"
-              [fullWidth]="true"
-            />
+            <pp-input [label]="'profile.first_name' | translate" [formField]="editForm.firstName" [fullWidth]="true" />
+            <pp-input [label]="'profile.last_name' | translate" [formField]="editForm.lastName" [fullWidth]="true" />
           </pp-form-stack>
         </pp-form-block>
       </pp-form-section>
 
       <pp-form-actions alignment="right">
-        <pp-button
-          [label]="'cancel' | translate"
-          variant="outlined"
-          (click)="cancel()"
-        />
-        <pp-button
-          [label]="'save' | translate"
-          variant="filled"
-          buttonType="submit"
-          (click)="save()"
-        />
+        <pp-button [label]="'cancel' | translate" variant="outlined" (click)="cancel()" />
+        <pp-button [label]="'save' | translate" variant="filled" buttonType="submit" (click)="save()" />
       </pp-form-actions>
     </pp-form-stack>
   </pp-form>
@@ -369,48 +390,28 @@ Dialog bodies (opened via `MatDialog` → `PPDialogComponent`) use the same prim
 Two side-by-side fields share a row → `pp-form-stack layout="horizontal"` with two `pp-form-block` children. Tall stack of fields → vertical `pp-form-stack` of `pp-form-block`s.
 
 ```html
-<pp-form-section
-  [title]="'employment.title' | translate"
-  [description]="'employment.description' | translate"
->
+<pp-form-section [title]="'employment.title' | translate" [description]="'employment.description' | translate">
   <pp-form-stack layout="horizontal">
     <pp-form-stack>
       <!-- left column -->
       <pp-form-block>
-        <pp-input
-          [label]="'first_name' | translate"
-          [formField]="form.firstName"
-          [fullWidth]="true"
-        />
+        <pp-input [label]="'first_name' | translate" [formField]="form.firstName" [fullWidth]="true" />
       </pp-form-block>
       <pp-form-block>
-        <pp-input
-          [label]="'last_name' | translate"
-          [formField]="form.lastName"
-          [fullWidth]="true"
-        />
+        <pp-input [label]="'last_name' | translate" [formField]="form.lastName" [fullWidth]="true" />
       </pp-form-block>
     </pp-form-stack>
     <pp-form-stack>
       <!-- right column -->
       <pp-form-block>
-        <pp-input
-          [label]="'employee_id' | translate"
-          [formField]="form.employeeId"
-          [fullWidth]="true"
-        />
+        <pp-input [label]="'employee_id' | translate" [formField]="form.employeeId" [fullWidth]="true" />
       </pp-form-block>
     </pp-form-stack>
   </pp-form-stack>
 
   <!-- full-width below the columns -->
   <pp-form-block>
-    <pp-textarea
-      [label]="'notes' | translate"
-      [formField]="form.notes"
-      [fullWidth]="true"
-      [autoGrowth]="true"
-    />
+    <pp-textarea [label]="'notes' | translate" [formField]="form.notes" [fullWidth]="true" [autoGrowth]="true" />
   </pp-form-block>
 </pp-form-section>
 ```
@@ -434,21 +435,9 @@ Many Delphi forms use a `TListPanel` on the right edge containing buttons that *
   </pp-form>
 
   <aside class="employee-detail__rail">
-    <pp-button
-      [label]="'assignments' | translate"
-      variant="outlined"
-      (click)="openAssignments()"
-    />
-    <pp-button
-      [label]="'planning_parameters' | translate"
-      variant="outlined"
-      (click)="openPlanningParameters()"
-    />
-    <pp-button
-      [label]="'credit' | translate"
-      variant="outlined"
-      (click)="openCredit()"
-    />
+    <pp-button [label]="'assignments' | translate" variant="outlined" (click)="openAssignments()" />
+    <pp-button [label]="'planning_parameters' | translate" variant="outlined" (click)="openPlanningParameters()" />
+    <pp-button [label]="'credit' | translate" variant="outlined" (click)="openCredit()" />
   </aside>
 </div>
 ```
@@ -470,6 +459,9 @@ Reserve `<pp-form-actions>` for OK / Cancel / Save / Next; use `<aside>` for the
 - Prefer `@pdx/pp-tab` over `MatTabsModule`.
 - Prefer `@pdx/pp-list` over `MatListModule` / `MatSelectionList`.
 - Prefer `@pdx/pp-expansion-panel` over `MatExpansionModule`.
+- Prefer `@pdx/pp-slide-toggle` over `MatSlideToggleModule` for on/off settings — but keep `pp-checkbox` for opt-in checkboxes.
+- Prefer `@pdx/pp-paginator` over `MatPaginatorModule` for paged tables and lists.
+- For segmented-control / view-mode toggles, use `@pdx/pp-button-toggle` + `pp-button-toggle-group` (not for form radios — those use `pp-radio-group`). Children of `pp-button-toggle-group` take their label via content projection, not a `label` input.
 - Wrap every converted `TForm` body in `<pp-form>` with the structural primitives.
 - Use `@pdx/pp-icons` for all icons (not Material Icons or FontAwesome).
-- **PDX controls take label text via a `label` input, not content projection.** Always self-closing tag with `label="..."`.
+- **PDX controls take label text via a `label` input, not content projection.** Always self-closing tag with `label="..."`. (Exceptions: `pp-chip`, `pp-button-toggle`, `pp-dialog` body, `pp-tab` body — all use content projection.)

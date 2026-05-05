@@ -5,7 +5,7 @@ argument-hint: '[analyze|generate] [path/to/file.dfm] [screenshot-path]'
 disable-model-invocation: true
 compatibility: Designed for Claude Code. Uses argument-hint and disable-model-invocation Claude Code extensions.
 metadata:
-  version: '1.6.1'
+  version: '1.7.0'
 ---
 
 # Delphi-to-Angular Conversion

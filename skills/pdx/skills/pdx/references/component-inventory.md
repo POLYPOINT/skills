@@ -739,7 +739,31 @@ interface NodeSortEvent {
   nodeId: string;
   direction: 'up' | 'down';
 }
+
+const DROP_POSITIONS = { before: 'before', after: 'after', inside: 'inside' } as const;
+type DropPosition = (typeof DROP_POSITIONS)[keyof typeof DROP_POSITIONS];
+
+const SORT_DIRECTIONS = { up: 'up', down: 'down' } as const;
+type SortDirection = (typeof SORT_DIRECTIONS)[keyof typeof SORT_DIRECTIONS];
 ```
+
+### Tree update utilities
+
+The tree emits `NodeMoveEvent` and `NodeSortEvent` but does not mutate `data` itself. Use these pure helpers to compute the new tree:
+
+```typescript
+import { moveNodeInTree, sortNodeInTree } from '@pdx/pp-tree';
+
+protected onMove(event: NodeMoveEvent): void {
+  this.treeData.set(moveNodeInTree(this.treeData(), event));
+}
+
+protected onSort(event: NodeSortEvent): void {
+  this.treeData.set(sortNodeInTree(this.treeData(), event));
+}
+```
+
+Both functions take `readonly TreeData[]` and return a new `TreeData[]` — safe for signal updates.
 
 ### Peer Dependencies
 
@@ -1319,6 +1343,182 @@ A `document:click` host listener always closes any open dropdown when a click la
 
 ---
 
+## @pdx/pp-button-toggle (v1.0.0)
+
+Segmented control for mutually-exclusive choices rendered as connected toggle buttons (e.g. view-mode picker, density toggle, on-screen filter). Use `pp-radio-group` instead for traditional form radios.
+
+### Components
+
+#### PPButtonToggleGroupComponent
+
+```typescript
+import {
+  PPButtonToggleGroupComponent,
+  PPButtonToggleComponent,
+  PPButtonToggleSelectEvent,
+} from '@pdx/pp-button-toggle';
+```
+
+```html
+<pp-button-toggle-group [(selectedValue)]="viewMode" ariaLabel="View mode" (selectionChange)="onViewModeChange($event)">
+  <pp-button-toggle value="day" size="large">Day</pp-button-toggle>
+  <pp-button-toggle value="week" size="large">Week</pp-button-toggle>
+  <pp-button-toggle value="month" size="large">Month</pp-button-toggle>
+</pp-button-toggle-group>
+```
+
+| Input            | Type             | Default | Description                                                            |
+| ---------------- | ---------------- | ------- | ---------------------------------------------------------------------- |
+| `selectedValue`  | `string \| null` | `null`  | Currently selected child value. ModelSignal — supports two-way `[()]`. |
+| `ariaLabel`      | `string \| null` | `null`  | Accessible label for the group (`role="group"`).                       |
+| `ariaLabelledby` | `string \| null` | `null`  | ID of the element labelling the group.                                 |
+
+**Output:** `selectionChange` emits `PPButtonToggleSelectEvent` (`{ value: string }`).
+
+**Keyboard:** ArrowLeft / ArrowRight cycle focus across children with circular wrapping. Disabled toggles are skipped.
+
+#### PPButtonToggleComponent
+
+```html
+<pp-button-toggle value="grid" size="small" [(isActive)]="gridActive">Grid</pp-button-toggle>
+```
+
+| Input      | Type                 | Default   | Description                                                                                                                       |
+| ---------- | -------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `value`    | `string`             | `''`      | The value emitted by the parent group when this toggle is selected. Required when used inside `pp-button-toggle-group`.           |
+| `isActive` | `boolean`            | `false`   | Active state. ModelSignal — supports two-way `[()]`. Inside a group, the parent owns this; standalone, manage it on the consumer. |
+| `disabled` | `boolean`            | `false`   | Disabled state.                                                                                                                   |
+| `size`     | `'small' \| 'large'` | `'large'` | Visual size. Figma labels these "sm" (32 px height) and "md" (40 px height).                                                      |
+
+**Output:** `toggleChange` emits the new boolean active state. Standalone only — inside a group, selection is delegated to `selectionChange` on the parent.
+
+**Content:** The button label is projected as content (`<pp-button-toggle>Grid</pp-button-toggle>`). Unlike most PDX form controls, this one does **not** take a `label` input.
+
+### Models
+
+```typescript
+interface PPButtonToggleSelectEvent {
+  readonly value: string;
+}
+```
+
+**Forms:** Not a `ControlValueAccessor`. Wire to a signal/state directly, or to `[(selectedValue)]` on the group.
+
+### Peer Dependencies
+
+`@angular/core`, `@pdx/pp-theme`
+
+---
+
+## @pdx/pp-slide-toggle (v1.2.0)
+
+On/off switch for binary settings (e.g. notifications enabled, dark mode, auto-save). Replaces `mat-slide-toggle`. Use `pp-checkbox` instead for opt-in checkboxes (terms acceptance, multi-select filters).
+
+### Components
+
+#### PPSlideToggleComponent
+
+```typescript
+import { PPSlideToggleComponent, PPSlideToggleChangeEvent } from '@pdx/pp-slide-toggle';
+```
+
+```html
+<pp-slide-toggle id="notifications" label="Notifications" [(checked)]="notificationsOn" />
+<pp-slide-toggle label="Auto-save" labelPosition="before" size="sm" [formControl]="autoSaveControl" />
+```
+
+| Input            | Type                  | Default                    | Description                                                             |
+| ---------------- | --------------------- | -------------------------- | ----------------------------------------------------------------------- |
+| `id`             | `string`              | `'pp-slide-toggle-<rand>'` | Unique identifier.                                                      |
+| `label`          | `string \| null`      | `null`                     | Visible label text.                                                     |
+| `labelPosition`  | `'before' \| 'after'` | `'after'`                  | Whether the label sits before (left of) or after (right of) the switch. |
+| `size`           | `'sm' \| 'lg'`        | `'lg'`                     | Visual size. Figma: `lg` is 52×32, `sm` is 34×20.                       |
+| `checked`        | `boolean`             | `false`                    | On/off state. ModelSignal — supports two-way `[()]`.                    |
+| `disabled`       | `boolean`             | `false`                    | Disabled state. ModelSignal — supports two-way `[()]`.                  |
+| `ariaLabel`      | `string \| null`      | `null`                     | Accessibility label.                                                    |
+| `ariaLabelledby` | `string \| null`      | `null`                     | ID of the element labelling the toggle.                                 |
+
+**Output:** `slideToggleChange` emits `PPSlideToggleChangeEvent` (`{ id: string, checked: boolean }`).
+
+**Forms:** Implements `ControlValueAccessor` — bind via `[formField]` (Signal Forms) or `[formControl]` / `formControlName` (reactive forms).
+
+### Models
+
+```typescript
+interface PPSlideToggleChangeEvent {
+  id: string;
+  checked: boolean;
+}
+```
+
+### Peer Dependencies
+
+`@angular/common`, `@angular/core`, `@angular/forms`, `@pdx/pp-theme`
+
+---
+
+## @pdx/pp-paginator (v1.0.1)
+
+Page navigation with previous/next buttons, numeric page list (with overflow ellipses), and a page-size dropdown. Pair with `mat-table` for paged tables. Replaces `mat-paginator`.
+
+### Components
+
+#### PPPaginatorComponent
+
+```typescript
+import { PPPaginatorComponent, PPPaginatorPageEvent } from '@pdx/pp-paginator';
+```
+
+```html
+<pp-paginator
+  [length]="totalItems()"
+  [(pageIndex)]="pageIndex"
+  [(pageSize)]="pageSize"
+  ariaLabel="Employees pagination"
+  (page)="onPage($event)"
+/>
+```
+
+| Input               | Type      | Default            | Description                                                           |
+| ------------------- | --------- | ------------------ | --------------------------------------------------------------------- |
+| `length`            | `number`  | `0`                | Total number of items across all pages.                               |
+| `pageIndex`         | `number`  | `0`                | Zero-based current page index. ModelSignal — supports two-way `[()]`. |
+| `pageSize`          | `number`  | `10`               | Items per page. ModelSignal — supports two-way `[()]`.                |
+| `disabled`          | `boolean` | `false`            | Disable all controls.                                                 |
+| `hidePageSize`      | `boolean` | `false`            | Hide the page-size dropdown.                                          |
+| `ariaLabel`         | `string`  | `'Pagination'`     | ARIA label for the paginator container.                               |
+| `pageSizeLabel`     | `string`  | `'Items per page'` | Label next to the page-size dropdown.                                 |
+| `previousPageLabel` | `string`  | `'Previous page'`  | ARIA label on the previous-page button.                               |
+| `nextPageLabel`     | `string`  | `'Next page'`      | ARIA label on the next-page button.                                   |
+| `pageLabel`         | `string`  | `'Page'`           | ARIA-label prefix on numeric page buttons (e.g. `"Page 3"`).          |
+
+**Output:** `page` emits `PPPaginatorPageEvent` whenever the user changes page or page-size.
+
+**Page-size options:** Hard-coded internally to `[10, 25, 50, 100]`. Not configurable in v1.0.1.
+
+**Visible page labels are 1-based** — the dropdown / numeric buttons show `Page 1, Page 2, …` even though the public `pageIndex` is zero-based, matching Angular Material's convention.
+
+**Figma variants:** The design has two visual layouts — **Pages** (full numeric page list, ~404 px wide) and **Page Selector** (compact dropdown, ~194 px wide). The component renders both adaptively; consumers don't pick between them.
+
+### Models
+
+```typescript
+interface PPPaginatorPageEvent {
+  readonly length: number;
+  readonly pageIndex: number;
+  readonly previousPageIndex: number;
+  readonly pageSize: number;
+}
+```
+
+**Forms:** Not a `ControlValueAccessor`. Bind `pageIndex` / `pageSize` via two-way model bindings or react to the `page` event in a signal-store / service.
+
+### Peer Dependencies
+
+`@angular/core`, `@pdx/pp-menu`, `@pdx/pp-theme`
+
+---
+
 ## Component Replacement Map
 
 When a PDX component exists, always use it instead of Angular Material or custom implementations.
@@ -1347,6 +1547,9 @@ When a PDX component exists, always use it instead of Angular Material or custom
 | Expansion panel  | `PPExpansionPanelComponent` + `PPExpansionPanelItemComponent`       | `mat-expansion-panel`                                           |
 | Form scaffold    | `PPFormComponent` (+ section / stack / block / textblock / actions) | Custom form layout divs / ad-hoc Flex/Grid shells               |
 | Icons            | `pp-icon pp-icon-*`                                                 | `mat-icon`, FontAwesome, other icon libraries                   |
+| Button toggle    | `PPButtonToggleComponent` + `PPButtonToggleGroupComponent`          | `mat-button-toggle`, `mat-button-toggle-group`                  |
+| Slide toggle     | `PPSlideToggleComponent`                                            | `mat-slide-toggle`                                              |
+| Paginator        | `PPPaginatorComponent`                                              | `mat-paginator`                                                 |
 
 `pp-sidenav` and `pp-top-navigation` are **not** in this drop-in table. They are app-shell design decisions — use them only when introducing or redesigning global navigation. See the "Navigation (app-shell only)" section in [../SKILL.md](../SKILL.md) for the applicability rules.
 
@@ -1354,12 +1557,10 @@ When a PDX component exists, always use it instead of Angular Material or custom
 
 - Autocomplete (`mat-autocomplete`)
 - Date picker (`mat-datepicker`)
-- Slide toggle (`mat-slide-toggle`)
 - Progress bar / spinner (`mat-progress-bar`, `mat-progress-spinner`)
 - Snackbar (`mat-snackbar`)
 - Tooltip (`mat-tooltip`)
 - Table (`mat-table`)
-- Paginator (`mat-paginator`)
 - Sort (`mat-sort`)
 - Toolbar (`mat-toolbar`) — as a generic container, page header, dialog header, etc. (not as app-shell top navigation — for that, see `pp-top-navigation` above)
 - Sidenav (`mat-sidenav`) — as a non-navigation drawer: filter panels, inspector panes, document outlines, etc. (not as app-shell navigation — for that, see `pp-sidenav` above)
