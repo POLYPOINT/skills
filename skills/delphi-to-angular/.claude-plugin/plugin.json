@@ -1,5 +1,10 @@
 {
   "name": "delphi-to-angular",
-  "description": "Guides conversion of Delphi components to Angular",
-  "version": "1.7.0"
+  "description": "Guide the conversion of Polypoint P2 Delphi VCL forms (.dfm/.pas) and frames into Angular standalone components — analyzing DFM/PAS sources, mapping VCL components (TForm, TFrame, TDBGrid, TVirtualStringTree, TPanel, TPageControl, etc.) to Angular + @pdx/* equivalents, and emitting PDX-styled feature components with NgRx Signal Store and Signal Forms.",
+  "version": "1.8.0",
+  "author": {
+    "name": "POLYPOINT"
+  },
+  "keywords": ["angular", "delphi", "migration", "polypoint", "pdx", "vcl", "conversion"],
+  "category": "development"
 }

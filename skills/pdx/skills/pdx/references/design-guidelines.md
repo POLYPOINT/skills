@@ -65,7 +65,7 @@ Do not introduce custom font sizes outside the scale unless explicitly approved.
 
 PDX defines a structured color system. Always use design tokens — never raw hex or RGB values in component styles.
 
-**Main colors:** Primary, Secondary, Tertiary (+ SystemcolorUI). Each has a tonal palette ranging from shade `000` to `1000`.
+**Main colors:** Primary, Secondary, Tertiary (+ SystemcolorUI). Each palette emits an unsuffixed base token plus discrete shade keys: `50, 100, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 920, 940, 950, 960, 980, 990` (`50` darkest → `990` lightest). There is **no** `1000` shade — `990` is the lightest. SCSS variables: `$pp-<palette>` (base) + `$pp-<palette>-<shade>`. CSS custom properties: `--pp-<palette>` + `--pp-<palette>-<shade>` (the prefix is `--pp-`, **not** `--color-pp-`).
 
 **Status colors:** Error, Success, Info, Warning, Disabled.
 
@@ -118,9 +118,9 @@ Shadows are a **semantic signal for elevation**, not a decorative tool. A shadow
 
 **Alternative to shadows:** Elements that previously relied on shadows for separation should now use surface color, contrast, and borders instead.
 
-- Page background: `secondary-shade990` (light gray)
-- Element surface: `secondary-shade1000` (white)
-- Border: `1px` solid `secondary-shade900`
+- Page background: `$pp-secondary-980` (light gray)
+- Element surface: `$pp-secondary-990` (lightest, near-white) — or `$pp-white` for pure white
+- Border: `1px` solid `$pp-secondary-900`
 
 > Principle: Differentiate through surface, contrast, and borders — not through elevation.
 
@@ -296,7 +296,7 @@ Forms are not a single component but a flexible composition of multiple elements
 - Apply consistent spacing and clear alignment.
 - Use consistent patterns across the application.
 
-> **Layout pitfalls:** before building a multi-column or many-button form, see the **Layout pitfalls** section under `@pdx/pp-form` in [component-inventory.md](component-inventory.md) — `pp-form-block` has a 230 px min-width (so two side-by-side blocks need ≥ 508 px), `pp-form-actions` is a hard 2-column grid (so > 2 buttons need a custom flex action bar), and nested `<header>` elements inside `pp-form` produce duplicate-banner a11y violations.
+> **Layout pitfalls:** before building a multi-column or many-button form, see the **Layout pitfalls** section under `@pdx/pp-form` in [component-inventory.md](component-inventory.md) — `pp-form-block` has a 230 px min-width (so two side-by-side blocks need ≥ 508 px), `pp-form-actions` is a responsive `auto-fit` grid of 150 px tracks (so adjacent buttons wrap at narrow widths and tightly-controlled bars need a custom flex layout), and nested `<header>` elements inside `pp-form` produce duplicate-banner a11y violations.
 
 ---
 
@@ -330,8 +330,8 @@ Chips represent small pieces of information, attributes, or selections. They hel
 
 - Main content area should have a max-width of `75rem`, aligned to the start of the page (not centered).
 - This is the **default** pattern for standard content pages. Other layouts (dashboards, full-bleed views, split panes, data-heavy screens) may deviate when the content requires it. Document exceptions when they arise.
-- Page background: `secondary-shade990`
-- Content cards and panels: `secondary-shade1000` with `1px` border in `secondary-shade900`
+- Page background: `$pp-secondary-980`
+- Content cards and panels: `$pp-secondary-990` with `1px` border in `$pp-secondary-900`
 
 ---
 

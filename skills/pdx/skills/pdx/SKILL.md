@@ -1,8 +1,8 @@
 ---
 name: pdx
-description: This skill should be used when the user asks to "apply PDX styles", "use PDX libs", "use PDX styling", "make it look like POLYPOINT", "apply POLYPOINT styling", "use POLYPOINT libs", "use POLYPOINT components", "apply pdx", or mentions the POLYPOINT Design Experience design system. Guides usage of @pdx/* Angular component libraries and design tokens to produce UI consistent with the PDX design system.
+description: This skill should be used when applying the PDX (POLYPOINT Design Experience) design system to Angular code — installing or using `@pdx/*` libraries, replacing Angular Material components with PDX equivalents, applying PDX design tokens or typography, building forms with `pp-form`, or auditing existing UI for PDX consistency. Triggers on phrases like "apply PDX styles", "use PDX libs", "use POLYPOINT components", "make it POLYPOINT-styled", "replace mat-button with pp-button", or "audit Material usage".
 metadata:
-  version: '1.6.0'
+  version: '1.7.0'
 ---
 
 # PDX — POLYPOINT Design Experience
@@ -15,14 +15,14 @@ Apply the PDX design system to Angular frontends. PDX provides reusable Angular 
 
 ## Label rule
 
-PDX form controls (`pp-button`, `pp-icon-button`, `pp-checkbox`, `pp-radio-button`, `pp-input`, `pp-textarea`, `pp-select`, `pp-multiselect`) take their visible text via a `label` input — **they do not project content**. `<pp-checkbox>Text</pp-checkbox>` and `<pp-button>Save</pp-button>` render with an empty label — the projected text is silently dropped. Always pass `label="..."` (or bind it: `[label]="'save' | translate"`), use a self-closing tag, and never wrap content. Add `id="..."` on `pp-checkbox` / `pp-radio-button` for `for`/`htmlFor` linkage. Exceptions: `pp-chip` falls back to `ng-content` when `label` is unset; `pp-dialog` and `pp-tab` use content projection for **bodies**, not labels.
+PDX form controls (`pp-button`, `pp-checkbox`, `pp-radio-button`, `pp-input`, `pp-textarea`, `pp-select`, `pp-multiselect`, `pp-slide-toggle`) take their visible text via a `label` input — **they do not project content**. `<pp-checkbox>Text</pp-checkbox>` and `<pp-button>Save</pp-button>` render with an empty label — the projected text is silently dropped. Always pass `label="..."` (or bind it: `[label]="'save' | translate"`), use a self-closing tag, and never wrap content. Add `id="..."` on `pp-checkbox` / `pp-radio-button` for `for`/`htmlFor` linkage. Exceptions: icon-only buttons (`pp-icon-button`, `pp-floating-action-button`) have no `label` input — identify them via `ariaLabel` instead; `pp-chip` falls back to `ng-content` when `label` is unset; `pp-button-toggle` takes its label via content projection (segmented-control children); `pp-dialog` and `pp-tab` use content projection for **bodies**, not labels.
 
 ## Layout pitfalls (read before building forms)
 
 PDX form primitives have hard sizing constraints that can clip or wrap content. Before composing a multi-column form or a many-button action bar, check the **Layout pitfalls** section under `@pdx/pp-form` in [references/component-inventory.md](references/component-inventory.md):
 
 - `pp-form-block` has `min-width: 14.375rem` (230 px). Two blocks side by side need ≥ 508 px or the second wraps.
-- `pp-form-actions` is a hard 2-column grid — for > 2 buttons, build a custom flex action bar instead.
+- `pp-form-actions` is a responsive `auto-fit` grid of `9.375rem` (150 px) tracks with `0.75rem` gap. Buttons wrap onto new rows when the container is narrower than `n × 150 px + gaps`. Alignment via `--left` / `--center` / `--right` modifiers (default right). For tightly-controlled multi-button bars, build a custom flex action bar instead.
 - No nested `<header>` inside `pp-form` — `pp-form-section` already renders one. Two `<header>` descendants on the page = duplicate banner landmarks = axe violation. Use `<div>` for visual section headers inside the form.
 
 Width control for `pp-input` / `pp-textarea` is **context-aware**: use `[fullWidth]="true"` only inside a `pp-form-block` / column layout that should fill its column. For standalone inputs (toolbars, narrow filters, inline search), pick `size="sm"` or `size="lg"` instead.
@@ -95,7 +95,7 @@ When these conditions are not met, **do not reach for `pp-sidenav` or `pp-top-na
 - `mat-sidenav` used as a drawer (filters, inspector, document outline) → keep `mat-sidenav`, it's not navigation.
 - `mat-toolbar` used as a page header, dialog header, or action bar → keep `mat-toolbar`.
 - A static in-page menu or tab-like switcher inside one feature → use `pp-tab-group`, `pp-menu`, or plain buttons.
-- Converted Delphi forms → never own navigation; see delphi-to-angular skill.
+- Feature components routed _into_ the app shell (e.g. converted legacy forms, dialog bodies) → never own navigation, even if the legacy source had a top toolbar or a left tree.
 
 When the conditions **are** met, use the full component family: `PPSidenavComponent` with `PPSidenavItemComponent` + `PPSidenavGroupComponent` + `PPSidenavSubItemComponent`, or `PPTopNavigationComponent` with a `PPTopNavItem[]` array. See [component-inventory.md](references/component-inventory.md) for APIs.
 
@@ -120,7 +120,7 @@ Follow PDX design guidelines for all styling decisions. Key rules:
 - **Corner radius:** `full` for controls, `0.5rem` for cards/containers, `1rem` for dialogs (desktop)
 - **Shadows:** Only for floating elements (FAB, modals, dropdowns). Use surface color and borders for separation.
 - **Icons:** `@pdx/pp-icons` only — no other icon libraries
-- **Page layout:** Max-width `75rem`, start-aligned. Background `secondary-shade990`, cards `secondary-shade1000` with `1px` border `secondary-shade900`
+- **Page layout:** Max-width `75rem`, start-aligned. Background `$pp-secondary-980`, cards `$pp-secondary-990` with `1px` border `$pp-secondary-900`. (Scale tops at `990` — lightest. Use `var(--pp-secondary-990)` etc. in CSS, `$pp-secondary-990` in SCSS.)
 
 For the complete guidelines, consult **[references/design-guidelines.md](references/design-guidelines.md)**.
 
@@ -146,8 +146,9 @@ When Figma MCP tools are available, fetch component documentation from the PDX F
 
 ## Important Notes
 
-- **Libraries are under active development.** The component inventory in this skill is a snapshot. Before relying on a specific component API, verify against the actual PDX source repo to confirm inputs, outputs, and available features are up to date.
-- **PDX source repo:** Available on Azure DevOps (`Shared Components / pdx`). Clone or browse via `az repos` CLI if the latest component source is needed.
+- **Libraries are under active development.** The component inventory in this skill is a snapshot. Before relying on a specific component API, verify against the actual PDX source repo.
+- **PDX source repo:** `Shared Components / pdx` on Azure DevOps. Each component lives under `libs/<package>/src/lib/...`. Component inputs are declared with `input()` / `model()` in the `*.component.ts`; templates show how `icon` / class inputs are consumed. Color tokens are emitted from `libs/pp-theme/css/color/colors.css` (CSS custom properties `--pp-*`) and `libs/pp-theme/scss/color/colors.scss` (SCSS variables `$pp-*`).
+- **Dark mode:** `@pdx/pp-theme` does not currently ship a dark-mode color scheme. There are no `[data-theme="dark"]` selectors or `prefers-color-scheme` media queries in the theme. If a project needs dark mode, expect to define alternate tokens locally.
 
 ## Reference Files
 

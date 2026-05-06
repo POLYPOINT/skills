@@ -180,15 +180,18 @@ Instead of SCSS imports, styles can be added to the `angular.json` styles array:
 
 ```css
 .my-element {
-  color: var(--color-pp-primary-500);
-  background: var(--color-pp-secondary-980);
+  color: var(--pp-primary);
+  background: var(--pp-secondary-980);
+  border-color: var(--pp-secondary-900);
 }
 ```
+
+The CSS custom-property prefix is **`--pp-`** (not `--color-pp-`). Each palette emits an unsuffixed base (e.g. `--pp-primary`) plus discrete shade keys: `50, 100, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 920, 940, 950, 960, 980, 990` (`50` darkest → `990` lightest). There is no `1000`.
 
 ### With TailwindCSS
 
 ```html
-<div class="text-pp-primary-500 bg-pp-secondary-980 border-pp-secondary-900">Content</div>
+<div class="text-pp-primary bg-pp-secondary-980 border-pp-secondary-900">Content</div>
 ```
 
 ---
@@ -227,10 +230,10 @@ PDX icons use a webfont with CSS classes:
 
 Pattern: `pp-icon pp-icon-<icon-name>`. Icon names use **underscores**, not hyphens — see the correction table in [component-inventory.md](component-inventory.md).
 
-For icon-only buttons, always provide an `aria-label`:
+For icon-only buttons, always provide an `aria-label`. The `icon` input on `pp-button`, `pp-icon-button`, `pp-tab`, and `pp-sidenav-item` takes the **modifier class only** — components auto-prepend `pp-icon`. Don't pass `"pp-icon pp-icon-edit_filled"` (that double-applies the base class):
 
 ```html
-<pp-icon-button icon="pp-icon pp-icon-edit_filled" ariaLabel="Edit item" />
+<pp-icon-button icon="pp-icon-edit_filled" ariaLabel="Edit item" />
 ```
 
 ---
@@ -329,18 +332,26 @@ Standard PDX page layout:
 ```scss
 :host {
   display: block;
-  background: $pp-secondary-990;
+  background: $pp-secondary-980;
   padding: 1.5rem;
 }
 
 .content-card {
-  background: $pp-secondary-1000;
+  background: $pp-secondary-990;
   border: 1px solid $pp-secondary-900;
   border-radius: 0.5rem;
   padding: 1.5rem;
   max-width: 75rem;
 }
 ```
+
+> The shade scale tops at `990` (lightest); there is no `1000`. `$pp-secondary-990` is the lightest near-white surface. For pure white, the theme also exports `$pp-white` / `var(--pp-white)`.
+
+---
+
+## Dark Mode
+
+`@pdx/pp-theme` does **not** ship a dark-mode color scheme. There are no `[data-theme="dark"]` selectors or `prefers-color-scheme` media queries in the theme output. Projects that need dark mode must define alternate tokens locally; do not assume PDX components adapt automatically.
 
 ---
 

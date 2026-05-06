@@ -15,7 +15,7 @@ PDX component recipes (buttons, inputs, form scaffold, layout pitfalls, icons, e
 | i18n             | `@ngx-translate/core` — `TranslatePipe`, `TranslateService`, locale JSON files in the app's i18n folder |
 | Styling          | TailwindCSS v4 + SCSS (BEM)                                                                             |
 | Date/time        | `Temporal` (exposed as a **global** — do not import)                                                    |
-| Unit testing     | Vitest                                                                                                  |
+| Unit testing     | Angular `@angular/build:unit-test` executor (Vitest-based) — not Jest, not Karma                        |
 | E2E testing      | Playwright                                                                                              |
 | A11y testing     | `vitest-axe` + a shared `formatA11yViolations` helper from the workspace's testing lib                  |
 | API mocking      | MSW where the workspace has it; otherwise builders in the workspace's shared test-data lib              |
@@ -303,6 +303,46 @@ const MOCK_ITEMS: Item[] = [
 
 For mock data large enough to demo the feature, prefer the **MSW + test-data builder** pattern below over inlining `MOCK_ITEMS` arrays.
 
+### HTTP interceptors — discover, don't reinvent
+
+Before adding any interceptor (auth, error mapping, loading indicators, retries, telemetry), search the workspace for an existing global stack. Look for `provideHttpClient(withInterceptors([...]))` in the app config, and grep `*.interceptor.ts` / `withInterceptors` across shared libs. If a stack is already registered, the new service should rely on it — feature-specific interceptors are almost always wrong.
+
+Only introduce a new interceptor when the workspace has none, or when the behavior is genuinely scoped to one feature (rare). When you do, register it in the existing `provideHttpClient` array — don't create a parallel HTTP client.
+
+### Consuming observables in templates — `toSignal()`
+
+When a service returns `Observable<T>`, convert to a signal at the consumer rather than calling `subscribe()` manually. This is required by the project's reactivity conventions — search the workspace for existing `toSignal(` usages to confirm the prevailing pattern (initial-value, error handling, manual cleanup, etc.) before adding a new one.
+
+For a one-off observable that doesn't depend on a signal:
+
+```typescript
+import { toSignal } from '@angular/core/rxjs-interop';
+
+export class FeatureComponent {
+  private readonly service = inject(SomeService);
+
+  protected readonly currentUser = toSignal(this.service.getCurrentUser(), { initialValue: null });
+}
+```
+
+For an input-driven load, you must bridge the input signal to the observable — calling `this.itemId()` directly inside `toSignal(...)` reads it once at field-init time and never refetches when the input changes:
+
+```typescript
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { switchMap } from 'rxjs';
+
+export class FeatureComponent {
+  private readonly service = inject(SomeService);
+  protected readonly itemId = input.required<string>();
+
+  protected readonly items = toSignal(toObservable(this.itemId).pipe(switchMap((id) => this.service.getItems(id))), {
+    initialValue: [] as Item[],
+  });
+}
+```
+
+For more complex flows (loading state, error mapping, optimistic updates, cancellation across multiple inputs), prefer a signal store with `rxMethod` over hand-rolled `toObservable` + `switchMap`. Reserve raw `effect()` for fire-and-forget reactions to signal changes that don't return a stream.
+
 ## i18n & ngx-translate
 
 All user-visible text must go through `TranslatePipe` (template) or `TranslateService.instant()` (TypeScript). **Never hardcode strings** — not German, not English.
@@ -552,7 +592,7 @@ background: var(--mat-sys-surface-container);
 color: #717479;
 ```
 
-Scale: 50 (darkest) to 990 (lightest). 500 is the base.
+Each palette emits an unsuffixed base token (`--pp-primary`) plus discrete shade keys: `50, 100, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 920, 940, 950, 960, 980, 990` — `50` darkest, `990` lightest. There is **no** `1000`. The unsuffixed base is the brand color (not shade `500`). For SCSS use `$pp-primary` / `$pp-primary-990` etc.; for CSS use `var(--pp-primary)` / `var(--pp-primary-990)`. There is no `--color-pp-*` prefix.
 
 ## Route Pattern
 
@@ -578,7 +618,7 @@ this.dialog.open(SomeDialogComponent, {
 });
 ```
 
-Wrap the dialog body in `<pp-dialog>` (see [pdx-recipes.md](pdx-recipes.md)). Use `<mat-dialog-actions>` (not `<pp-form-actions>`) inside `<pp-dialog>` — the dialog shell owns its footer.
+Wrap the dialog body in `<pp-dialog>` (see [pdx-recipes.md](pdx-recipes.md)). The dialog header (title + close X) and footer buttons are owned by `<pp-dialog>` itself via its `[title]`, `[confirmButtonTitle]`, `[showDismissButton]` inputs and `(confirm)` / `(dismiss)` outputs. **Do not** add a separate `<pp-form-actions>` or `<mat-dialog-actions>` row inside the dialog body — those create duplicate footers. Use `<mat-dialog-actions>` only when wrapping a legacy dialog that hasn't been migrated to `<pp-dialog>` yet.
 
 ## General Rules
 

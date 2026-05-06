@@ -101,6 +101,20 @@ Key things to extract from PAS:
 | `TPolyFrame`  | Base for frames, includes High-DPI scaling |
 | `TDataModule` | Base for data access modules               |
 
+## HiDPI image-list triad — drop on conversion
+
+Polypoint Delphi forms ship per-DPI `TImageList` components in groups of three, e.g.:
+
+```
+ilHierarch         ← 96 dpi (1×)
+ilHierarch_144dpi  ← 144 dpi (1.5×)
+ilHierarch_192dpi  ← 192 dpi (2×)
+```
+
+VCL has no DPI-aware glyph scaling; the codebase compensates by maintaining three pre-rendered bitmap sheets per icon set. **Discard the entire triad on conversion** — `@pdx/pp-icons` is a webfont and scales with `font-size`, so per-DPI assets have no equivalent. Map each image-list entry to its semantic icon name (look up the symbol in `@pdx/pp-icons` — see the icon correction table in [pdx-recipes.md](pdx-recipes.md)) and ignore the rest.
+
+Image lists are often hosted on a runtime DataModule (e.g. `dmHierarchieImg`) that exists only to bundle the bitmaps. When the entire DM is image-list metadata, the DM has no Angular counterpart at all — record that in the conversion plan so a reader doesn't go hunting for a service that shouldn't exist.
+
 ### Always read the base class
 
 Many forms inherit from a domain-specific base (e.g. `TfKnotenGen`, `TfMitarbBase`). The base class typically defines:
@@ -141,6 +155,46 @@ fDefFlexHierarchie.pas
 
 List every traced sub-dialog under a **Connected dialogs** section in the conversion plan, with a one-line role per dialog. Each becomes its own Angular dialog component opened via `MatDialog.open(..., { width: '36rem', /* … */ })`.
 
+## Two data-flow patterns — pick the right one
+
+Polypoint forms come in two shapes. Identify which one before designing the Angular conversion.
+
+### Pattern A — dataset-bound (DB-aware controls)
+
+`TDataSource` placed on the DFM, `TOraQuery` (or similar) feeding it, `TDBGrid` / `TDBEdit` / `TDBLookupComboBox` reading fields directly. This is the classic VCL pattern and the embedded SQL inside `TOraQuery.SQL.Strings` is the data-access layer.
+
+Angular shape: feature service exposes typed `Observable<T>` / DTOs from a REST endpoint; component consumes via `toSignal()` or a signal store. The embedded SQL is **not** ported — flag it as a backend task.
+
+### Pattern B — controller-mediated (no DB-aware controls)
+
+The DFM has **no** `TDataSource` and **no** `TDB*` controls. The form holds a controller interface field (e.g. `IOrgTreeClient`, `IUserEmployeeMapping`) and passes domain objects in and out through method calls. DataModules (`dm*.pas`) are constructed at runtime via `TSingleDmFactory` rather than being placed on the form's DFM.
+
+This is the canonical Polypoint pattern in modern PEP code (e.g. `fDefFlexHierarchie`, `fHierarchListe`). When you see no `TDataSource = ...` properties on any control, you're in Pattern B.
+
+Angular shape:
+
+```
+component
+  ↳ injects feature store (signalStore)
+    ↳ store.rxMethod (loadX, saveX)
+      ↳ injects typed service
+        ↳ HttpClient → REST endpoint → DTO
+template reads store.items() / store.selected() / store.busy()
+```
+
+No `[formField]` on bound controls, no `(input)` → patch-store; instead, controls call store methods on `(click)` / `(change)` and the template reflects derived state.
+
+### How to tell them apart
+
+| Signal in the DFM/PAS               | Pattern |
+| ----------------------------------- | ------- |
+| `TDataSource` placed on the form    | A       |
+| Any `TDB*` control                  | A       |
+| `TOraQuery.SQL.Strings = (...)`     | A       |
+| Controller interface field (`IFoo`) | B       |
+| `TSingleDmFactory` / runtime DM     | B       |
+| Controls bind via method calls only | B       |
+
 ## Data Flow Pattern
 
 ```
@@ -163,13 +217,13 @@ form.field().value() changes (signal)
 
 ## Lifecycle
 
-| Delphi Event     | When                          | Angular Equivalent                    |
-| ---------------- | ----------------------------- | ------------------------------------- |
-| `FormCreate`     | Component instantiated        | `constructor()` or field initializers |
-| `FormShow`       | Component visible, data loads | `effect()` reacting to inputs         |
-| User interaction | Events fire                   | Template events + signal updates      |
-| `FormCloseQuery` | Before close, validate        | `canDeactivate` guard                 |
-| `FormDestroy`    | Cleanup                       | `DestroyRef` / `takeUntilDestroyed`   |
+| Delphi Event     | When                                          | Angular Equivalent                                                                      |
+| ---------------- | --------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `FormCreate`     | Component instantiated, runs once             | `constructor()` or field initializers — **not** `effect()`                              |
+| `FormShow`       | Component made visible (potentially repeated) | `effect(() => store.load(this.id()))` reacting to `input()` signals or route activation |
+| User interaction | Events fire                                   | Template events + signal updates                                                        |
+| `FormCloseQuery` | Before close, validate                        | `canDeactivate` guard                                                                   |
+| `FormDestroy`    | Cleanup                                       | `DestroyRef` / `takeUntilDestroyed`                                                     |
 
 ## File Encoding
 

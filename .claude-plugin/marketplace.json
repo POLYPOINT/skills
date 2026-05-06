@@ -10,7 +10,7 @@
     {
       "name": "delphi-to-angular",
       "source": "./skills/delphi-to-angular",
-      "description": "Guides conversion of Delphi components to Angular",
+      "description": "Guide the conversion of Polypoint P2 Delphi VCL forms (.dfm/.pas) and frames into Angular standalone components — analyzing DFM/PAS sources, mapping VCL components to Angular + @pdx/* equivalents, and emitting PDX-styled features with NgRx Signal Store and Signal Forms.",
       "category": "development"
     },
     {
@@ -22,7 +22,7 @@
     {
       "name": "pdx",
       "source": "./skills/pdx",
-      "description": "Apply PDX (Polypoint Design Experience) styling and component libraries to Angular frontends",
+      "description": "Apply the PDX (POLYPOINT Design Experience) design system to Angular frontends — installing and using @pdx/* libraries, replacing Angular Material with PDX equivalents, applying design tokens and typography, building forms with pp-form, and auditing existing UI for PDX consistency.",
       "category": "development"
     },
     {

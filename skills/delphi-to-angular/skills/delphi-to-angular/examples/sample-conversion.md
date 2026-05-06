@@ -196,6 +196,8 @@ Notes:
 
 ### choose-month-range.component.html
 
+> **Heads up — this sample predates the canonical `pp-dialog` recipe.** New conversions should wrap the dialog body in `<pp-dialog>` and let it render the title and confirm/dismiss buttons (see the `pp-dialog` section in `pdx-recipes.md`). The `<h2 mat-dialog-title>` + `<mat-dialog-content>` + `<mat-dialog-actions>` pattern shown below is a fallback only when migrating a legacy dialog that isn't ready for the `pp-dialog` shell yet.
+
 ```html
 <h2 mat-dialog-title data-testid="choose-month-range-title">{{ 'choose_month_range.title' | translate }}</h2>
 
@@ -231,7 +233,7 @@ Notes:
 
 - Every interactive surface has a `data-testid` so e2e tests don't query by translated text.
 - `pp-button` uses `[label]` binding with the translate pipe — never content projection.
-- `<mat-dialog-actions>` (not `<pp-form-actions>`) because the dialog shell owns the footer.
+- `<mat-dialog-actions>` (not `<pp-form-actions>`) because this sample uses the legacy Material dialog shell. New conversions should use `<pp-dialog>` and let it own the footer; see the `pp-dialog` recipe in `pdx-recipes.md`.
 - Month picker uses Material's `<input matInput type="month">` — no native PDX month picker yet.
 
 ### choose-month-range.component.scss

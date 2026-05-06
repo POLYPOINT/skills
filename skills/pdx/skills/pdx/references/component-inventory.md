@@ -44,17 +44,17 @@ import { ... } from '@pdx/pp-theme';
 
 ### Color Tokens
 
-**SCSS variables:** `$pp-primary`, `$pp-secondary-500`, `$pp-error`, `$pp-success`, etc.
+**SCSS variables:** `$pp-primary` (base), `$pp-primary-500`, `$pp-secondary-980`, `$pp-error`, `$pp-success`, etc.
 
-**CSS variables:** `--color-pp-primary-500`, `--color-pp-secondary-980`, etc.
+**CSS variables:** `--pp-primary` (base), `--pp-primary-500`, `--pp-secondary-980`, etc. The prefix is **`--pp-`**, not `--color-pp-`.
 
-**TailwindCSS utilities:** `text-pp-primary-500`, `bg-pp-secondary-980`, etc.
+**TailwindCSS utilities:** `text-pp-primary`, `bg-pp-secondary-980`, `border-pp-secondary-900`, etc.
 
 **Core palettes:** primary, secondary, tertiary, neutral-variant, error, success, info, warning.
 
 **Extended palettes:** orange, purple, dark-blue, blue, light-blue, light-green, green, yellow.
 
-**Shade scale:** 0-990 per palette.
+**Shade scale (per palette):** discrete keys `50, 100, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 920, 940, 950, 960, 980, 990` plus an unsuffixed base. `50` is darkest, `990` is lightest. There is **no** `1000` shade. Source of truth: `libs/pp-theme/css/color/colors.css` and `libs/pp-theme/scss/color/colors.scss` in the PDX repo.
 
 ### Typography
 
@@ -104,6 +104,26 @@ Icon names use **underscores**, not hyphens. Always look up the actual name in t
 
 `pp-icon-search` and `pp-icon-refresh` happen to match common guesses, but assume nothing — verify each name.
 
+### Two ways to render an icon — and the prop convention
+
+There are two contexts to render a PDX icon:
+
+1. **Bare HTML / your own template span:** use the **full class string** — both classes are needed for the webfont (`pp-icon`) and the glyph (`pp-icon-<name>`):
+
+   ```html
+   <span class="pp-icon pp-icon-add" aria-hidden="true"></span>
+   ```
+
+2. **PDX component prop** — `icon`, `leadingIcon`, or `trailingIcon` on `pp-button`, `pp-icon-button`, `pp-floating-action-button`, `pp-tab`, `pp-sidenav-item`, `pp-input`, `pp-chip`, `pp-select`, `pp-multiselect`, `pp-menu`, `pp-list` (`leading` / `trailing`), `pp-expansion-panel-item`, etc.: pass the **modifier class only**. The component renders the `pp-icon` base class internally:
+
+   ```html
+   <pp-button label="New" icon="pp-icon-add" />
+   <pp-icon-button icon="pp-icon-edit_filled" ariaLabel="Edit" />
+   <pp-input label="Search" leadingIcon="pp-icon-search" />
+   ```
+
+Passing the full `"pp-icon pp-icon-add"` to a component prop double-applies the base class; passing only `"pp-icon-add"` to a bare `<span>` renders nothing because the webfont's `font-family` lives on the `pp-icon` class.
+
 ### SCSS scope
 
 Import the icon stylesheet **once globally** (typically in the app's root `styles.scss`):
@@ -132,21 +152,21 @@ import { PPButtonComponent } from '@pdx/pp-button';
 ```html
 <pp-button label="Save" variant="filled" size="md" />
 <pp-button label="Cancel" variant="outlined" />
-<pp-button label="Delete" variant="text" icon="pp-icon pp-icon-delete_trash" />
+<pp-button label="Delete" variant="text" icon="pp-icon-delete_trash" />
 <pp-button label="Submit" variant="filled" [fullWidth]="true" buttonType="submit" />
 <pp-button label="Warning" variant="tonal" />
 ```
 
-| Input        | Type                                          | Default    | Description                    |
-| ------------ | --------------------------------------------- | ---------- | ------------------------------ |
-| `label`      | `string`                                      | required   | Button text                    |
-| `variant`    | `'filled' \| 'outlined' \| 'text' \| 'tonal'` | `'filled'` | Visual style                   |
-| `size`       | `'sm' \| 'md' \| 'lg'`                        | `'md'`     | Button size                    |
-| `icon`       | `string`                                      | —          | Icon class name (leading icon) |
-| `disabled`   | `boolean`                                     | `false`    | Disabled state                 |
-| `fullWidth`  | `boolean`                                     | `false`    | Full-width button              |
-| `buttonType` | `'button' \| 'submit' \| 'reset'`             | `'button'` | HTML button type               |
-| `ariaLabel`  | `string`                                      | —          | Accessibility label            |
+| Input        | Type                                          | Default    | Description                                                                                                                               |
+| ------------ | --------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `label`      | `string`                                      | required   | Button text                                                                                                                               |
+| `variant`    | `'filled' \| 'outlined' \| 'text' \| 'tonal'` | `'filled'` | Visual style                                                                                                                              |
+| `size`       | `'sm' \| 'md' \| 'lg'`                        | `'md'`     | Button size                                                                                                                               |
+| `icon`       | `string`                                      | —          | Icon modifier class only — e.g. `"pp-icon-add"`. The component auto-prepends `pp-icon`; do **not** pass the full `"pp-icon pp-icon-add"`. |
+| `disabled`   | `boolean`                                     | `false`    | Disabled state                                                                                                                            |
+| `fullWidth`  | `boolean`                                     | `false`    | Full-width button                                                                                                                         |
+| `buttonType` | `'button' \| 'submit' \| 'reset'`             | `'button'` | HTML button type                                                                                                                          |
+| `ariaLabel`  | `string`                                      | —          | Accessibility label                                                                                                                       |
 
 #### PPIconButtonComponent
 
@@ -154,7 +174,21 @@ import { PPButtonComponent } from '@pdx/pp-button';
 import { PPIconButtonComponent } from '@pdx/pp-button';
 ```
 
-Compact icon-only button for toolbars and inline actions. Always provide `ariaLabel`.
+```html
+<pp-icon-button icon="pp-icon-edit_filled" ariaLabel="Edit item" (click)="edit()" />
+<pp-icon-button icon="pp-icon-delete_trash" ariaLabel="Delete" variant="text" (click)="remove()" />
+```
+
+Compact icon-only button for toolbars and inline actions. **No `label` input** — identify the button via `ariaLabel`.
+
+| Input        | Type                                          | Default    | Description                                                                                                                                 |
+| ------------ | --------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `icon`       | `string`                                      | required   | Icon modifier class only — e.g. `"pp-icon-edit_filled"`. Component auto-prepends `pp-icon`; do **not** pass the full `"pp-icon pp-icon-X"`. |
+| `variant`    | `'filled' \| 'outlined' \| 'text' \| 'tonal'` | `'text'`   | Visual style                                                                                                                                |
+| `size`       | `'sm' \| 'md' \| 'lg'`                        | `'md'`     | Button size                                                                                                                                 |
+| `disabled`   | `boolean`                                     | `false`    | Disabled state                                                                                                                              |
+| `buttonType` | `'button' \| 'submit' \| 'reset'`             | `'button'` | HTML button type                                                                                                                            |
+| `ariaLabel`  | `string`                                      | required   | Accessibility label — required for screen-reader identification                                                                             |
 
 #### PPFloatingActionButtonComponent
 
@@ -162,7 +196,11 @@ Compact icon-only button for toolbars and inline actions. Always provide `ariaLa
 import { PPFloatingActionButtonComponent } from '@pdx/pp-button';
 ```
 
-Prominent FAB for primary screen actions. Supports fixed positioning.
+```html
+<pp-floating-action-button icon="pp-icon-add" ariaLabel="Add item" />
+```
+
+Prominent FAB for primary screen actions. Supports fixed positioning. Selector is the full **`pp-floating-action-button`** — there is no short `pp-fab` alias.
 
 ### Peer Dependencies
 
@@ -292,7 +330,7 @@ Structural rules:
 - **Renders an internal `<form>` element.** The component template is `<form class="pp-form"><ng-content/></form>`. Two consequences:
   - `<pp-button buttonType="submit">` inside `<pp-form>` will trigger native form submission — wire `(submit)` on the surrounding logic accordingly (typically by handling the click on the submit button, since `<pp-form>` doesn't expose a submit output).
   - Do **not** nest `<pp-form>` inside another `<form>` element or another `<pp-form>` — nested forms are invalid HTML.
-- **Width-inherits from its parent.** `pp-form` has no intrinsic width; wrap it in a container with a defined width (the stories use `<div class="w-full max-w-201">`). Without it, the form stretches to fill the viewport.
+- **Width-inherits from its parent.** `pp-form` has no intrinsic width; wrap it in a container with a defined width. Real consumer apps use stock Tailwind utilities (`max-w-3xl`, `max-w-[75rem]`) to clamp it to the page-content width. Without a width constraint, the form stretches to fill the viewport.
 - One `<pp-form>` per component.
 
 #### PPFormSectionComponent
@@ -391,7 +429,7 @@ Row for form-level buttons (e.g. Cancel / Save). Use `<pp-button>` children.
 ### Canonical composition
 
 ```html
-<div class="w-full max-w-201">
+<div class="w-full max-w-[75rem]">
   <pp-form>
     <pp-form-stack>
       <pp-form-section title="Profile" description="Your contact details.">
@@ -416,7 +454,7 @@ Row for form-level buttons (e.g. Cancel / Save). Use `<pp-button>` children.
 The PDX form primitives have a few hard-coded sizing constraints that can clip or wrap content unexpectedly. Detect them up front rather than fighting CSS at the end.
 
 - **`pp-form-block` has `min-width: 14.375rem` (230 px).** Two blocks side by side inside a `pp-form-stack layout="horizontal"` need at least **508 px** of available width to render in one row (`230 + 48 gap + 230`). When the surrounding column is narrower (e.g. tabs share space with a 12 rem photo column on the right), the second block wraps under the first. Inspect the available width along the layout chain (`max-width` + `grid-template-columns` + nested stacks). If the room is `< 508 px`, either stack the blocks vertically (drop `layout="horizontal"`), or apply a scoped `min-width: 0` override so the block can shrink below its built-in floor.
-- **`pp-form-actions` is a hard 2-column grid** (`grid-template-columns: repeat(2, 9.375rem)`). Adding a third button inside `pp-form-actions` silently wraps it onto a new row. For >2 actions, generate a custom flex action bar (e.g. a `<div>` with `display: flex` and a spacer between secondary and primary buttons) instead of forcing everything through `pp-form-actions`. Reserve `pp-form-actions` for the canonical Cancel + Save / OK pair.
+- **`pp-form-actions` is a responsive `auto-fit` grid** (`grid-template-columns: repeat(auto-fit, 9.375rem); gap: 0.75rem;`). Each track is 150 px wide; buttons fit per row only while the container is wide enough (`n × 150 px + (n − 1) × 12 px`), and wrap onto new rows otherwise. The `alignment` input maps to `--left` / `--center` / `--right` modifiers controlling `justify-content` (default `right`). For tightly-controlled multi-button bars (e.g. one secondary action floated left, primary on the right with a spacer), build a custom flex action bar instead. Reserve `pp-form-actions` for the canonical Cancel + Save / OK pair.
 - **No nested `<header>` inside `pp-form`.** `pp-form-section` already renders a `<header>` for its title block. Adding another `<header>` descendant for a section banner produces two banner landmarks on the page — an axe / a11y violation. Use `<div class="…__header">` with appropriate styling for any visual section header inside a PDX form.
 
 ### Peer Dependencies
@@ -565,7 +603,7 @@ import { PPChipComponent } from '@pdx/pp-chip';
 
 ```html
 <pp-chip id="tag1" label="Angular" [removable]="true" (removed)="onRemove($event)" />
-<pp-chip id="cat1" label="Frontend" leadingIcon="pp-icon pp-icon-code" />
+<pp-chip id="cat1" label="Frontend" leadingIcon="pp-icon-code" />
 <pp-chip id="info" label="Read-only" [removable]="false" />
 ```
 

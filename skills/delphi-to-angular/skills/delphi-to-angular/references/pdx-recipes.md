@@ -1,10 +1,10 @@
 # PDX Component Recipes
 
-Recipes for using `@pdx/*` components inside generated Angular features. This file is self-contained — everything you need to convert a Delphi form is here. If the `pdx` skill is also installed (it provides full PDX component APIs, design tokens, and layout guidelines), invoke it for the canonical reference; otherwise, treat this file as the source of truth.
+Recipes for using `@pdx/*` components inside generated Angular features. This file is self-contained: everything you need to convert a Delphi form to PDX-styled Angular is documented here, with no dependency on any other skill.
 
 ## Label rule (applies to every PDX control)
 
-PDX form controls (`pp-button`, `pp-icon-button`, `pp-checkbox`, `pp-radio-button`, `pp-input`, `pp-textarea`, `pp-select`, `pp-multiselect`) take their visible text via a **`label` input** — they do **not** project content.
+PDX form controls (`pp-button`, `pp-checkbox`, `pp-radio-button`, `pp-input`, `pp-textarea`, `pp-select`, `pp-multiselect`, `pp-slide-toggle`) take their visible text via a **`label` input** — they do **not** project content. Icon-only buttons (`pp-icon-button`, `pp-floating-action-button`) have no `label` input at all; identify them via `ariaLabel` instead.
 
 ```html
 <!-- Wrong — content is silently dropped, label is empty -->
@@ -19,7 +19,7 @@ PDX form controls (`pp-button`, `pp-icon-button`, `pp-checkbox`, `pp-radio-butto
 <pp-button [label]="'save' | translate" variant="filled" />
 ```
 
-Always pass `label="..."` (or `[label]="..."` when binding) and use a self-closing tag. Add `id="..."` on `pp-checkbox` / `pp-radio-button` for `for`/`htmlFor` linkage. Exceptions: `pp-chip` falls back to `ng-content` when `label` is unset; `pp-dialog` and `pp-tab` use content projection for **bodies**, not labels.
+Always pass `label="..."` (or `[label]="..."` when binding) and use a self-closing tag. Add `id="..."` on `pp-checkbox` / `pp-radio-button` for `for`/`htmlFor` linkage. Exceptions: `pp-chip` falls back to `ng-content` when `label` is unset; `pp-button-toggle` takes its label via content projection (segmented-control children); `pp-dialog` and `pp-tab` use content projection for **bodies**, not labels.
 
 ## Icon usage
 
@@ -63,10 +63,12 @@ Never import it from a per-component SCSS file. The compiled CSS contains every 
 <pp-button label="Cancel" variant="outlined" (click)="cancel()" />
 <pp-button label="Reset" variant="text" size="sm" (click)="reset()" />
 <pp-button label="New" icon="pp-icon-add" variant="filled" (click)="create()" />
-<pp-icon-button icon="pp-icon pp-icon-delete_trash" ariaLabel="Delete" (click)="delete()" />
+<pp-icon-button icon="pp-icon-delete_trash" ariaLabel="Delete" (click)="delete()" />
 ```
 
 Variants: `filled`, `outlined`, `text`, `tonal`. Sizes: `sm`, `md`, `lg`.
+
+The `icon` input takes the **modifier class only** (e.g. `"pp-icon-add"`); `pp-button`, `pp-icon-button`, `pp-tab`, and `pp-sidenav-item` auto-prepend `pp-icon` internally. For bare HTML icon usage (a `<span class="...">`), pass the full string `class="pp-icon pp-icon-add"` — outside a component, nothing prepends the base class.
 
 ## pp-input / pp-textarea
 
@@ -334,6 +336,29 @@ Pair with `mat-table` for paged table conversions. **`pageIndex` is zero-based**
 
 Use `[hidePageSize]="true"` when the page size is fixed by product requirements and the dropdown adds noise.
 
+## pp-dialog
+
+```typescript
+import { PPDialogComponent } from '@pdx/pp-dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+```
+
+```html
+<pp-dialog
+  [title]="'category_names.title' | translate"
+  [confirmButtonTitle]="'common.save' | translate"
+  [showDismissButton]="true"
+  (confirm)="onConfirm()"
+  (dismiss)="onDismiss()"
+>
+  <!-- dialog body — pp-form, pp-input, pp-list, table, etc. -->
+</pp-dialog>
+```
+
+Open the dialog component via Angular Material's `MatDialog` service; wrap the body in `<pp-dialog>`. The header (`title`, close X, optional `[showDismissButton]`) and footer buttons (`confirmButtonTitle`, dismiss) are owned by `pp-dialog` — don't re-create them with `mat-dialog-title` / `mat-dialog-actions`. Bind `(confirm)` and `(dismiss)` to handlers that call `dialogRef.close(value)`.
+
+Use `<mat-dialog-actions>` only for legacy dialogs that still use Material's title/footer pattern; new conversions should use `<pp-dialog>`'s own header/footer. When in doubt, search the workspace for existing `<pp-dialog>` usages and follow their pattern.
+
 ## pp-form scaffold
 
 Every converted `TForm` body wraps in `<pp-form>`. Use the structural primitives (`PPFormSectionComponent`, `PPFormStackComponent`, `PPFormBlockComponent`, `PPFormTextblockComponent`, `PPFormActionsComponent`) instead of ad-hoc divs + Tailwind for form layout.
@@ -352,7 +377,7 @@ import { PPInputComponent } from '@pdx/pp-input';
 ```
 
 ```html
-<div class="w-full max-w-201">
+<div class="w-full max-w-[75rem]">
   <pp-form>
     <pp-form-stack>
       <pp-form-section [title]="'profile.title' | translate" [description]="'profile.description' | translate">
@@ -376,14 +401,14 @@ import { PPInputComponent } from '@pdx/pp-input';
 ### Structural rules
 
 - **`<pp-form>`** — outermost wrapper, one per component. It renders an internal `<form>` element, so `<pp-button buttonType="submit">` triggers native form submission. Don't nest `<pp-form>` inside another `<form>` or `<pp-form>`.
-- **Width-constrained parent.** `<pp-form>` inherits its parent's width and has no intrinsic max-width. Wrap it in `<div class="w-full max-w-201">` (matches the PDX story templates) or it stretches to fill the viewport.
+- **Width-constrained parent.** `<pp-form>` inherits its parent's width and has no intrinsic max-width. Wrap it in `<div class="w-full max-w-[75rem]">` (or whatever content max-width the workspace already uses for routed pages) or the form stretches to fill the viewport.
 - **`<pp-form-stack>`** — direct child of `<pp-form>`. Wraps section(s) **and** `<pp-form-actions>` together so spacing between them is governed by the stack. Use `layout="horizontal"` for side-by-side, omit or `"vertical"` for stacking (default).
 - **`<pp-form-section>`** — one per semantic region. `title` is required; `description` is optional. Set `singleColumn` only when fields shouldn't flow into multiple columns.
 - **`<pp-form-block>`** — groups related fields inside a section. One block per logical cluster.
 - **`<pp-form-textblock>`** — inline title/description pair for sub-groupings.
 - **`<pp-form-actions>`** — footer row for form-level buttons. Right-aligned by default.
 
-Dialog bodies (opened via `MatDialog` → `PPDialogComponent`) use the same primitives inside the dialog's content projection; `<pp-form-actions>` becomes `<mat-dialog-actions>` in that context.
+Dialog bodies (opened via `MatDialog` → `PPDialogComponent`) use the same form primitives inside the dialog's content projection. The dialog's confirm/dismiss buttons are owned by `<pp-dialog>` itself (see the `pp-dialog` recipe above) — don't add a separate `<pp-form-actions>` or `<mat-dialog-actions>` row inside the dialog body.
 
 ### Two-column layout recipe
 
@@ -421,7 +446,7 @@ Two side-by-side fields share a row → `pp-form-stack layout="horizontal"` with
 The PDX form primitives have a few hard-coded sizing constraints that can clip or wrap content unexpectedly. Detect them up front rather than fighting CSS at the end.
 
 - **`pp-form-block` has `min-width: 14.375rem` (230 px).** Two blocks side by side inside a `pp-form-stack layout="horizontal"` need at least **508 px** of available width to render in one row (`230 + 48 gap + 230`). When the surrounding column is narrower (e.g. tabs share space with a 12 rem photo column on the right), the second block wraps under the first. Inspect the available width along the layout chain (`max-width` + `grid-template-columns` + nested stacks). If the room is `< 508 px`, either stack the blocks vertically (drop `layout="horizontal"`), or apply a scoped `min-width: 0` override so the block can shrink below its built-in floor.
-- **`pp-form-actions` is a hard 2-column grid** (`grid-template-columns: repeat(2, 9.375rem)`). Adding a third button inside `pp-form-actions` silently wraps it onto a new row. For >2 actions, generate a custom flex action bar (e.g. a `<div>` with `display: flex` and a spacer between secondary and primary buttons) instead of forcing everything through `pp-form-actions`. Reserve `pp-form-actions` for the canonical Cancel + Save / OK pair.
+- **`pp-form-actions` is a responsive `auto-fit` grid** (`grid-template-columns: repeat(auto-fit, 9.375rem); gap: 0.75rem`). Each track is 150 px wide; buttons fit per row only while the container is wider than `n × 150 px + (n − 1) × 12 px`, and wrap onto new rows otherwise. The `alignment` input maps to `--left` / `--center` / `--right` modifiers controlling `justify-content` (default `right`). For tightly-controlled multi-button bars (e.g. one secondary action floated left, primary on the right with a spacer), build a custom flex action bar instead. Reserve `pp-form-actions` for the canonical Cancel + Save / OK pair.
 - **No nested `<header>` inside `pp-form`.** `pp-form-section` already renders a `<header>` for its title block. Adding another `<header>` descendant for a section banner produces two banner landmarks on the page — an axe / a11y violation. Use `<div class="…__header">` with appropriate styling for any visual section header inside a PDX form.
 
 ### Right-side button rail → `<aside>`, not `pp-form-actions`
