@@ -2,7 +2,7 @@
 name: pdx
 description: This skill should be used when applying the PDX (POLYPOINT Design Experience) design system to Angular code — installing or using `@pdx/*` libraries, replacing Angular Material components with PDX equivalents, applying PDX design tokens or typography, building forms with `pp-form`, or auditing existing UI for PDX consistency. Triggers on phrases like "apply PDX styles", "use PDX libs", "use POLYPOINT components", "make it POLYPOINT-styled", "replace mat-button with pp-button", or "audit Material usage".
 metadata:
-  version: '1.7.0'
+  version: '1.8.1'
 ---
 
 # PDX — POLYPOINT Design Experience
@@ -15,7 +15,7 @@ Apply the PDX design system to Angular frontends. PDX provides reusable Angular 
 
 ## Label rule
 
-PDX form controls (`pp-button`, `pp-checkbox`, `pp-radio-button`, `pp-input`, `pp-textarea`, `pp-select`, `pp-multiselect`, `pp-slide-toggle`) take their visible text via a `label` input — **they do not project content**. `<pp-checkbox>Text</pp-checkbox>` and `<pp-button>Save</pp-button>` render with an empty label — the projected text is silently dropped. Always pass `label="..."` (or bind it: `[label]="'save' | translate"`), use a self-closing tag, and never wrap content. Add `id="..."` on `pp-checkbox` / `pp-radio-button` for `for`/`htmlFor` linkage. Exceptions: icon-only buttons (`pp-icon-button`, `pp-floating-action-button`) have no `label` input — identify them via `ariaLabel` instead; `pp-chip` falls back to `ng-content` when `label` is unset; `pp-button-toggle` takes its label via content projection (segmented-control children); `pp-dialog` and `pp-tab` use content projection for **bodies**, not labels.
+PDX form controls (`pp-button`, `pp-checkbox`, `pp-radio-button`, `pp-input`, `pp-textarea`, `pp-select`, `pp-multiselect`, `pp-slide-toggle`, `pp-datepicker`) take their visible text via a `label` input — **they do not project content**. `<pp-checkbox>Text</pp-checkbox>` and `<pp-button>Save</pp-button>` render with an empty label — the projected text is silently dropped. Always pass `label="..."` (or bind it: `[label]="'save' | translate"`), use a self-closing tag, and never wrap content. Add `id="..."` on `pp-checkbox` / `pp-radio-button` for `for`/`htmlFor` linkage. Exceptions: icon-only buttons (`pp-icon-button`, `pp-floating-action-button`) have no `label` input — identify them via `ariaLabel` instead; `pp-chip` falls back to `ng-content` when `label` is unset; `pp-button-toggle` takes its label via content projection (segmented-control children); `pp-dialog` and `pp-tab` use content projection for **bodies**, not labels.
 
 ## Layout pitfalls (read before building forms)
 
@@ -51,36 +51,38 @@ Width control for `pp-input` / `pp-textarea` is **context-aware**: use `[fullWid
 | `@pdx/pp-button-toggle`   | `PPButtonToggleComponent`, `PPButtonToggleGroupComponent` (segmented control / view-mode toggle)                                                                             |
 | `@pdx/pp-slide-toggle`    | `PPSlideToggleComponent` (on/off switch with optional label, ControlValueAccessor)                                                                                           |
 | `@pdx/pp-paginator`       | `PPPaginatorComponent` (page navigation + page-size selector)                                                                                                                |
+| `@pdx/pp-datepicker`      | `PPDatepickerComponent` (single / range / month-year date picker, CDK overlay)                                                                                               |
 
 ## Component Replacement Rules
 
 Replace Angular Material components with PDX equivalents:
 
-| Instead of                                           | Use                                                                 |
-| ---------------------------------------------------- | ------------------------------------------------------------------- |
-| `mat-button`, `mat-raised-button`, `mat-flat-button` | `PPButtonComponent`                                                 |
-| `mat-icon-button`                                    | `PPIconButtonComponent`                                             |
-| `mat-fab`, `mat-mini-fab`                            | `PPFloatingActionButtonComponent`                                   |
-| `mat-form-field` + `matInput`                        | `PPInputComponent`                                                  |
-| `mat-form-field` + `<textarea matInput>`             | `PPTextareaComponent`                                               |
-| `mat-checkbox`                                       | `PPCheckboxComponent`                                               |
-| `mat-radio-button` / `mat-radio-group`               | `PPRadioButtonComponent` / `PPRadioGroupComponent`                  |
-| `mat-chip` / `mat-chip-set`                          | `PPChipComponent` / `PPChipListComponent`                           |
-| Custom dialog templates                              | `PPDialogComponent` (still opened via `MatDialog` service)          |
-| `mat-tree`                                           | `PPTreeComponent`                                                   |
-| `mat-select`                                         | `PPSelectComponent`                                                 |
-| `mat-select` (multiple)                              | `PPMultiselectComponent`                                            |
-| `mat-menu`                                           | `PPMenuComponent` / `PPMenuMultiselectComponent`                    |
-| `mat-tab-group` + `mat-tab`                          | `PPTabGroupComponent` + `PPTabComponent`                            |
-| `mat-selection-list` / `mat-list`                    | `PPListComponent`                                                   |
-| `mat-expansion-panel`                                | `PPExpansionPanelComponent` + `PPExpansionPanelItemComponent`       |
-| Custom form layout divs / ad-hoc Flex/Grid shells    | `PPFormComponent` (+ section / stack / block / textblock / actions) |
-| `mat-icon`, FontAwesome                              | `<span class="pp-icon pp-icon-*">`                                  |
-| `mat-button-toggle` / `mat-button-toggle-group`      | `PPButtonToggleComponent` / `PPButtonToggleGroupComponent`          |
-| `mat-slide-toggle`                                   | `PPSlideToggleComponent`                                            |
-| `mat-paginator`                                      | `PPPaginatorComponent`                                              |
+| Instead of                                           | Use                                                                  |
+| ---------------------------------------------------- | -------------------------------------------------------------------- |
+| `mat-button`, `mat-raised-button`, `mat-flat-button` | `PPButtonComponent`                                                  |
+| `mat-icon-button`                                    | `PPIconButtonComponent`                                              |
+| `mat-fab`, `mat-mini-fab`                            | `PPFloatingActionButtonComponent`                                    |
+| `mat-form-field` + `matInput`                        | `PPInputComponent`                                                   |
+| `mat-form-field` + `<textarea matInput>`             | `PPTextareaComponent`                                                |
+| `mat-checkbox`                                       | `PPCheckboxComponent`                                                |
+| `mat-radio-button` / `mat-radio-group`               | `PPRadioButtonComponent` / `PPRadioGroupComponent`                   |
+| `mat-chip` / `mat-chip-set`                          | `PPChipComponent` / `PPChipListComponent`                            |
+| Custom dialog templates                              | `PPDialogComponent` (still opened via `MatDialog` service)           |
+| `mat-tree`                                           | `PPTreeComponent`                                                    |
+| `mat-select`                                         | `PPSelectComponent`                                                  |
+| `mat-select` (multiple)                              | `PPMultiselectComponent`                                             |
+| `mat-menu`                                           | `PPMenuComponent` / `PPMenuMultiselectComponent`                     |
+| `mat-tab-group` + `mat-tab`                          | `PPTabGroupComponent` + `PPTabComponent`                             |
+| `mat-selection-list` / `mat-list`                    | `PPListComponent`                                                    |
+| `mat-expansion-panel`                                | `PPExpansionPanelComponent` + `PPExpansionPanelItemComponent`        |
+| Custom form layout divs / ad-hoc Flex/Grid shells    | `PPFormComponent` (+ section / stack / block / textblock / actions)  |
+| `mat-icon`, FontAwesome                              | `<span class="pp-icon pp-icon-*">`                                   |
+| `mat-button-toggle` / `mat-button-toggle-group`      | `PPButtonToggleComponent` / `PPButtonToggleGroupComponent`           |
+| `mat-slide-toggle`                                   | `PPSlideToggleComponent`                                             |
+| `mat-paginator`                                      | `PPPaginatorComponent`                                               |
+| `mat-datepicker` / `mat-date-range-picker`           | `PPDatepickerComponent` (`type="single" \| "range" \| "month-year"`) |
 
-**No PDX replacement yet** — use Angular Material with pp-theme: autocomplete, datepicker, progress bar/spinner, snackbar, tooltip, table, sort, `mat-toolbar` (generic container use only), `mat-sidenav` (non-navigation drawer/inspector/filter panel).
+**No PDX replacement yet** — use Angular Material with pp-theme: autocomplete, progress bar/spinner, snackbar, tooltip, table, sort, `mat-toolbar` (generic container use only).
 
 ## Navigation (app-shell only — not a drop-in replacement)
 
@@ -92,7 +94,7 @@ Replace Angular Material components with PDX equivalents:
 
 When these conditions are not met, **do not reach for `pp-sidenav` or `pp-top-navigation`.** Specifically:
 
-- `mat-sidenav` used as a drawer (filters, inspector, document outline) → keep `mat-sidenav`, it's not navigation.
+- A drawer (filters, inspector, document outline) that isn't app-shell navigation → use `pp-sidenav` with `variant="panel-only"` (single-panel sub-navigation, no rail or emblem). The `'app-shell'` variant is still off-limits here.
 - `mat-toolbar` used as a page header, dialog header, or action bar → keep `mat-toolbar`.
 - A static in-page menu or tab-like switcher inside one feature → use `pp-tab-group`, `pp-menu`, or plain buttons.
 - Feature components routed _into_ the app shell (e.g. converted legacy forms, dialog bodies) → never own navigation, even if the legacy source had a top toolbar or a left tree.

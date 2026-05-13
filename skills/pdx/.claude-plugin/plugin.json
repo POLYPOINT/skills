@@ -1,7 +1,7 @@
 {
   "name": "pdx",
   "description": "Apply the PDX (POLYPOINT Design Experience) design system to Angular frontends — installing and using @pdx/* libraries, replacing Angular Material with PDX equivalents, applying design tokens and typography, building forms with pp-form, and auditing existing UI for PDX consistency.",
-  "version": "1.7.0",
+  "version": "1.8.1",
   "author": {
     "name": "POLYPOINT"
   },

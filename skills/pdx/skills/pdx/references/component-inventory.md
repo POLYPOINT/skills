@@ -137,7 +137,7 @@ Never import it from a per-component SCSS file. The compiled CSS contains every 
 
 ---
 
-## @pdx/pp-button (v1.2.0)
+## @pdx/pp-button (v1.2.1)
 
 Buttons for all user interaction needs: standard buttons, icon buttons, and floating action buttons (FAB).
 
@@ -208,7 +208,7 @@ Prominent FAB for primary screen actions. Supports fixed positioning. Selector i
 
 ---
 
-## @pdx/pp-input (v2.0.0)
+## @pdx/pp-input (v2.1.0)
 
 Text inputs and textareas with validation, helper text, tooltips, and forms integration.
 
@@ -236,25 +236,26 @@ import { PPInputComponent } from '@pdx/pp-input';
 <pp-input label="Password" inputType="password" [invalid]="hasError" />
 ```
 
-| Input                     | Type                                                | Default                                      | Description                        |
-| ------------------------- | --------------------------------------------------- | -------------------------------------------- | ---------------------------------- |
-| `label`                   | `string`                                            | required                                     | Field label                        |
-| `inputType`               | `'text' \| 'email' \| 'password' \| 'tel' \| 'url'` | `'text'`                                     | HTML input type                    |
-| `size`                    | `'sm' \| 'lg'`                                      | `'sm'`                                       | Field size                         |
-| `leadingIcon`             | `string \| undefined`                               | `undefined`                                  | Icon before field                  |
-| `trailingIcon`            | `boolean`                                           | `false`                                      | Show trailing icon                 |
-| `helperText`              | `string \| undefined`                               | `undefined`                                  | Guidance text below field          |
-| `tooltip`                 | `string \| undefined`                               | `undefined`                                  | Hover hint text                    |
-| `required`                | `boolean`                                           | `false`                                      | Shows required marker              |
-| `optional`                | `boolean`                                           | `false`                                      | Shows "(optional)"                 |
-| `invalid`                 | `boolean`                                           | `false`                                      | Error state                        |
-| `disabled`                | `boolean`                                           | `false`                                      | Disabled state                     |
-| `readonly`                | `boolean`                                           | `false`                                      | Read-only state                    |
-| `fullWidth`               | `boolean`                                           | `false`                                      | Full-width field                   |
-| `value`                   | `string`                                            | `''`                                         | Current value                      |
-| `id`                      | `string \| undefined`                               | `undefined`                                  | Unique identifier for the element  |
-| `ariaLabel`               | `string \| undefined`                               | `undefined`                                  | Accessibility label                |
-| `ariaLabelTrailingButton` | `string \| undefined`                               | `'Trailing button for resetting the input.'` | Accessible name for trailing reset |
+| Input                     | Type                                                | Default                                      | Description                                                                                                                                                                                                                                         |
+| ------------------------- | --------------------------------------------------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `label`                   | `string`                                            | required                                     | Field label                                                                                                                                                                                                                                         |
+| `inputType`               | `'text' \| 'email' \| 'password' \| 'tel' \| 'url'` | `'text'`                                     | HTML input type                                                                                                                                                                                                                                     |
+| `size`                    | `'sm' \| 'lg'`                                      | `'sm'`                                       | Field size                                                                                                                                                                                                                                          |
+| `leadingIcon`             | `string \| undefined`                               | `undefined`                                  | Icon before field                                                                                                                                                                                                                                   |
+| `trailingIcon`            | `boolean`                                           | `false`                                      | Show trailing icon                                                                                                                                                                                                                                  |
+| `helperText`              | `string \| undefined`                               | `undefined`                                  | Guidance text below field                                                                                                                                                                                                                           |
+| `tooltip`                 | `string \| undefined`                               | `undefined`                                  | Hover hint text                                                                                                                                                                                                                                     |
+| `required`                | `boolean`                                           | `false`                                      | Shows required marker                                                                                                                                                                                                                               |
+| `optional`                | `boolean`                                           | `false`                                      | Shows "(optional)"                                                                                                                                                                                                                                  |
+| `invalid`                 | `boolean`                                           | `false`                                      | Error state                                                                                                                                                                                                                                         |
+| `disabled`                | `boolean`                                           | `false`                                      | Disabled state                                                                                                                                                                                                                                      |
+| `readonly`                | `boolean`                                           | `false`                                      | Read-only state                                                                                                                                                                                                                                     |
+| `fullWidth`               | `boolean`                                           | `false`                                      | Full-width field                                                                                                                                                                                                                                    |
+| `value`                   | `string`                                            | `''`                                         | Current value                                                                                                                                                                                                                                       |
+| `id`                      | `string \| undefined`                               | `undefined`                                  | Unique identifier for the element                                                                                                                                                                                                                   |
+| `ariaLabel`               | `string \| undefined`                               | `undefined`                                  | Accessibility label                                                                                                                                                                                                                                 |
+| `ariaLabelTrailingButton` | `string \| undefined`                               | `'Trailing button for resetting the input.'` | Accessible name for trailing reset                                                                                                                                                                                                                  |
+| `labelSpace`              | `'auto' \| 'always' \| 'never'`                     | `'auto'`                                     | Reserves 8px above the field for the floating-label notch. `'auto'` reserves when `label` is non-empty; use `'always'` for label-less inputs that share a row with labeled inputs (keeps vertical alignment); `'never'` opts out (legacy overflow). |
 
 **Output:** `inputChange` emits the new value.
 
@@ -270,22 +271,23 @@ import { PPTextareaComponent } from '@pdx/pp-input';
 <pp-textarea label="Comments" [autoGrowth]="true" helperText="Tell us what you think" />
 ```
 
-| Input        | Type                  | Default     | Description                   |
-| ------------ | --------------------- | ----------- | ----------------------------- |
-| `label`      | `string`              | required    | Field label                   |
-| `autoGrowth` | `boolean`             | `false`     | Auto-expanding height         |
-| `resizable`  | `boolean`             | `false`     | User-resizable textarea       |
-| `helperText` | `string \| undefined` | `undefined` | Guidance text below field     |
-| `tooltip`    | `string \| undefined` | `undefined` | Hover hint text               |
-| `required`   | `boolean`             | `false`     | Shows required marker         |
-| `optional`   | `boolean`             | `false`     | Shows "(optional)"            |
-| `invalid`    | `boolean`             | `false`     | Error state                   |
-| `disabled`   | `boolean`             | `false`     | Disabled state                |
-| `readonly`   | `boolean`             | `false`     | Read-only state               |
-| `fullWidth`  | `boolean`             | `false`     | Full-width field              |
-| `value`      | `string`              | `''`        | Current value                 |
-| `id`         | `string \| undefined` | `undefined` | Unique identifier for element |
-| `ariaLabel`  | `string \| undefined` | `undefined` | Accessibility label           |
+| Input        | Type                            | Default     | Description                                                                                                                                                |
+| ------------ | ------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `label`      | `string`                        | required    | Field label                                                                                                                                                |
+| `autoGrowth` | `boolean`                       | `false`     | Auto-expanding height                                                                                                                                      |
+| `resizable`  | `boolean`                       | `false`     | User-resizable textarea                                                                                                                                    |
+| `helperText` | `string \| undefined`           | `undefined` | Guidance text below field                                                                                                                                  |
+| `tooltip`    | `string \| undefined`           | `undefined` | Hover hint text                                                                                                                                            |
+| `required`   | `boolean`                       | `false`     | Shows required marker                                                                                                                                      |
+| `optional`   | `boolean`                       | `false`     | Shows "(optional)"                                                                                                                                         |
+| `invalid`    | `boolean`                       | `false`     | Error state                                                                                                                                                |
+| `disabled`   | `boolean`                       | `false`     | Disabled state                                                                                                                                             |
+| `readonly`   | `boolean`                       | `false`     | Read-only state                                                                                                                                            |
+| `fullWidth`  | `boolean`                       | `false`     | Full-width field                                                                                                                                           |
+| `value`      | `string`                        | `''`        | Current value                                                                                                                                              |
+| `id`         | `string \| undefined`           | `undefined` | Unique identifier for element                                                                                                                              |
+| `ariaLabel`  | `string \| undefined`           | `undefined` | Accessibility label                                                                                                                                        |
+| `labelSpace` | `'auto' \| 'always' \| 'never'` | `'auto'`    | Same semantics as on `pp-input` — reserves the floating-label notch space. Use `'always'` to align a label-less textarea with neighbouring labeled fields. |
 
 **Output:** `textareaChange` emits the new value.
 
@@ -303,7 +305,7 @@ import { PPTextareaComponent } from '@pdx/pp-input';
 
 ---
 
-## @pdx/pp-form (v1.1.0)
+## @pdx/pp-form (v1.2.0)
 
 Structural primitives for assembling form layouts. These components orchestrate layout, grouping, and typography for forms — they do **not** render controls themselves. Compose with `@pdx/pp-input`, `@pdx/pp-checkbox`, etc. for the actual inputs.
 
@@ -463,7 +465,7 @@ The PDX form primitives have a few hard-coded sizing constraints that can clip o
 
 ---
 
-## @pdx/pp-checkbox (v1.1.1)
+## @pdx/pp-checkbox (v1.2.0)
 
 Accessible checkbox with three states, error display, and forms integration.
 
@@ -481,14 +483,15 @@ import { PPCheckboxComponent, CheckboxState } from '@pdx/pp-checkbox';
 <pp-checkbox id="err" label="Required field" [error]="true" />
 ```
 
-| Input       | Type             | Default      | Description         |
-| ----------- | ---------------- | ------------ | ------------------- |
-| `id`        | `string`         | `''`         | Unique identifier   |
-| `label`     | `string`         | `''`         | Display label       |
-| `state`     | `CheckboxState`  | `Unselected` | Current state       |
-| `error`     | `boolean`        | `false`      | Error state         |
-| `disabled`  | `boolean`        | `false`      | Disabled state      |
-| `ariaLabel` | `string \| null` | `null`       | Accessibility label |
+| Input       | Type                               | Default      | Description                                                                                                                                                                                      |
+| ----------- | ---------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`        | `string`                           | `''`         | Unique identifier                                                                                                                                                                                |
+| `label`     | `string`                           | `''`         | Display label                                                                                                                                                                                    |
+| `state`     | `CheckboxState`                    | `Unselected` | Current state                                                                                                                                                                                    |
+| `error`     | `boolean`                          | `false`      | Error state                                                                                                                                                                                      |
+| `disabled`  | `boolean`                          | `false`      | Disabled state                                                                                                                                                                                   |
+| `ariaLabel` | `string \| null`                   | `null`       | Accessibility label                                                                                                                                                                              |
+| `labelWrap` | `'wrap' \| 'nowrap' \| 'truncate'` | `'wrap'`     | Long-label behaviour. `'wrap'` flows onto multiple lines. `'nowrap'` keeps a single line and overflows the parent. `'truncate'` clips with an ellipsis and exposes the full label via a tooltip. |
 
 **Outputs:**
 
@@ -519,7 +522,7 @@ interface PPCheckboxChangeEvent {
 
 ---
 
-## @pdx/pp-radio (v1.2.1)
+## @pdx/pp-radio (v1.3.0)
 
 Radio buttons for single-choice selections. Standalone or grouped.
 
@@ -535,17 +538,18 @@ import { PPRadioButtonComponent } from '@pdx/pp-radio';
 <pp-radio-button id="opt1" label="Option A" value="a" />
 ```
 
-| Input             | Type               | Default | Description                                                                |
-| ----------------- | ------------------ | ------- | -------------------------------------------------------------------------- |
-| `id`              | `string`           | `''`    | Unique identifier — set per radio for `for`/`htmlFor` linkage              |
-| `label`           | `string`           | `''`    | Display label                                                              |
-| `value`           | `string \| number` | `''`    | Associated value                                                           |
-| `disabled`        | `boolean`          | `false` | Disabled state                                                             |
-| `checked`         | `boolean`          | `false` | Checked state — only for standalone use; ignored inside a `pp-radio-group` |
-| `ariaLabel`       | `string \| null`   | `null`  | Accessibility label                                                        |
-| `ariaLabelledby`  | `string \| null`   | `null`  | ID of the element labelling this radio button                              |
-| `ariaDescribedby` | `string \| null`   | `null`  | ID of the element describing this radio button                             |
-| `tabIndex`        | `number \| null`   | `null`  | Tab index for keyboard navigation                                          |
+| Input             | Type                               | Default  | Description                                                                                                                                                                          |
+| ----------------- | ---------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`              | `string`                           | `''`     | Unique identifier — set per radio for `for`/`htmlFor` linkage                                                                                                                        |
+| `label`           | `string`                           | `''`     | Display label                                                                                                                                                                        |
+| `value`           | `string \| number`                 | `''`     | Associated value                                                                                                                                                                     |
+| `disabled`        | `boolean`                          | `false`  | Disabled state                                                                                                                                                                       |
+| `checked`         | `boolean`                          | `false`  | Checked state — only for standalone use; ignored inside a `pp-radio-group`                                                                                                           |
+| `ariaLabel`       | `string \| null`                   | `null`   | Accessibility label                                                                                                                                                                  |
+| `ariaLabelledby`  | `string \| null`                   | `null`   | ID of the element labelling this radio button                                                                                                                                        |
+| `ariaDescribedby` | `string \| null`                   | `null`   | ID of the element describing this radio button                                                                                                                                       |
+| `tabIndex`        | `number \| null`                   | `null`   | Tab index for keyboard navigation                                                                                                                                                    |
+| `labelWrap`       | `'wrap' \| 'nowrap' \| 'truncate'` | `'wrap'` | Long-label behaviour. Same semantics as `pp-checkbox` — `'wrap'` flows, `'nowrap'` overflows on one line, `'truncate'` clips with ellipsis and exposes the full label via a tooltip. |
 
 **Output:** `radioChange` emits the value.
 
@@ -589,7 +593,7 @@ interface PPRadioOption {
 
 ---
 
-## @pdx/pp-chip (v1.2.0)
+## @pdx/pp-chip (v1.2.1)
 
 Compact chips for filters, tags, and selections.
 
@@ -640,7 +644,7 @@ interface PPChipItemModel { ... }
 
 ---
 
-## @pdx/pp-dialog (v1.1.1)
+## @pdx/pp-dialog (v1.1.2)
 
 Responsive dialog shell for wrapping custom content. Works with Angular Material's `MatDialog` service.
 
@@ -1001,7 +1005,7 @@ interface PPMenuMultiselectChangeEvent {
 
 ---
 
-## @pdx/pp-list (v2.0.0)
+## @pdx/pp-list (v2.1.0)
 
 Accessible listbox with four selection variants, keyboard navigation, leading/trailing icons, overline + supporting text per item. Use when you need an in-page list (not a dropdown — use `pp-select`/`pp-menu` for those).
 
@@ -1045,7 +1049,8 @@ interface PPListItem {
   readonly overline?: string;
   readonly supportingText?: string;
   readonly disabled?: boolean;
-  readonly leading?: string; // e.g. 'pp-icon-home'
+  readonly leading?: string; // CSS icon class, e.g. 'pp-icon-home'. Mutually exclusive with `leadingSrc`.
+  readonly leadingSrc?: string; // Image URL or base64 data URI for the leading slot. Takes precedence over `leading` when both are set.
   readonly trailing?: string; // e.g. 'pp-icon-angle_right'
   readonly checkLabel?: string; // only meaningful in the 'multi' variant
 }
@@ -1243,9 +1248,11 @@ A single collapsible section with clickable header.
 
 ---
 
-## @pdx/pp-sidenav (v1.0.0)
+## @pdx/pp-sidenav (v1.1.0)
 
-Two-panel side navigation: a Level 1 icon rail plus an expandable Level 2+ subnavigation panel. **App-shell level** — owned by the root layout that holds the router outlet, not by feature components routed into that outlet.
+Two-panel side navigation: a Level 1 icon rail plus an expandable Level 2+ subnavigation panel. **App-shell level** in the default `'app-shell'` variant — owned by the root layout that holds the router outlet, not by feature components routed into that outlet.
+
+The `'panel-only'` variant (added in v1.1.0) renders only the right-hand panel (no rail, no emblem, no toggle, no slide animation) and projects Level 2+ content directly. Use it as the PDX replacement for non-navigation drawers — filter panels, inspector panes, document outlines, etc. — that were previously built with `mat-sidenav`. The applicability rules in the SKILL's "Navigation (app-shell only)" section still apply: `'app-shell'` is for global app navigation, `'panel-only'` is for in-feature drawers.
 
 ### Components
 
@@ -1273,10 +1280,13 @@ import {
 
 **`PPSidenavComponent`**
 
-| Input          | Type             | Default | Description                                                                   |
-| -------------- | ---------------- | ------- | ----------------------------------------------------------------------------- |
-| `collapsed`    | `boolean`        | `false` | Whether the subnav panel is hidden (icon rail only). Two-way `[(collapsed)]`. |
-| `sectionTitle` | `string \| null` | `null`  | Title at the top of the subnav panel. Falls back to the selected item label.  |
+| Input             | Type                          | Default       | Description                                                                                                                                                                                                        |
+| ----------------- | ----------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `collapsed`       | `boolean`                     | `false`       | Whether the subnav panel is hidden (icon rail only). Two-way `[(collapsed)]`.                                                                                                                                      |
+| `sectionTitle`    | `string \| null`              | `null`        | Title at the top of the subnav panel. Falls back to the selected item label.                                                                                                                                       |
+| `variant`         | `'app-shell' \| 'panel-only'` | `'app-shell'` | `'app-shell'` renders the icon rail + collapsible panel and projects Level 2+ content from the selected `pp-sidenav-item`. `'panel-only'` renders only the panel and projects Level 2+ content directly (no rail). |
+| `showPanelHeader` | `boolean`                     | `true`        | Whether the panel header (`activeSectionTitle`) renders. Set `false` in `panel-only` mode when the surrounding feature already provides a page heading.                                                            |
+| `autoExpand`      | `boolean`                     | `true`        | Whether the panel auto-expands on hover/click of a collapsed rail item (and collapses again on mouse-leave). Only meaningful in `'app-shell'` mode — `'panel-only'` ignores the flag because there is no rail.     |
 
 **`PPSidenavItemComponent`** (Level 1 icon item)
 
@@ -1557,48 +1567,130 @@ interface PPPaginatorPageEvent {
 
 ---
 
+## @pdx/pp-datepicker (v1.0.0)
+
+Signal-based, zoneless-safe date picker with three selection modes — `single` (one calendar day), `range` (a start/end pair), and `month-year` (a month + year combo with **no day selection** — the panel skips the day grid and walks the user through month → year). The calendar overlay is rendered via `@angular/cdk/overlay` with focus trapping, scroll repositioning, and click-outside / `Escape` to close. Weekday/month labels come from `Intl.DateTimeFormat` — no third-party date library required.
+
+### Components
+
+#### PPDatepickerComponent
+
+```typescript
+import { PPDatepickerComponent, PPDateRange, PPDatepickerChangeEvent, PPDatepickerType } from '@pdx/pp-datepicker';
+```
+
+```html
+<!-- single -->
+<pp-datepicker label="Date" [(value)]="selected" />
+
+<!-- range -->
+<pp-datepicker type="range" label="Date Range" [(value)]="range" />
+
+<!-- month-year -->
+<pp-datepicker type="month-year" label="Period" [(value)]="period" />
+
+<!-- with form integration -->
+<pp-datepicker label="Birthday" [formControl]="birthdayCtrl" [required]="true" min="1900-01-01" />
+```
+
+| Input            | Type                                  | Default    | Description                                                                                                                                                                                                                                                                                           |
+| ---------------- | ------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`           | `'single' \| 'range' \| 'month-year'` | `'single'` | Selection type. `single` picks one calendar day → `Date`. `range` picks a start + end day → `PPDateRange`. `month-year` picks **only a month + year, no day** → `Date` anchored to day 1 of the picked month at 00:00 (anchor day is an implementation detail; the user never sees or selects a day). |
+| `label`          | `string`                              | `'Date'`   | Floating label rendered inside the trigger outline.                                                                                                                                                                                                                                                   |
+| `disabled`       | `boolean`                             | `false`    | Disables the trigger.                                                                                                                                                                                                                                                                                 |
+| `readonly`       | `boolean`                             | `false`    | Trigger is focusable but cannot open the overlay.                                                                                                                                                                                                                                                     |
+| `invalid`        | `boolean`                             | `false`    | Renders the trigger in error styling.                                                                                                                                                                                                                                                                 |
+| `required`       | `boolean`                             | `false`    | Decorates the label with a required asterisk. Purely visual — wire `Validators.required` on the bound control to enforce.                                                                                                                                                                             |
+| `optional`       | `boolean`                             | `false`    | Decorates the label with a "(optional)" hint. `required` wins if both are set.                                                                                                                                                                                                                        |
+| `helperText`     | `string`                              | `''`       | Helper text rendered below the trigger.                                                                                                                                                                                                                                                               |
+| `min`            | `Date \| null`                        | `null`     | Inclusive lower bound. Earlier dates render disabled.                                                                                                                                                                                                                                                 |
+| `max`            | `Date \| null`                        | `null`     | Inclusive upper bound. Later dates render disabled.                                                                                                                                                                                                                                                   |
+| `firstDayOfWeek` | `PPDayOfWeek` (`0`-`6`)               | `1`        | First day of the week (`0` = Sunday … `6` = Saturday). Default Monday.                                                                                                                                                                                                                                |
+| `locale`         | `PPSupportedLocale \| string`         | `'en'`     | Locale for weekday/month/header labels. Canonical: `'de-CH' \| 'en' \| 'fr' \| 'it' \| 'nl'`. Arbitrary BCP-47 tags (`'de-DE'`, `'en-US'`, …) are normalised internally.                                                                                                                              |
+| `todayLabel`     | `string`                              | `'Today'`  | Label of the "today" shortcut button in day mode.                                                                                                                                                                                                                                                     |
+| `value`          | `Date \| PPDateRange \| null`         | `null`     | `ModelSignal` — two-way bound selection. Shape varies by `type`.                                                                                                                                                                                                                                      |
+
+**Outputs:**
+
+- `dateChange` — emits `PPDatepickerChangeEvent` whenever the user commits a new value.
+- `opened` — emits when the calendar overlay opens.
+- `closed` — emits when the calendar overlay closes.
+
+**Forms:** Implements `ControlValueAccessor`, so `[(ngModel)]` and `formControlName` work out of the box.
+
+### Models
+
+```typescript
+type PPDatepickerType = 'single' | 'range' | 'month-year';
+type PPDayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+type PPSupportedLocale = 'de-CH' | 'en' | 'fr' | 'it' | 'nl';
+type PPLocaleInput = PPSupportedLocale | (string & {});
+
+interface PPDateRange {
+  readonly start: Date | null;
+  readonly end: Date | null;
+}
+
+interface PPDatepickerChangeEvent {
+  readonly value: Date | PPDateRange | null;
+}
+```
+
+### Keyboard
+
+Arrow keys move by day/week. `PageUp` / `PageDown` shift by month. `Home` / `End` jump to the start/end of the week. `Enter` / `Space` commit. `Escape` closes the panel. Out-of-range cells (per `min` / `max`) are disabled and skipped.
+
+### Range mode
+
+Range selection requires two clicks: the first anchors the start, the second closes and emits the normalised range. Closing the panel before the second click clears any partial selection (so the form-control value never goes out of sync with the visible trigger).
+
+### Peer Dependencies
+
+`@angular/cdk`, `@angular/common`, `@angular/core`, `@angular/forms`, `@pdx/pp-theme`
+
+---
+
 ## Component Replacement Map
 
 When a PDX component exists, always use it instead of Angular Material or custom implementations.
 
-| Need             | PDX Component                                                       | Replaces                                                        |
-| ---------------- | ------------------------------------------------------------------- | --------------------------------------------------------------- |
-| Standard button  | `PPButtonComponent`                                                 | `mat-button`, `mat-raised-button`, `mat-flat-button`            |
-| Icon button      | `PPIconButtonComponent`                                             | `mat-icon-button`                                               |
-| FAB              | `PPFloatingActionButtonComponent`                                   | `mat-fab`, `mat-mini-fab`                                       |
-| Text input       | `PPInputComponent`                                                  | `mat-form-field` + `matInput`                                   |
-| Textarea         | `PPTextareaComponent`                                               | `mat-form-field` + `matInput` + `<textarea>`                    |
-| Checkbox         | `PPCheckboxComponent`                                               | `mat-checkbox`                                                  |
-| Radio button     | `PPRadioButtonComponent`                                            | `mat-radio-button`                                              |
-| Radio group      | `PPRadioGroupComponent`                                             | `mat-radio-group`                                               |
-| Chip             | `PPChipComponent`                                                   | `mat-chip`                                                      |
-| Chip list        | `PPChipListComponent`                                               | `mat-chip-listbox`, `mat-chip-set`                              |
-| Dialog           | `PPDialogComponent`                                                 | Custom dialog templates (still use `MatDialog` service to open) |
-| Tree             | `PPTreeComponent`                                                   | `mat-tree`, custom tree implementations                         |
-| Select           | `PPSelectComponent`                                                 | `mat-select`                                                    |
-| Multiselect      | `PPMultiselectComponent`                                            | `mat-select` (multiple)                                         |
-| Menu             | `PPMenuComponent`                                                   | `mat-menu`                                                      |
-| Menu multiselect | `PPMenuMultiselectComponent`                                        | `mat-menu` (multi-select)                                       |
-| Tab group        | `PPTabGroupComponent`                                               | `mat-tab-group`                                                 |
-| Tab              | `PPTabComponent`                                                    | `mat-tab`                                                       |
-| List             | `PPListComponent`                                                   | `mat-selection-list`, `mat-list`                                |
-| Expansion panel  | `PPExpansionPanelComponent` + `PPExpansionPanelItemComponent`       | `mat-expansion-panel`                                           |
-| Form scaffold    | `PPFormComponent` (+ section / stack / block / textblock / actions) | Custom form layout divs / ad-hoc Flex/Grid shells               |
-| Icons            | `pp-icon pp-icon-*`                                                 | `mat-icon`, FontAwesome, other icon libraries                   |
-| Button toggle    | `PPButtonToggleComponent` + `PPButtonToggleGroupComponent`          | `mat-button-toggle`, `mat-button-toggle-group`                  |
-| Slide toggle     | `PPSlideToggleComponent`                                            | `mat-slide-toggle`                                              |
-| Paginator        | `PPPaginatorComponent`                                              | `mat-paginator`                                                 |
+| Need             | PDX Component                                                        | Replaces                                                        |
+| ---------------- | -------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Standard button  | `PPButtonComponent`                                                  | `mat-button`, `mat-raised-button`, `mat-flat-button`            |
+| Icon button      | `PPIconButtonComponent`                                              | `mat-icon-button`                                               |
+| FAB              | `PPFloatingActionButtonComponent`                                    | `mat-fab`, `mat-mini-fab`                                       |
+| Text input       | `PPInputComponent`                                                   | `mat-form-field` + `matInput`                                   |
+| Textarea         | `PPTextareaComponent`                                                | `mat-form-field` + `matInput` + `<textarea>`                    |
+| Checkbox         | `PPCheckboxComponent`                                                | `mat-checkbox`                                                  |
+| Radio button     | `PPRadioButtonComponent`                                             | `mat-radio-button`                                              |
+| Radio group      | `PPRadioGroupComponent`                                              | `mat-radio-group`                                               |
+| Chip             | `PPChipComponent`                                                    | `mat-chip`                                                      |
+| Chip list        | `PPChipListComponent`                                                | `mat-chip-listbox`, `mat-chip-set`                              |
+| Dialog           | `PPDialogComponent`                                                  | Custom dialog templates (still use `MatDialog` service to open) |
+| Tree             | `PPTreeComponent`                                                    | `mat-tree`, custom tree implementations                         |
+| Select           | `PPSelectComponent`                                                  | `mat-select`                                                    |
+| Multiselect      | `PPMultiselectComponent`                                             | `mat-select` (multiple)                                         |
+| Menu             | `PPMenuComponent`                                                    | `mat-menu`                                                      |
+| Menu multiselect | `PPMenuMultiselectComponent`                                         | `mat-menu` (multi-select)                                       |
+| Tab group        | `PPTabGroupComponent`                                                | `mat-tab-group`                                                 |
+| Tab              | `PPTabComponent`                                                     | `mat-tab`                                                       |
+| List             | `PPListComponent`                                                    | `mat-selection-list`, `mat-list`                                |
+| Expansion panel  | `PPExpansionPanelComponent` + `PPExpansionPanelItemComponent`        | `mat-expansion-panel`                                           |
+| Form scaffold    | `PPFormComponent` (+ section / stack / block / textblock / actions)  | Custom form layout divs / ad-hoc Flex/Grid shells               |
+| Icons            | `pp-icon pp-icon-*`                                                  | `mat-icon`, FontAwesome, other icon libraries                   |
+| Button toggle    | `PPButtonToggleComponent` + `PPButtonToggleGroupComponent`           | `mat-button-toggle`, `mat-button-toggle-group`                  |
+| Slide toggle     | `PPSlideToggleComponent`                                             | `mat-slide-toggle`                                              |
+| Paginator        | `PPPaginatorComponent`                                               | `mat-paginator`                                                 |
+| Date picker      | `PPDatepickerComponent` (`type="single" \| "range" \| "month-year"`) | `mat-datepicker`, `mat-date-range-picker`                       |
 
 `pp-sidenav` and `pp-top-navigation` are **not** in this drop-in table. They are app-shell design decisions — use them only when introducing or redesigning global navigation. See the "Navigation (app-shell only)" section in [../SKILL.md](../SKILL.md) for the applicability rules.
 
 **Components without a PDX replacement yet** — use Angular Material with PDX theme applied:
 
 - Autocomplete (`mat-autocomplete`)
-- Date picker (`mat-datepicker`)
 - Progress bar / spinner (`mat-progress-bar`, `mat-progress-spinner`)
 - Snackbar (`mat-snackbar`)
 - Tooltip (`mat-tooltip`)
 - Table (`mat-table`)
 - Sort (`mat-sort`)
 - Toolbar (`mat-toolbar`) — as a generic container, page header, dialog header, etc. (not as app-shell top navigation — for that, see `pp-top-navigation` above)
-- Sidenav (`mat-sidenav`) — as a non-navigation drawer: filter panels, inspector panes, document outlines, etc. (not as app-shell navigation — for that, see `pp-sidenav` above)

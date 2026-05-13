@@ -97,6 +97,10 @@ Inputs render at their **natural width** by default. Pick the width strategy fro
 
 Don't blanket-apply `fullWidth` everywhere — a full-width input inside a narrow toolbar visually overflows; a natural-width input inside a 30 rem form-block looks broken. Same rule applies to `pp-textarea`.
 
+### Mixed labeled / label-less rows — `labelSpace`
+
+`pp-input` and `pp-textarea` reserve 8px above the field for the floating-label notch only when `label` is non-empty. In a row that mixes labeled and label-less inputs aligned with `align-items: center`, the label-less fields sit higher than the labeled ones. Pass `labelSpace="always"` on the label-less inputs in such a row to keep them vertically aligned. Use `labelSpace="never"` only for tight legacy layouts that already account for the overflow; the default `'auto'` is correct everywhere else.
+
 ### Read-only fields
 
 For Delphi `ReadOnly = True` text fields, pass `[readonly]="true"`:
@@ -115,6 +119,8 @@ The binding is a property, not an attribute. In tests, assert via `nativeInput.r
 
 Three-state via `CheckboxState` enum (`Selected`, `Unselected`, `Indeterminate`). Implements `ControlValueAccessor` for Signal Forms.
 
+For long labels in narrow columns, set `labelWrap`: `'wrap'` (default, flows onto a second line), `'nowrap'` (single line — overflows the parent), or `'truncate'` (clips with ellipsis and shows the full label in a tooltip on hover/focus). Use `'truncate'` when the surrounding column has a hard width and overflow would break layout. Same behaviour is available on `pp-radio-button`.
+
 ## pp-radio
 
 ```typescript
@@ -131,6 +137,8 @@ protected readonly statusOptions: PPRadioOption[] = [
 ```
 
 `PPRadioOption` shape: `{ id: string, label: string, value: string | number, disabled?: boolean, ariaLabel?: string | null }`.
+
+For standalone `<pp-radio-button>` instances with long labels, the same `labelWrap` input applies — see the pp-checkbox section above.
 
 ## pp-select / pp-multiselect
 
@@ -178,6 +186,8 @@ protected readonly selectedIds = signal<(string | number)[]>([]);
 Variants: `Default` (read-only), `Single` (replace-on-click), `SingleRadio` (radio indicator), `Multi` (checkbox toggle). `selectedIds` is a `ModelSignal<(string | number)[]>` — even when ids are integers, the array type is `(string | number)[]`. Cast or compare numerically when consumers expect plain numbers.
 
 `pp-list` items render with `id="pp-list-item-<id>"` and `[attr.data-id]` automatically — use `data-id` for stable e2e selectors instead of adding custom testids per row.
+
+Item leading slot accepts either a CSS icon class (`leading: 'pp-icon-home'`) **or** an image URL / base64 data URI (`leadingSrc: 'https://…/avatar.png'`). When both are set, `leadingSrc` wins — use it for avatar lists (e.g. employee pickers) and fall back to `leading` for category-icon lists.
 
 ## pp-menu
 
@@ -335,6 +345,40 @@ protected onPage(event: PPPaginatorPageEvent): void {
 Pair with `mat-table` for paged table conversions. **`pageIndex` is zero-based** (Material convention) — visible page labels in the UI are 1-based. **Page-size options are hard-coded** to `[10, 25, 50, 100]` in v1.0.1; not configurable. Pass translation keys for every ARIA label so screen readers respect the user's locale.
 
 Use `[hidePageSize]="true"` when the page size is fixed by product requirements and the dropdown adds noise.
+
+## pp-datepicker
+
+```typescript
+import { PPDatepickerComponent, PPDateRange } from '@pdx/pp-datepicker';
+```
+
+```html
+<!-- single date — replaces TDateTimePicker / TPEPDateEdit -->
+<pp-datepicker
+  [label]="'employee.birthday' | translate"
+  [formControl]="birthdayCtrl"
+  [required]="true"
+  locale="de-CH"
+/>
+
+<!-- range — replaces a pair of date edits that bracket a period -->
+<pp-datepicker type="range" [label]="'period.range' | translate" [formControl]="rangeCtrl" locale="de-CH" />
+
+<!-- month + year — replaces TECMonthEdit -->
+<pp-datepicker type="month-year" [label]="'wage.month' | translate" [formControl]="monthCtrl" locale="de-CH" />
+```
+
+Use `@pdx/pp-datepicker` `PPDatepickerComponent` for every Delphi date control. The component is a `ControlValueAccessor`, so wire it with `[formControl]` (or `[formField]` via your Signal Forms bridge) and commit `Date` values. Convert to `Temporal.PlainDate` / `Temporal.PlainYearMonth` at the store/service boundary — keep the form-control on `Date` so the picker round-trips cleanly.
+
+Three modes:
+
+- `type="single"` (default) — commits a single `Date`. Use for any Delphi `TDateTimePicker` / `TPEPDateEdit` / `TDBDateEdit`.
+- `type="range"` — commits a `PPDateRange` (`{ start, end }`). Use when the Delphi form has two adjacent date edits bracketing a period and the form treats them as a unit.
+- `type="month-year"` — user picks **only a month + year, no day** (the panel skips the day grid and walks them through month → year). Committed value is a `Date` anchored to day 1 of the picked month at 00:00 — the anchor day is an implementation detail to keep the value typed as `Date`; the user never sees or selects a day. Direct replacement for `TECMonthEdit`.
+
+Pass a translated `label`. Set `locale` to the active app locale (`'de-CH' \| 'en' \| 'fr' \| 'it' \| 'nl'` are canonical; arbitrary BCP-47 tags are normalised internally). Apply `[min]` / `[max]` whenever the Delphi source enforces bounds (e.g. validity windows on contracts, absence periods that cannot cross fiscal-year edges). Use `[required]` to mirror `Validators.required` visually — the validator on the bound control still does the enforcement.
+
+Custom date-navigator widgets (`TPEPDateNavigator` with prev/next month buttons + a month label) stay as a small custom component built from `pp-icon-button` + `pp-datepicker`; the picker covers the "pick any date" branch while the icon buttons handle the stepper.
 
 ## pp-dialog
 
