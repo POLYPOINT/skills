@@ -137,7 +137,7 @@ Never import it from a per-component SCSS file. The compiled CSS contains every 
 
 ---
 
-## @pdx/pp-button (v1.2.1)
+## @pdx/pp-button (v1.3.0)
 
 Buttons for all user interaction needs: standard buttons, icon buttons, and floating action buttons (FAB).
 
@@ -176,19 +176,20 @@ import { PPIconButtonComponent } from '@pdx/pp-button';
 
 ```html
 <pp-icon-button icon="pp-icon-edit_filled" ariaLabel="Edit item" (click)="edit()" />
-<pp-icon-button icon="pp-icon-delete_trash" ariaLabel="Delete" variant="text" (click)="remove()" />
+<pp-icon-button icon="pp-icon-delete_trash" ariaLabel="Delete" variant="plain" (click)="remove()" />
+<pp-icon-button icon="pp-icon-arrow_back" ariaLabel="Back" variant="plain-dark" size="sm" />
 ```
 
 Compact icon-only button for toolbars and inline actions. **No `label` input** — identify the button via `ariaLabel`.
 
-| Input        | Type                                          | Default    | Description                                                                                                                                 |
-| ------------ | --------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `icon`       | `string`                                      | required   | Icon modifier class only — e.g. `"pp-icon-edit_filled"`. Component auto-prepends `pp-icon`; do **not** pass the full `"pp-icon pp-icon-X"`. |
-| `variant`    | `'filled' \| 'outlined' \| 'text' \| 'tonal'` | `'text'`   | Visual style                                                                                                                                |
-| `size`       | `'sm' \| 'md' \| 'lg'`                        | `'md'`     | Button size                                                                                                                                 |
-| `disabled`   | `boolean`                                     | `false`    | Disabled state                                                                                                                              |
-| `buttonType` | `'button' \| 'submit' \| 'reset'`             | `'button'` | HTML button type                                                                                                                            |
-| `ariaLabel`  | `string`                                      | required   | Accessibility label — required for screen-reader identification                                                                             |
+| Input        | Type                                                           | Default         | Description                                                                                                                                                  |
+| ------------ | -------------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `icon`       | `string`                                                       | `'pp-icon-add'` | Icon modifier class only — e.g. `"pp-icon-edit_filled"`. Component auto-prepends `pp-icon`; do **not** pass the full `"pp-icon pp-icon-X"`.                  |
+| `variant`    | `'filled' \| 'plain' \| 'plain-dark' \| 'outlined' \| 'tonal'` | `'filled'`      | Visual style. `'plain'` has no background (use for in-toolbar actions); `'plain-dark'` is the dark-on-light variant intended for the mobile toolbar surface. |
+| `size`       | `'sm' \| 'lg'`                                                 | `'lg'`          | Button size (icon-button uses two sizes, not three).                                                                                                         |
+| `disabled`   | `boolean`                                                      | `false`         | Disabled state                                                                                                                                               |
+| `buttonType` | `'button' \| 'submit' \| 'reset'`                              | `'button'`      | HTML button type                                                                                                                                             |
+| `ariaLabel`  | `string`                                                       | —               | Accessibility label — required for screen-reader identification on icon-only buttons.                                                                        |
 
 #### PPFloatingActionButtonComponent
 
@@ -198,9 +199,18 @@ import { PPFloatingActionButtonComponent } from '@pdx/pp-button';
 
 ```html
 <pp-floating-action-button icon="pp-icon-add" ariaLabel="Add item" />
+<pp-floating-action-button icon="pp-icon-edit_filled" ariaLabel="Edit" position="top-right" size="sm" />
 ```
 
-Prominent FAB for primary screen actions. Supports fixed positioning. Selector is the full **`pp-floating-action-button`** — there is no short `pp-fab` alias.
+Prominent FAB for primary screen actions. Selector is the full **`pp-floating-action-button`** — there is no short `pp-fab` alias.
+
+| Input       | Type                                                                         | Default          | Description                                                                                                                 |
+| ----------- | ---------------------------------------------------------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `icon`      | `string`                                                                     | `'pp-icon-add'`  | Icon modifier class.                                                                                                        |
+| `position`  | `'relative' \| 'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left'` | `'bottom-right'` | Anchor in the surrounding container. `'relative'` flows inline; the four corner values switch to `position: fixed` styling. |
+| `size`      | `'sm' \| 'lg'`                                                               | `'lg'`           | FAB size.                                                                                                                   |
+| `disabled`  | `boolean`                                                                    | `false`          | Disabled state.                                                                                                             |
+| `ariaLabel` | `string`                                                                     | —                | Accessibility label — required because the button is icon-only.                                                             |
 
 ### Peer Dependencies
 
@@ -899,6 +909,7 @@ interface PPMenuItem {
   readonly id: string | number;
   readonly label: string;
   readonly supportingText?: string;
+  readonly disabled?: boolean; // muted style; the menu skips disabled items in keyboard nav and never emits itemSelect for them
 }
 ```
 
@@ -920,7 +931,7 @@ interface PPMultiselectChangeEvent {
 
 ---
 
-## @pdx/pp-menu (v1.1.2)
+## @pdx/pp-menu (v1.2.0)
 
 Standalone dropdown menu components for single and multiple selection. Used internally by `@pdx/pp-select` and as the context menu for `@pdx/pp-tree`. Can also be used directly for custom dropdown implementations.
 
@@ -988,6 +999,7 @@ interface PPMenuItem {
   readonly id: string | number;
   readonly label: string;
   readonly supportingText?: string;
+  readonly disabled?: boolean; // muted style; the menu skips disabled items in keyboard nav and never emits itemSelect for them
 }
 
 interface PPMenuSelectEvent {
@@ -1391,6 +1403,167 @@ A `document:click` host listener always closes any open dropdown when a click la
 
 ---
 
+## @pdx/pp-toolbar (v1.0.0)
+
+Two app-shell toolbar components. Both are **purely presentational** — state in, events out; the host wires auth / navigation logic. Both are designed to render as a **sticky horizontal bar pinned to the top of the viewport**, staying visible while page content scrolls underneath.
+
+- `PPToolbarComponent` — sticky desktop/global toolbar with a station-select dropdown (powered by `pp-menu`) and a logout button. Collapses to icon-only logout on viewports `< 600 px`. **The station select is a context switcher, _not_ breadcrumb navigation** — picking a station swaps the active organizational context, it does not change route hierarchy.
+- `PPToolbarMobileComponent` — mobile page-level "app bar": optional back button + page title + trailing action icons + optional notifications badge, with an optional safe-area spacer for the iOS notch / Android status bar (`showStatusBar`). Every interactive surface meets a 44×44 px touch target.
+
+Same scope rule as `pp-sidenav` / `pp-top-navigation`: these are **app-shell** components. Feature components routed _into_ the shell do not emit them.
+
+### When to use
+
+Reach for `pp-toolbar` (desktop) when the design calls for a persistent global bar with workspace/context switching and a global action (typically logout). Typical uses: application headers, context / workspace selection, navigation between organizational units, global actions such as logout or settings.
+
+Reach for `pp-toolbar-mobile` when the design calls for a compact touch-optimised page header that stays accessible while scrolling. Typical uses: mobile page headers, detail-page headers with a back button, navigation between views, contextual page actions, notification or status surfaces.
+
+Both prioritise visibility-while-scrolling and quick access to the most important actions; if the design doesn't need either property, prefer a plain page header (e.g. a `mat-toolbar` styled element) instead.
+
+### Components
+
+#### PPToolbarComponent
+
+```typescript
+import { PPToolbarComponent, PPToolbarStation, PPToolbarStationSelectEvent } from '@pdx/pp-toolbar';
+```
+
+```html
+<pp-toolbar
+  [stations]="stations"
+  [(activeStationId)]="activeStationId"
+  [logoutLabel]="'shell.logout' | translate"
+  (stationSelect)="onStationSelect($event)"
+  (logout)="onLogout()"
+/>
+```
+
+| Input             | Type                                    | Default    | Description                                                                                                                             |
+| ----------------- | --------------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `stations`        | `PPToolbarStation[]`                    | `[]`       | Stations the user can switch between. The toolbar auto-selects the first entry if `activeStationId` is `null` or no longer in the list. |
+| `activeStationId` | `ModelSignal<string \| number \| null>` | `null`     | Two-way bound id of the active station. Drives the trigger label and the highlighted menu item.                                         |
+| `logoutLabel`     | `string`                                | `'Logout'` | Visible label next to the logout icon. Hidden on narrow viewports so the button collapses to icon-only.                                 |
+| `ariaLabel`       | `string \| null`                        | `null`     | Accessible label applied to the `<header role="banner">` landmark.                                                                      |
+
+**Outputs:**
+
+- `stationSelect` — emits `PPToolbarStationSelectEvent` (`{ id, station }`) whenever a station is activated, even if it was already the active one.
+- `logout` — emits `void` on the logout click; the host terminates the session.
+
+#### PPToolbarMobileComponent
+
+```typescript
+import { PPToolbarMobileComponent, PPToolbarMobileAction, PPToolbarMobileActionTapEvent } from '@pdx/pp-toolbar';
+```
+
+```html
+<pp-toolbar-mobile
+  [title]="pageTitle()"
+  [showBackButton]="true"
+  [actions]="actions"
+  [notificationsCount]="unread()"
+  (backTap)="onBack()"
+  (actionTap)="onAction($event)"
+  (notificationsTap)="onNotifications()"
+/>
+```
+
+| Input                    | Type                      | Default           | Description                                                                                                                                                       |
+| ------------------------ | ------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `title`                  | `string`                  | `''`              | Page title in the bar centre. Truncates with ellipsis when it overflows.                                                                                          |
+| `showBackButton`         | `boolean`                 | `false`           | Renders a leading back-arrow icon button.                                                                                                                         |
+| `backAriaLabel`          | `string`                  | `'Back'`          | Accessible label for the back button (icon-only).                                                                                                                 |
+| `showStatusBar`          | `boolean`                 | `false`           | Reserves `env(safe-area-inset-top)` so the toolbar clears the iOS notch / Android status bar in a PWA. Visually empty.                                            |
+| `actions`                | `PPToolbarMobileAction[]` | `[]`              | Trailing icon actions. `actions[0]` renders at the **right-most** position; subsequent entries extend leftward. Disabled entries are visible but non-interactive. |
+| `notificationsCount`     | `number`                  | `0`               | Unread count. `> 0` renders a notifications icon with a numeric badge; `0` omits the icon entirely. Values above `notificationsBadgeMax` render as `'<max>+'`.    |
+| `notificationsAriaLabel` | `string`                  | `'Notifications'` | Accessible label for the notifications button.                                                                                                                    |
+| `notificationsBadgeMax`  | `number`                  | `99`              | Upper bound for the displayed badge count (overflows render as e.g. `'99+'`).                                                                                     |
+| `ariaLabel`              | `string \| null`          | `null`            | Accessible label for the `<header role="banner">` landmark.                                                                                                       |
+
+**Outputs:**
+
+- `backTap` — emits when the back button is tapped.
+- `actionTap` — emits `PPToolbarMobileActionTapEvent` (`{ id, action }`) when the user taps a non-disabled action.
+- `notificationsTap` — emits when the notifications icon is tapped.
+
+### Models
+
+```typescript
+interface PPToolbarStation {
+  readonly id: string | number;
+  readonly label: string;
+  readonly disabled?: boolean; // visible but non-activatable
+}
+
+interface PPToolbarStationSelectEvent {
+  readonly id: string | number;
+  readonly station: PPToolbarStation;
+}
+
+interface PPToolbarMobileAction {
+  readonly id: string | number;
+  readonly icon: string; // pp-icon modifier class, e.g. 'pp-icon-search'
+  readonly ariaLabel: string; // required — actions are icon-only
+  readonly disabled?: boolean;
+  readonly active?: boolean; // toggled-on visual (e.g. filter applied)
+}
+
+interface PPToolbarMobileActionTapEvent {
+  readonly id: string | number;
+  readonly action: PPToolbarMobileAction;
+}
+```
+
+### States
+
+`pp-toolbar` (desktop, station-select driven):
+
+- **Closed** — the station dropdown is hidden (default).
+- **Open** — the dropdown is visible; the currently selected station is highlighted.
+- **Selected** — the active item is visually highlighted in both the trigger label and the open dropdown.
+
+`pp-toolbar-mobile` (interactive icon buttons inherit standard button states):
+
+- **Default**, **Hover**, **Focused**, **Pressed**, **Disabled** — standard `pp-icon-button` states apply to the back button, action icons, and the notifications icon.
+- Per-element accents: a notifications badge can be active (count > 0) or inactive (count = 0, icon omitted entirely); individual action icons can be rendered in their "active" state via `PPToolbarMobileAction.active = true` (e.g. filter applied).
+
+### Interactions
+
+`pp-toolbar` (desktop):
+
+- Click the select trigger → opens the dropdown.
+- Click a dropdown item → changes the active station / context and emits `stationSelect`.
+- Click outside the toolbar → closes the dropdown.
+- Click the logout action → emits `logout` (the host terminates the session).
+- Scroll the page → the toolbar stays pinned at the top.
+
+`pp-toolbar-mobile`:
+
+- Tap the navigation icon (back button) → emits `backTap`; the host navigates back or closes the current view.
+- Tap an action icon → emits `actionTap` with `{ id, action }`; the host triggers the contextual action.
+- Tap the notifications icon → emits `notificationsTap`; the host opens related content.
+- Scroll the page → the toolbar stays pinned at the top.
+
+### Mobile design guidelines
+
+When composing screens around `pp-toolbar-mobile`, follow the Figma design guidance to keep the bar usable on small viewports:
+
+- Keep the toolbar compact and focused — prioritise only the most important actions.
+- Use clear, recognisable icons and maintain consistent icon placement across screens.
+- Avoid overcrowding the trailing-action slot; if a screen needs more than a few actions, demote secondary actions into a `pp-menu` opened from a single overflow icon.
+- Use notification badges sparingly — they should signal genuinely new / unread content, not steady-state counts.
+- Keep page titles short and readable (the title truncates with ellipsis when it overflows the available width).
+
+### Responsive note
+
+`pp-toolbar` and `pp-toolbar-mobile` are **siblings, not composables**: render one or the other based on the host's breakpoint / route logic. They never appear together on the same screen.
+
+### Peer Dependencies
+
+`@angular/core`, `@pdx/pp-button`, `@pdx/pp-menu`, `@pdx/pp-theme`
+
+---
+
 ## @pdx/pp-button-toggle (v1.0.0)
 
 Segmented control for mutually-exclusive choices rendered as connected toggle buttons (e.g. view-mode picker, density toggle, on-screen filter). Use `pp-radio-group` instead for traditional form radios.
@@ -1683,7 +1856,7 @@ When a PDX component exists, always use it instead of Angular Material or custom
 | Paginator        | `PPPaginatorComponent`                                               | `mat-paginator`                                                 |
 | Date picker      | `PPDatepickerComponent` (`type="single" \| "range" \| "month-year"`) | `mat-datepicker`, `mat-date-range-picker`                       |
 
-`pp-sidenav` and `pp-top-navigation` are **not** in this drop-in table. They are app-shell design decisions — use them only when introducing or redesigning global navigation. See the "Navigation (app-shell only)" section in [../SKILL.md](../SKILL.md) for the applicability rules.
+`pp-sidenav`, `pp-top-navigation`, and `pp-toolbar` / `pp-toolbar-mobile` are **not** in this drop-in table. They are app-shell design decisions — use them only when introducing or redesigning global navigation / shell chrome. See the "Navigation (app-shell only)" section in [../SKILL.md](../SKILL.md) for the applicability rules.
 
 **Components without a PDX replacement yet** — use Angular Material with PDX theme applied:
 

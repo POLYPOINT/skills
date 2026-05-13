@@ -67,11 +67,11 @@ Use `@pdx/pp-icons` for all icons via `<span class="pp-icon pp-icon-<name>"></sp
 
 ### Shell-level components
 
-`@pdx/pp-sidenav` and `@pdx/pp-top-navigation` are app-shell components, **not** per-form primitives. A converted Delphi form is a feature routed _into_ the saas app's existing shell — it never introduces or replaces navigation.
+`@pdx/pp-sidenav`, `@pdx/pp-top-navigation`, and `@pdx/pp-toolbar` (both `PPToolbarComponent` and `PPToolbarMobileComponent`) are app-shell components, **not** per-form primitives. A converted Delphi form is a feature routed _into_ the saas app's existing shell — it never introduces or replaces navigation or shell chrome.
 
-Do not emit `<pp-sidenav>` or `<pp-top-navigation>` markup from any conversion, even if the Delphi source has a `TMainMenu`, `TTreeView` used as a navigation tree, or a toolbar at the top of the form. Flag such elements in the conversion plan as "shell-level — leave to app-shell team" and move on.
+Do not emit `<pp-sidenav>`, `<pp-top-navigation>`, `<pp-toolbar>`, or `<pp-toolbar-mobile>` markup from any conversion, even if the Delphi source has a `TMainMenu`, `TTreeView` used as a navigation tree, or a toolbar at the top of the form. Flag such elements in the conversion plan as "shell-level — leave to app-shell team" and move on.
 
-Apply `pp-sidenav` in its default `'app-shell'` variant (and `pp-top-navigation`) only in a separate, explicit task that asks for app-shell navigation work. Do not infer the need from screenshots or from a design that happens to show a bar / column — those may be page headers, filter panels, or inspector panes. For an in-feature drawer (filter panel, inspector pane, document outline) introduced by the conversion, use `<pp-sidenav variant="panel-only">` — it renders only the right-hand panel and is the PDX replacement for the old `mat-sidenav` drawer pattern.
+Apply `pp-sidenav` in its default `'app-shell'` variant (and `pp-top-navigation` / `pp-toolbar` / `pp-toolbar-mobile`) only in a separate, explicit task that asks for app-shell work. Do not infer the need from screenshots or from a design that happens to show a bar / column — those may be page headers, filter panels, or inspector panes. For an in-feature drawer (filter panel, inspector pane, document outline) introduced by the conversion, use `<pp-sidenav variant="panel-only">` — it renders only the right-hand panel and is the PDX replacement for the old `mat-sidenav` drawer pattern.
 
 ## Data Layer
 

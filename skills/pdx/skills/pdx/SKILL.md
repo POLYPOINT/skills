@@ -2,7 +2,7 @@
 name: pdx
 description: This skill should be used when applying the PDX (POLYPOINT Design Experience) design system to Angular code — installing or using `@pdx/*` libraries, replacing Angular Material components with PDX equivalents, applying PDX design tokens or typography, building forms with `pp-form`, or auditing existing UI for PDX consistency. Triggers on phrases like "apply PDX styles", "use PDX libs", "use POLYPOINT components", "make it POLYPOINT-styled", "replace mat-button with pp-button", or "audit Material usage".
 metadata:
-  version: '1.8.1'
+  version: '1.9.1'
 ---
 
 # PDX — POLYPOINT Design Experience
@@ -52,6 +52,7 @@ Width control for `pp-input` / `pp-textarea` is **context-aware**: use `[fullWid
 | `@pdx/pp-slide-toggle`    | `PPSlideToggleComponent` (on/off switch with optional label, ControlValueAccessor)                                                                                           |
 | `@pdx/pp-paginator`       | `PPPaginatorComponent` (page navigation + page-size selector)                                                                                                                |
 | `@pdx/pp-datepicker`      | `PPDatepickerComponent` (single / range / month-year date picker, CDK overlay)                                                                                               |
+| `@pdx/pp-toolbar`         | `PPToolbarComponent` (app-shell desktop toolbar — station-select + logout), `PPToolbarMobileComponent` (mobile page header — back + title + actions + notifications)         |
 
 ## Component Replacement Rules
 
@@ -86,20 +87,20 @@ Replace Angular Material components with PDX equivalents:
 
 ## Navigation (app-shell only — not a drop-in replacement)
 
-`@pdx/pp-sidenav` and `@pdx/pp-top-navigation` are **design decisions**, not generic Material swaps. Apply them only when:
+`@pdx/pp-sidenav`, `@pdx/pp-top-navigation`, and `@pdx/pp-toolbar` (both `PPToolbarComponent` and `PPToolbarMobileComponent`) are **design decisions**, not generic Material swaps. Apply them only when:
 
 1. **A navigation concern is actually present.** The user (or the design) explicitly calls for app-level navigation: a top bar that switches between sections of the app, or a side menu of app areas with nested sub-items. Screenshots showing a bar along the top or a column on the left do **not** automatically imply nav — they may be page headers, inspector panes, filter drawers, etc.
 2. **You are working at the app-shell level.** The component owning the `<router-outlet>` (or a top-level shell component that hosts the outlet). Feature components routed _into_ the shell do not own navigation.
 3. **Existing app-shell markup is being introduced or redesigned.** If the app already has a shell without these, do not swap it out unless asked.
 
-When these conditions are not met, **do not reach for `pp-sidenav` or `pp-top-navigation`.** Specifically:
+When these conditions are not met, **do not reach for `pp-sidenav`, `pp-top-navigation`, or `pp-toolbar`.** Specifically:
 
 - A drawer (filters, inspector, document outline) that isn't app-shell navigation → use `pp-sidenav` with `variant="panel-only"` (single-panel sub-navigation, no rail or emblem). The `'app-shell'` variant is still off-limits here.
-- `mat-toolbar` used as a page header, dialog header, or action bar → keep `mat-toolbar`.
+- `mat-toolbar` used as a page header, dialog header, or action bar → keep `mat-toolbar`. `pp-toolbar` / `pp-toolbar-mobile` are **shell chrome**, not generic page headers.
 - A static in-page menu or tab-like switcher inside one feature → use `pp-tab-group`, `pp-menu`, or plain buttons.
 - Feature components routed _into_ the app shell (e.g. converted legacy forms, dialog bodies) → never own navigation, even if the legacy source had a top toolbar or a left tree.
 
-When the conditions **are** met, use the full component family: `PPSidenavComponent` with `PPSidenavItemComponent` + `PPSidenavGroupComponent` + `PPSidenavSubItemComponent`, or `PPTopNavigationComponent` with a `PPTopNavItem[]` array. See [component-inventory.md](references/component-inventory.md) for APIs.
+When the conditions **are** met, use the full component family: `PPSidenavComponent` with `PPSidenavItemComponent` + `PPSidenavGroupComponent` + `PPSidenavSubItemComponent`; `PPTopNavigationComponent` with a `PPTopNavItem[]` array; `PPToolbarComponent` (station-select + logout) for the desktop shell, and `PPToolbarMobileComponent` (back + title + actions + notifications) for the mobile shell — render one or the other based on the host's breakpoint logic, never both. See [component-inventory.md](references/component-inventory.md) for APIs.
 
 ## Workflow
 
