@@ -1,11 +1,11 @@
 ---
 name: delphi-to-angular
 description: Use when converting Delphi VCL views (.dfm/.pas) from the P2 codebase to Angular components. Handles forms, frames, data modules, grids, trees, tabs, and dialogs. Produces Angular components plus any needed store, service, mocks, routes, and tests matching the POLYPOINT saas repo stack.
-argument-hint: '[analyze|generate] [path/to/file.dfm] [screenshot-path]'
+argument-hint: '[analyze|generate] [path/to/file.dfm] [screenshot-path] [path/to/PolylangSoluling.ntp]'
 disable-model-invocation: true
 compatibility: Designed for Claude Code. Uses argument-hint and disable-model-invocation Claude Code extensions.
 metadata:
-  version: '1.9.2'
+  version: '1.10.1'
 ---
 
 # Delphi-to-Angular Conversion
@@ -17,8 +17,11 @@ Converts Delphi VCL views from the P2 codebase into Angular components for the P
 ```
 /delphi-to-angular analyze /path/to/P2/delphi/pep/fEditMitarbeiter.dfm
 /delphi-to-angular analyze /path/to/P2/delphi/pep/fEditMitarbeiter.dfm /path/to/screenshot.png
+/delphi-to-angular analyze /path/to/P2/delphi/pep/fEditMitarbeiter.dfm /path/to/P2/delphi/language/soluling/PolylangSoluling.ntp
 /delphi-to-angular generate
 ```
+
+Any argument ending in `.ntp` is treated as the Soluling translation project file, regardless of its position. If omitted, the skill probes the default path `<p2-repo>/delphi/language/soluling/PolylangSoluling.ntp` and, failing that, asks the user.
 
 ## Phase Routing
 
@@ -48,6 +51,7 @@ From the PAS `uses` clause, resolve referenced files from the same directory as 
 - Read any data modules (`dm*.pas` + `.dfm`) for SQL queries
 - **Read the base class.** If the form derives from a domain-specific base (`TfKnotenGen`, `TfMitarbBase`, etc. — anything beyond `TForm` / `TDBParForm` / `TFrame` / `TDataModule`), open the base PAS + DFM. Base classes typically contribute fields, tabs, and validation that the child silently inherits. See [references/delphi-patterns.md](references/delphi-patterns.md) for `inherited` DFM merging and base-class reading.
 - **Trace every `ShowModal` and `CreateForm` call** in the PAS. Each one opens a sub-dialog that needs its own Angular dialog component. List the targets up front so the conversion plan accounts for them.
+- **Read string-resource units.** Any unit in the `uses` clause that looks like a strings container (`strres`, `str*`, `*Strings`, `*Const`, etc.) holds `resourcestring` constants the form/frame references in code (snackbars, dialog titles, validation messages). Read those `.pas` files so every German string the form can produce is in scope for the Soluling lookup in Step 2.6.
 
 ### Step 2.5: Reuse pass
 
@@ -57,6 +61,17 @@ Before designing new helpers, search the workspace for existing utilities:
 - The most-similar existing feature in the app (e.g. an already-converted hierarchy or detail dialog) for tree helpers, lock services, or domain-specific utilities.
 
 Reuse before generating. The point is **zero duplication of cross-feature utilities**.
+
+### Step 2.6: Locate the Soluling translation file
+
+The P2 Delphi apps all share a single Soluling translation project: `<p2-repo>/delphi/language/soluling/PolylangSoluling.ntp`. This file is the authoritative source for every German UI string and its existing translations across all locales (`de-CH`, `en`, `fr`, …). The Angular conversion reuses those translations rather than re-translating from scratch.
+
+1. **Resolve the path.** Use the first source available, in this order:
+   1. Any `$ARGUMENTS` value ending in `.ntp`.
+   2. The default `<p2-repo>/delphi/language/soluling/PolylangSoluling.ntp` derived from the input DFM path (walk up to the `p2` repo root).
+   3. **Ask the user** for the path if neither of the above resolves to an existing file. Do not proceed to Step 3 without it.
+2. **Read the file.** `PolylangSoluling.ntp` is a Soluling project file (XML-like text). Each translatable string appears with a stable key/ID, a source value (typically German), and translated values per locale. Skim once to learn the key shape and the set of locales present — this is the shape you will look up against in the Generate phase.
+3. **Note the file path** so the Generate phase can re-read it without re-asking.
 
 ### Step 3: Parse DFM structure
 
@@ -136,6 +151,21 @@ List anything found in the reuse-pass that the generated code will import (test-
 
 - /<route-path> (lazy loaded)
 
+### Translations (Soluling)
+
+- Soluling source: <resolved .ntp path>
+- Locales present in .ntp: <de-CH, en, fr, …>
+
+Strings found in Soluling — will be written to every locale JSON during generate:
+
+- `<feature.key>` <- "<German source>" (from <DFM component | strres constant>)
+- ...
+
+Strings NOT found in Soluling — will be intentionally skipped so the human translator catches them in Transifex:
+
+- "<German source>" (from <DFM component | strres constant>) — no matching .ntp entry
+- ...
+
 ### Translation decisions needed
 
 - "<German term>" -> "<proposed English>"?
@@ -180,15 +210,18 @@ Apply the **smart-vs-dumb component rule**: the parent owns the store when a sto
 8. **Parent component** (`<feature>.component.ts`, `.html`, `.scss`) — imports children, wires store, owns `data-testid` host attribute.
 9. **Parent spec** (`<feature>.component.spec.ts`) — Vitest. Include the axe a11y assertion (see angular-conventions.md).
 
-### Step 2.5: Generate translation keys
+### Step 2.5: Populate translation keys from Soluling
 
-For every user-visible string the new components introduce, add a translation key under a feature namespace (`hierarchy.title`, `hierarchy.add_child`).
+For every user-visible string the new components introduce, add a translation key under a feature namespace (`hierarchy.title`, `hierarchy.add_child`). Values for each locale come from the Soluling project file located in the analyze phase — **not** from re-translation.
 
-1. Discover the workspace's i18n folder once. The folder is commonly under `apps/<app>/public/assets/i18n/` in Nx layouts and `src/assets/i18n/` in classic Angular CLI layouts — search for an `i18n` directory containing locale JSON files (`find . -type d -name i18n`, or grep for an existing translation key).
-2. List every locale file present (`de-CH.json`, `en.json`, `fr.json`, etc.).
-3. Add the new key to **every** locale file. Use English as the placeholder for any locale you can't translate confidently and note those as TODO in the final summary.
+1. **Discover the workspace's i18n folder once.** Commonly under `apps/<app>/public/assets/i18n/` (Nx) or `src/assets/i18n/` (CLI). Search for an `i18n` directory containing locale JSON files (`find . -type d -name i18n`).
+2. **List every locale file present** (`de-CH.json`, `en.json`, `fr.json`, etc.).
+3. **Open `PolylangSoluling.ntp`** at the path resolved in analyze Step 2.6. For each German source string the generated components or strres-derived constants need, look it up by source value (and, where applicable, by Delphi component / resourcestring name) to find the matching Soluling entry.
+4. **For each Soluling match:** write the Angular feature key into **every** locale JSON file, using the Soluling translation for that locale. If the .ntp has `de-CH` and `fr` but the app also ships `en`, copy the values for the locales that exist in both, and skip the locales the .ntp does not provide.
+5. **For each German string with no Soluling match:** do **not** write any locale entry for that key — not even an English placeholder, not even the German source. Leaving the key absent across all locale files is intentional: the next Transifex sync flags it as a new missing string so the human translator authors it once. Track these in the post-generate summary so the developer knows what to expect in Transifex.
+6. **Keys in locale JSON files are flat** — `{ "hierarchy.title": "…" }`, not `{ "hierarchy": { "title": "…" } }`. Match the project's existing casing (snake vs kebab, feature-prefixed or not) and reuse shared namespaces like `common.save` / `common.cancel` rather than minting feature-local duplicates.
 
-Do not hardcode any user-visible string in templates or TypeScript — `TranslatePipe` for templates, `TranslateService.instant(...)` for snackbars / dynamic labels.
+Do not hardcode any user-visible string in templates or TypeScript — `TranslatePipe` for templates, `TranslateService.instant(...)` for snackbars / dynamic labels. The component templates still reference keys (`'hierarchy.title' | translate`) whether or not the locale file has a value yet — `ngx-translate` falls back to the key itself when a value is missing, which is exactly the signal the human translator needs.
 
 ### Step 2.6: Generate mock API / fixtures
 
@@ -244,7 +277,7 @@ List all generated files with a one-line description of each. Highlight:
 
 - Decisions made during generation (translation choices, optimistic UI scope, locking applied).
 - TODO items that need backend work (HTTP endpoints, real auth).
-- Locales that received the English placeholder rather than a real translation.
+- **Soluling outcome:** translation keys populated from `PolylangSoluling.ntp` (by locale) vs. keys intentionally left absent across all locale files so the human translator authors them in Transifex. List each absent key with its German source so the developer can sanity-check before the next Transifex push.
 
 ---
 

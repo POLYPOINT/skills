@@ -381,7 +381,7 @@ For each generated feature, add the new keys to **all** locale files found. Use 
 
 ### Key naming
 
-**Match the project's existing key-naming convention** — flat vs nested, snake vs kebab, feature-prefixed or not. Inspect a few existing keys before deciding. If the project already has a shared `common` / `shared` namespace for OK / Cancel / Save, reuse it instead of inventing a new one. If no convention is clear, ask the user. Avoid German keys — if the Delphi term has no agreed English translation, raise it during the analyze phase.
+**Keys in locale JSON files are flat** — single-level keys with the full dotted path (`"hierarchy.title": "…"`), not nested objects (`{ "hierarchy": { "title": "…" } }`). Match the project's existing casing convention (snake vs kebab, feature-prefixed or not). Inspect a few existing keys before deciding. If the project already has a shared `common` / `shared` namespace for OK / Cancel / Save, reuse it instead of inventing a new one. Avoid German keys — if the Delphi term has no agreed English translation, raise it during the analyze phase.
 
 ### Locale resolution
 
