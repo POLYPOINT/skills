@@ -97,7 +97,7 @@ end;
 
 ### Translation decisions needed
 
-List the user-visible strings that need a translation key, without prescribing a specific namespace. Inspect the workspace's existing locale files and propose keys that follow the project's convention (flat vs nested, kebab vs snake, feature-prefixed vs not). Ask the user if no convention is clear.
+List the user-visible strings that need a translation key. Keys in locale JSON files are flat (single-level, dotted paths). Inspect the workspace's existing locale files to match the casing convention (kebab vs snake, feature-prefixed vs not).
 
 - "Choose Month Range" — dialog title
 - "From:" / "To:" — month-picker labels
@@ -314,18 +314,14 @@ Notes:
 
 Add the new keys to **every** locale file in the workspace's i18n folder (discover via `find . -type d -name i18n` or by inspecting an existing locale file).
 
-The shape below is **illustrative** — match the project's existing namespace structure (flat vs nested, snake vs kebab, feature-prefixed or not). Inspect a few existing keys before deciding. If the project already has a `common` / `shared` namespace for OK/Cancel, reuse it instead of duplicating.
+Keys in locale JSON files are flat — match the project's casing convention (snake vs kebab, feature-prefixed or not). If the project already has a `common` / `shared` namespace for OK/Cancel, reuse it instead of duplicating.
 
 ```json
 {
-  "choose_month_range": {
-    "title": "Choose Month Range",
-    "from": "From",
-    "to": "To",
-    "first_month_required": "Start month is required",
-    "last_month_required": "End month is required"
-  }
+  "choose_month_range.title": "Choose Month Range",
+  "choose_month_range.from": "From",
+  "choose_month_range.to": "To",
+  "choose_month_range.first_month_required": "Start month is required",
+  "choose_month_range.last_month_required": "End month is required"
 }
 ```
-
-Use English as the placeholder for any locale you can't translate confidently and flag those as TODO in the conversion summary.
