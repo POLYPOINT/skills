@@ -1,6 +1,6 @@
 ---
 name: redact-jira
-description: Fetch a JIRA ticket's text and produce a privacy-safe version with all personal information redacted, before that text is used anywhere else in a review. Use at the start of a PR review, after the diff is available, to prepare the ticket description for comparison against the implementation.
+description: Take a developer-supplied PDF export of a JIRA ticket and produce a privacy-safe version with all personal information redacted, before that text is used anywhere else in a review. Use at the start of a PR review, after the diff is available, to prepare the ticket description for comparison against the implementation.
 ---
 
 # Redact JIRA ticket
@@ -15,16 +15,29 @@ and never reaches the orchestrator. You return only a redaction *summary*.
 
 ## Inputs
 
-- Either a JIRA ticket ID/URL, or a path to a file containing raw pasted ticket
-  text (the orchestrator passes one of these).
+- A path to a **PDF export of the JIRA ticket** that the developer produced (the
+  orchestrator passes this path). See "How the developer exports the ticket"
+  below for how that PDF is created.
 - Output path: `./.pr-review/ticket.md`.
+
+## How the developer exports the ticket
+
+The developer creates the PDF before this skill runs. The orchestrator is
+responsible for asking for it, but for reference the steps are:
+
+1. Open the JIRA issue in a browser.
+2. Click the **… (more actions)** menu near the top-right of the issue.
+3. Choose **Print** (on some JIRA versions this is under **Export → Print**).
+4. In the browser's print dialog, set the destination to **Save as PDF**.
+5. Save the file and hand its path to the review.
 
 ## Procedure
 
-1. **Get the ticket text.** If given a ticket ID/URL, use the connected
-   Atlassian/JIRA tool (`getJiraIssue`) to retrieve the summary and description.
-   If given a path to raw pasted text, read it from there. (The orchestrator
-   handles the case where no connector is available by collecting the paste.)
+1. **Get the ticket text.** Read the supplied PDF export with the Read tool
+   (it accepts PDFs) and extract the ticket's summary, description, and any
+   acceptance criteria. The PDF may include surrounding chrome (comments,
+   activity log, sidebar fields) — pull out the parts that describe the change
+   and ignore navigation/boilerplate.
 
 2. **Identify personal information.** Scan the summary and description for:
    - People's names (reporters, assignees, customers, names in prose)

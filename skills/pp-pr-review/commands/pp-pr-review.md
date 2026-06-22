@@ -122,14 +122,21 @@ changed and proceed.
 
 ## Step 4 — Redact PII (blocking, hard gate)
 
-Spawn a **sub-agent** that applies the **redact-jira** skill to the **JIRA ticket
-confirmed in step 1**, writing the cleaned ticket to `./.pr-review/ticket.md`. The
-raw ticket text stays in the sub-agent's context and must never enter yours.
+This review does **not** fetch the ticket from JIRA automatically. Instead, ask
+the developer to export the ticket confirmed in step 1 as a **PDF** and give you
+the path. Show them exactly how:
 
-- If no JIRA connector is available, the sub-agent can't fetch the ticket: ask
-  the developer to paste the ticket summary and description, save it verbatim to
-  `./.pr-review/ticket.raw.md`, spawn the redact sub-agent pointed at that file,
-  then delete `ticket.raw.md` once `ticket.md` exists.
+> Please export JIRA ticket **<id>** as a PDF and tell me where you saved it:
+> 1. Open the ticket in your browser.
+> 2. Click the **… (more actions)** menu near the top-right of the issue.
+> 3. Choose **Print** (on some JIRA versions it's under **Export → Print**).
+> 4. In the print dialog, set the destination to **Save as PDF** and save it.
+> 5. Paste the path to the saved PDF here.
+
+Wait for the developer to provide the PDF path. Then spawn a **sub-agent** that
+applies the **redact-jira** skill to that PDF, writing the cleaned ticket to
+`./.pr-review/ticket.md`. The raw ticket text stays in the sub-agent's context
+and must never enter yours.
 
 The sub-agent returns a redaction **summary** (counts and kinds, never values)
 and the **absolute path** of the cleaned ticket file. Present the summary, then
