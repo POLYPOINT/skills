@@ -42,6 +42,12 @@
       "source": "./skills/playwright-api",
       "description": "Create Playwright API tests based on a playwright e2e test, it will test the corner cases missed by the e2e test",
       "category": "testing"
+    },
+    {
+      "name": "pp-pr-review",
+      "source": "./skills/pp-pr-review",
+      "description": "Gated, sub-agent-driven PR review for Azure DevOps. Verifies the repo, redacts PII, fans out parallel analyses (core logic, tests, security, SQL/JPA, memory, performance, and POLYPOINT Coding Guidelines), triages findings with the developer into a curated set, then drafts and posts PR comments only on explicit confirmation.",
+      "category": "development"
     }
   ]
 }
