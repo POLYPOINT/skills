@@ -21,10 +21,8 @@ clean and the triage sharp.
    Azure repo, branches resolvable) *before* anything is checked out or posted.
 3. **Setup** (deterministic script) — checks out the branch, computes the diff
    against the target.
-4. **Redact PII** (blocking gate) — the developer exports the JIRA ticket as a
-   PDF (… menu → Print → Save as PDF) and provides the path; a sub-agent reads
-   that PDF and strips personal information; the raw text never enters the main
-   conversation.
+4. **Redact PII** (blocking gate) — a sub-agent fetches the JIRA ticket and
+   strips personal information; the raw text never enters the main conversation.
 5. **Parallel analyses** — seven sub-agents run concurrently, each writing a
    findings report: **core logic** (with a plain-language summary and ranked
    "review hot spots" linking to the important code), **tests**, **security**,
@@ -195,10 +193,8 @@ otherwise it's resolved from the feature branch.
 
 Requires `git`, `curl`, and `jq` on PATH.
 
-The redaction step does not connect to JIRA. The developer exports the ticket
-as a PDF (open the issue → **… (more actions)** menu → **Print** → **Save as
-PDF** in the browser print dialog) and provides the path; a sub-agent reads that
-PDF and strips personal information before it's used in the review.
+A JIRA/Atlassian connector enables automatic ticket fetching in the redaction
+step; without it, the plugin asks the developer to paste the ticket text.
 
 ## The gating model (why posting is safe)
 
