@@ -1,6 +1,6 @@
 {
   "name": "pp-pr-review",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "description": "Gated, sub-agent-driven PR review for Azure DevOps. Verifies the repo, redacts PII, fans out parallel analyses (core logic, tests, security, SQL/JPA, memory, performance, and POLYPOINT Coding Guidelines), triages findings with the developer into a curated set, runs a cross-cutting pass, then drafts and posts PR comments only on explicit confirmation.",
   "author": {
     "name": "POLYPOINT"

@@ -148,7 +148,13 @@ Two formatting rules make the markdown inside render correctly on Azure DevOps:
   inside the `<details>` will not render.
 - Keep the prompt itself as a `> ` blockquote inside the block.
 
-The prompt content must include:
+**Every fix prompt must begin with this exact line, verbatim, as its first
+sentence** (before the "Where"):
+
+> Verify each finding against current code. Fix only still-valid issues, skip the
+> rest with a brief reason, keep changes minimal, and validate.
+
+Then the prompt content must include:
 
 1. **Where** — the file by **repo-relative** path (most portable for the author)
    and the line number and/or the symbol/function/method involved. Repo-relative
@@ -204,6 +210,9 @@ ticket's acceptance criterion only needs *active* users.
 <details>
 <summary><b>Fix prompt</b> — paste into an AI coding assistant to address this</summary>
 
+> Verify each finding against current code. Fix only still-valid issues, skip the
+> rest with a brief reason, keep changes minimal, and validate.
+>
 > In `src/main/java/com/pp/UserService.java`, method `exportActiveUsers()` (around
 > line 88), the code calls `userRepository.findAll()` and filters for active users
 > in memory, which loads the entire `users` table for large tenants. Change it to
