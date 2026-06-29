@@ -272,7 +272,8 @@ Tell the developer the draft is ready and **where to find it** — state the
 **absolute path** to the file (Cmd/Ctrl-clickable in the IntelliJ console), not
 the relative `./.pr-review/...` form. Build it from `cwd` in
 `./.pr-review/run.meta` (`<cwd>/.pr-review/pr-comments.md`). Give a one-line shape
-of the draft (e.g. "1 summary comment + N threaded comments").
+of the draft (e.g. "N threaded comments" — the draft is actionable comments only,
+no PR summary).
 
 Then **ask the developer how they want to review it**:
 

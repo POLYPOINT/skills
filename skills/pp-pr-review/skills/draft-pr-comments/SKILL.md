@@ -24,14 +24,15 @@ hook-protected step.
 
 ## What to produce
 
-Write `./.pr-review/pr-comments.md` as discrete, independently-postable comments:
+Write `./.pr-review/pr-comments.md` as discrete, independently-postable comments.
+
+**Produce actionable comments only — do not write a PR summary.** Summarising the
+PR is handled by other tools; this draft contains only the specific, actionable
+findings the developer accepted. Do **not** add a `## Summary comment` section, an
+overview, or any "what this PR does" preamble.
 
 ```markdown
 # PR review comments
-
-## Summary comment
-<one comment giving the high-level take: what the PR does and the overall review
-conclusion — a few sentences. This is the top-level PR comment.>
 
 ## Inline / threaded comments
 ### /abs/path/to/File.ext:42 — <short title>
@@ -68,9 +69,9 @@ inline, so the **Relates to** line is what tells the author where to look.>
 > `## Inline / threaded comments` heading. The only difference is the `###` line:
 > a heading ending in `:<line>` is posted anchored to that line; a heading with no
 > `path:line` is posted as an ordinary (unanchored) PR thread. Do **not** add any
-> other `##` section — the posting script recognises only `## Summary comment` and
-> `## Inline / threaded comments`, and any other `##` line would be swallowed into
-> the previous comment's body.
+> other `##` section (in particular, no `## Summary comment`) — the posting script
+> recognises only `## Inline / threaded comments`, and any other `##` line would be
+> swallowed into the previous comment's body.
 
 Format the body so it is **easy to skim**: the short summary first, then a
 **Details** section, then the **Fix prompt** last, separated from the details by a
@@ -174,9 +175,11 @@ comment, matching the one-concern-per-comment rule. For purely observational not
 that ask a question with no concrete change to make, you may omit the fix prompt;
 include it whenever there is something to fix.
 
-For **summary-level** actionable points that have no single location, you may add
-a fix prompt to the summary comment too, describing the area to change in the same
-self-contained, verify-first style.
+For **summary-level** actionable points that have no single location, write them
+as **general comments** (a `###` entry with no `path:line` in the heading and a
+`Relates to:` line pointing at the relevant area), and give them a fix prompt in
+the same self-contained, verify-first style. Do not roll them into a PR summary —
+there is no summary comment.
 
 ### Worked example of one inline comment
 
@@ -227,19 +230,21 @@ Guidelines:
   posting script converts it to the repo-relative path Azure needs. **Only anchor
   when the location is in the diff** (see "Anchor each comment to the diff");
   otherwise drop the `path:line` from the heading and use a general comment with a
-  `Relates to:` line. Summary-level points with no location go in the summary
-  comment.
+  `Relates to:` line. Summary-level points with no location also become general
+  comments — there is no summary comment.
 - **Carry only what's in `accepted.md`.** Nothing else.
 - **Be concise.** Trim reasoning to what the author needs to act.
 - **Keep PII out.** Don't reintroduce names or customer identifiers.
 
 ## Output format note
 
-The posting script (`post-to-azure.sh`) parses this file: `## Summary comment`
-becomes the top-level PR comment, and each `###` heading under `## Inline /
-threaded comments` becomes a separate thread, with the `path:line` from the
-heading used as the inline anchor. **Keep these exact headings** so the script can
-parse them — everything below a heading (including the **Fix prompt** blockquote)
+The posting script (`post-to-azure.sh`) parses this file: each `###` heading under
+`## Inline / threaded comments` becomes a separate thread, with the `path:line`
+from the heading used as the inline anchor. (The script also supports an optional
+`## Summary comment`, but this skill does **not** produce one — summaries are out
+of scope.) **Keep the `## Inline / threaded comments` heading exact** so the script
+can parse the file — everything below a `###` heading (including the **Fix prompt**
+blockquote)
 is the comment body and is posted verbatim with that comment, which is intended:
 the author gets the actionable prompt right on the thread. Return control to the
 orchestrator; do not post.
