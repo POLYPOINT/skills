@@ -56,9 +56,11 @@ Run:
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/init-run.sh
 ```
 
-This creates a clean `./.pr-review/` working directory and records run metadata
-(including the absolute repo root, used later to make code references clickable).
-Confirm it succeeded before continuing.
+This **deletes any `./.pr-review/` directory left over from a previous run** and
+creates a clean one, then records run metadata (including the absolute repo root,
+used later to make code references clickable). Starting from a clean slate means
+findings, drafts, and approvals never leak between reviews. Confirm it succeeded
+before continuing.
 
 ## Step 1 — Resolve the PR (blocking, light confirmation)
 
@@ -188,10 +190,19 @@ table** the developer can scan:
 
 Once the table is shown, **ask the developer how they want to triage it**:
 
-> Want to **loop** through these one at a time (I'll show the code and explain each,
-> and you decide as we go), or would you rather **call them out together** from the
-> table?
+> How do you want to handle these <N> findings?
+> - **Include all** as comments, or **exclude all** (bulk) — one decision for the
+>   whole table.
+> - **Loop** through them one at a time (I'll show the code and explain each, and
+>   you decide as we go).
+> - **Call them out together** — tell me in one message which to include/edit/reject.
 
+- **Include all** — accept every finding in the table as-is. Confirm the count
+  back to the developer ("Including all <N> as comments — say if you want to tweak
+  any wording"), then record each as an included finding (below). They can still
+  ask to edit a comment's wording afterward.
+- **Exclude all** — reject the entire table; record nothing and note that the
+  whole dimension was skipped, then move to the next dimension.
 - **Loop** — walk the findings in the table's order (severity-ranked), **one at a
   time**. For each finding:
   1. Show its code: if it has a `path:line`, read that bounded region (the lines
@@ -273,4 +284,22 @@ do small edits directly; for a full redraft, re-run the sub-agent).
   `./.pr-review/pr-comments.md` to post manually. Do **not** write the approval
   marker and do **not** run the post script.
 
-After posting (or declining), give a one-line summary of what was done and stop.
+## Step 11 — Clean up the working directory
+
+Once the review is complete, tear down the run's working directory so nothing
+leaks into the next review:
+
+- **After a successful post**, everything now lives on the PR, so run:
+
+  ```
+  bash ${CLAUDE_PLUGIN_ROOT}/scripts/cleanup-run.sh
+  ```
+
+  This removes `./.pr-review/` entirely.
+- **If the developer declined to post**, the draft at `./.pr-review/pr-comments.md`
+  is the only copy of their work — **do not delete it.** Leave the directory in
+  place so they can post manually; the next `/pp-pr-review` run will clear it at
+  step 0. (If they confirm they no longer need the draft, you may run
+  `cleanup-run.sh` then.)
+
+Then give a one-line summary of what was done and stop.

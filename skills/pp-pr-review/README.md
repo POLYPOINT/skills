@@ -30,9 +30,11 @@ clean and the triage sharp.
    team's documented POLYPOINT Coding Guidelines — conventions and clean-code
    rules generic linters don't know).
 6. **Triage** — the developer is walked through each dimension's findings as a
-   severity-ranked batch and picks which to include/edit/reject. Accepted
-   findings accumulate in a curated set. Code references are IntelliJ-clickable,
-   and the developer can ask to see the code behind any finding.
+   severity-ranked batch and chooses how to handle them: **bulk include/exclude**
+   the whole dimension, **loop** through each finding individually, or **call
+   them out together** — picking which to include/edit/reject. Accepted findings
+   accumulate in a curated set. Code references are IntelliJ-clickable, and the
+   developer can ask to see the code behind any finding.
 7. **Cross-cutting (open) review** — a sub-agent connects the accepted findings
    and surfaces gaps between the dedicated steps; then an open-ended,
    developer-directed pass.
@@ -42,6 +44,10 @@ clean and the triage sharp.
 10. **Post to PR** — **Gate: irreversible, requires explicit "yes".** Also
     enforced by a `PreToolUse` hook that blocks the post script unless approval
     was recorded for this run.
+11. **Clean up** — once the review is complete, the `./.pr-review/` working
+    directory is removed (after a successful post; if posting was declined the
+    draft is kept and the next run clears it). A leftover directory from a prior
+    run is also deleted at the start of every run.
 
 Each review dimension is a **skill**, so its heuristics (including the cited
 pattern catalogs for security/SQL-JPA/memory/performance) can be refined
@@ -73,11 +79,12 @@ pp-pr-review/
 │   ├── hooks.json                   PreToolUse guard registration
 │   └── scripts/guard-post.sh        blocks posting without approval
 └── scripts/
-    ├── init-run.sh                  clean working dir per run
+    ├── init-run.sh                  clean working dir per run (deletes any stale one)
     ├── verify-repo.sh               pre-flight: right repository?
     ├── checkout-and-diff.sh         deterministic setup
     ├── approve-post.sh              writes the one-shot approval marker
-    └── post-to-azure.sh             posts comments as PR threads
+    ├── post-to-azure.sh             posts comments as PR threads
+    └── cleanup-run.sh               removes the working dir once the review is done
 ```
 
 Run artifacts in `./.pr-review/`: per-dimension reports (`logic.md`, `tests.md`,
