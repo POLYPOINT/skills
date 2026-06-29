@@ -266,9 +266,32 @@ Do not advance until they sign off.
 ## Step 9 — Draft PR comments
 
 Spawn a **sub-agent** applying the **draft-pr-comments** skill with input
-`./.pr-review/accepted.md`, writing `./.pr-review/pr-comments.md`. Show the full
-draft to the developer. Make any edits they ask for by rewriting the file (you can
-do small edits directly; for a full redraft, re-run the sub-agent).
+`./.pr-review/accepted.md`, writing `./.pr-review/pr-comments.md`.
+
+Tell the developer the draft is ready and **where to find it** — state the
+**absolute path** to the file (Cmd/Ctrl-clickable in the IntelliJ console), not
+the relative `./.pr-review/...` form. Build it from `cwd` in
+`./.pr-review/run.meta` (`<cwd>/.pr-review/pr-comments.md`). Give a one-line shape
+of the draft (e.g. "1 summary comment + N threaded comments").
+
+Then **ask the developer how they want to review it**:
+
+> The draft is at **`<absolute path>/.pr-review/pr-comments.md`**. Want to review
+> the comments **one at a time** (I'll show each and you can adjust the wording), or
+> just **read the file yourself** and tell me any edits?
+
+- **One at a time** — walk the comments in file order. For **each** comment:
+  1. Display the comment as it will be posted — its target (inline `path:line` or
+     "general comment"), and the full body text.
+  2. **STOP and wait for the developer**: is this comment good to post, or do they
+     want adjustments? Do not advance to the next comment until they respond.
+  3. If they want changes, apply them by rewriting that comment in the file, show
+     the revised version, and confirm before moving on.
+- **Read it yourself** — they review the file directly and reply with any edits.
+
+Apply any edits they ask for by rewriting the file (small edits directly; for a
+full redraft, re-run the sub-agent). Don't advance to the posting gate until the
+developer is satisfied with the draft.
 
 ## Step 10 — Post to the PR (hard gate, irreversible)
 
