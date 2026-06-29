@@ -20,7 +20,8 @@ clean and the triage sharp.
    checkout of the PR's repository (git repo, `origin` matches the configured
    Azure repo, branches resolvable) *before* anything is checked out or posted.
 3. **Setup** (deterministic script) — checks out the branch, computes the diff
-   against the target.
+   against the target, and downloads the PR's **existing comments** (read-only) so
+   the analyses can skip anything already raised on the PR.
 4. **Redact PII** (blocking gate) — a sub-agent fetches the JIRA ticket and
    strips personal information; the raw text never enters the main conversation.
 5. **Parallel analyses** — seven sub-agents run concurrently, each writing a
@@ -28,7 +29,9 @@ clean and the triage sharp.
    "review hot spots" linking to the important code), **tests**, **security**,
    **SQL/JPA efficiency**, **memory**, **performance**, and **guidelines** (the
    team's documented POLYPOINT Coding Guidelines — conventions and clean-code
-   rules generic linters don't know).
+   rules generic linters don't know). Each sub-agent is given the existing PR
+   comments and **drops findings that merely repeat one** — no duplicating what a
+   human or another tool already commented.
 6. **Triage** — the developer is walked through each dimension's findings as a
    severity-ranked batch and chooses how to handle them: **bulk include/exclude**
    the whole dimension, **loop** through each finding individually, or **call
@@ -82,12 +85,14 @@ pp-pr-review/
     ├── init-run.sh                  clean working dir per run (deletes any stale one)
     ├── verify-repo.sh               pre-flight: right repository?
     ├── checkout-and-diff.sh         deterministic setup
+    ├── fetch-comments.sh            downloads existing PR comments (read-only)
     ├── approve-post.sh              writes the one-shot approval marker
     ├── post-to-azure.sh             posts comments as PR threads
     └── cleanup-run.sh               removes the working dir once the review is done
 ```
 
-Run artifacts in `./.pr-review/`: per-dimension reports (`logic.md`, `tests.md`,
+Run artifacts in `./.pr-review/`: the PR's existing comments
+(`existing-comments.md` / `.json`), per-dimension reports (`logic.md`, `tests.md`,
 `security.md`, `sql-jpa.md`, `memory.md`, `performance.md`, `guidelines.md`,
 `open.md`), the curated `accepted.md`, and the `pr-comments.md` draft.
 

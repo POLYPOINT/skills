@@ -122,6 +122,22 @@ branch, and writes `./.pr-review/diff.patch`, `./.pr-review/files.json`, and
 or an error, tell the developer and stop. Otherwise tell them how many files
 changed and proceed.
 
+## Step 3b — Fetch existing PR comments (deterministic)
+
+Run:
+
+```
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/fetch-comments.sh
+```
+
+This downloads every existing comment thread on the PR (read-only) and writes
+`./.pr-review/existing-comments.md` (a distilled, clickable list) and
+`./.pr-review/existing-comments.json` (the raw payload). The analyses in step 5
+use this to **avoid re-raising issues that are already commented on the PR** —
+whether by a human reviewer or another tool. Tell the developer how many existing
+comment threads were found. If the script errors (e.g. transient API failure),
+note it and continue — the file will simply be empty and no dedup happens.
+
 ## Step 4 — Redact PII (blocking, hard gate)
 
 Spawn a **sub-agent** that applies the **redact-jira** skill to the **JIRA ticket
@@ -164,6 +180,13 @@ the inputs and write its report file:
 | Memory | `review-memory` | `diff.patch`, `files.json` | `memory.md` |
 | Performance | `review-performance` | `diff.patch`, `files.json` | `performance.md` |
 | Guidelines | `review-guidelines` | `diff.patch`, `files.json` | `guidelines.md` |
+
+**Also give every sub-agent `./.pr-review/existing-comments.md`** (the comments
+already on the PR, from step 3b) and instruct each one: *compare your findings
+against these existing comments and drop any finding that is already raised by an
+existing comment — same issue at the same place. Don't duplicate what a human or
+another tool already said.* (If `existing-comments.md` is absent or empty, there's
+nothing to dedup against — proceed normally.)
 
 Tell the developer the analyses are running. When all seven reports exist, proceed
 to triage. (`review-open` is **not** in this batch — it runs in step 7, after
@@ -254,9 +277,11 @@ see the code behind a hot spot or finding:
 ## Step 7 — Cross-cutting (open) review
 
 Spawn a **sub-agent** applying the **review-open** skill with inputs
-`./.pr-review/accepted.md` and `./.pr-review/diff.patch`, writing
-`./.pr-review/open.md`. Triage its `OPEN-*` findings the same way (step 6),
-appending accepted ones to `accepted.md`.
+`./.pr-review/accepted.md`, `./.pr-review/diff.patch`, and
+`./.pr-review/existing-comments.md`, writing `./.pr-review/open.md`. Instruct it to
+drop any finding already raised by an existing PR comment, same as the step 5
+sub-agents. Triage its `OPEN-*` findings the same way (step 6), appending accepted
+ones to `accepted.md`.
 
 Then run the **open-ended part yourself** (this is interaction): ask the developer
 - Are there corner cases specific to this PR not yet covered?
