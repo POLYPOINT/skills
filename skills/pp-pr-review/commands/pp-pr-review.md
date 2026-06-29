@@ -174,10 +174,23 @@ triage, because it reads the accepted findings.)
 Triage the dimensions in this order: **core logic → tests → security → SQL/JPA →
 memory → performance → guidelines.**
 
-For **core logic first**, present its **Summary** and **Review hot spots** to
-orient the developer before any findings — read out each hot spot's plain-language
-explanation with its clickable `path:line` link. Offer: "say the word and I'll
-show you any of these." (See "Showing code" below.)
+For **core logic first**, present its **Summary** and then its **Review hot
+spots** as their own step, *before* any findings:
+
+- Make clear what this section is: **these are not problem findings.** They are the
+  places in the change where a human review is most likely to be valuable — the
+  most important or subtle logic — offered so the developer can eyeball them
+  themselves.
+- Present the hot spots as a scannable list, each with its plain-language
+  explanation and its clickable `path:line` link.
+- State the **number of findings** that will come next and that they are reviewed
+  **after** the hot spots, e.g.: "These are <H> hot spots to look over first — not
+  issues, just where your eyes are best spent. After we're through them I'll take
+  you through the <N> core-logic findings."
+- **STOP and let the developer review the hot spots.** Offer to show the code
+  behind any of them ("say the word and I'll open any of these" — see "Showing
+  code" below). Do not move on to the findings table until they're done looking and
+  tell you to continue.
 
 Then for **each dimension**, present its findings as a single **severity-ranked
 table** the developer can scan:
