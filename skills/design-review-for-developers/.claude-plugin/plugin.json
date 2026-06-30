@@ -1,0 +1,10 @@
+{
+  "name": "design-review-for-developers",
+  "description": "Performs a short, structured design review of a single design-system component against its Figma source — checking visual fidelity, states, accessibility, and implementation consistency from a developer's perspective. Includes a POLYPOINT/PDX-specific addendum. Not for full-page or layout reviews.",
+  "version": "1.0.0",
+  "author": {
+    "name": "POLYPOINT"
+  },
+  "keywords": ["design-review", "figma", "design-system", "accessibility", "frontend", "pdx", "polypoint"],
+  "category": "development"
+}
