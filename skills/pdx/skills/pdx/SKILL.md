@@ -2,7 +2,7 @@
 name: pdx
 description: This skill should be used when applying the PDX (POLYPOINT Design Experience) design system to Angular code — installing or using `@pdx/*` libraries, replacing Angular Material components with PDX equivalents, applying PDX design tokens or typography, building forms with `pp-form`, or auditing existing UI for PDX consistency. Triggers on phrases like "apply PDX styles", "use PDX libs", "use POLYPOINT components", "make it POLYPOINT-styled", "replace mat-button with pp-button", or "audit Material usage".
 metadata:
-  version: '1.9.1'
+  version: '1.10.0'
 ---
 
 # PDX — POLYPOINT Design Experience
@@ -15,7 +15,7 @@ Apply the PDX design system to Angular frontends. PDX provides reusable Angular 
 
 ## Label rule
 
-PDX form controls (`pp-button`, `pp-checkbox`, `pp-radio-button`, `pp-input`, `pp-textarea`, `pp-select`, `pp-multiselect`, `pp-slide-toggle`, `pp-datepicker`) take their visible text via a `label` input — **they do not project content**. `<pp-checkbox>Text</pp-checkbox>` and `<pp-button>Save</pp-button>` render with an empty label — the projected text is silently dropped. Always pass `label="..."` (or bind it: `[label]="'save' | translate"`), use a self-closing tag, and never wrap content. Add `id="..."` on `pp-checkbox` / `pp-radio-button` for `for`/`htmlFor` linkage. Exceptions: icon-only buttons (`pp-icon-button`, `pp-floating-action-button`) have no `label` input — identify them via `ariaLabel` instead; `pp-chip` falls back to `ng-content` when `label` is unset; `pp-button-toggle` takes its label via content projection (segmented-control children); `pp-dialog` and `pp-tab` use content projection for **bodies**, not labels.
+PDX form controls (`pp-button`, `pp-checkbox`, `pp-radio-button`, `pp-input`, `pp-textarea`, `pp-select`, `pp-multiselect`, `pp-slide-toggle`, `pp-datepicker`, `pp-timepicker`, `pp-autocomplete`) take their visible text via a `label` input — **they do not project content**. `<pp-checkbox>Text</pp-checkbox>` and `<pp-button>Save</pp-button>` render with an empty label — the projected text is silently dropped. Always pass `label="..."` (or bind it: `[label]="'save' | translate"`), use a self-closing tag, and never wrap content. Add `id="..."` on `pp-checkbox` / `pp-radio-button` for `for`/`htmlFor` linkage. Exceptions: icon-only buttons (`pp-icon-button`, `pp-floating-action-button`) have no `label` input — identify them via `ariaLabel` instead; `pp-chip` falls back to `ng-content` when `label` is unset; `pp-button-toggle` takes its label via content projection (segmented-control children); `pp-dialog` and `pp-tab` use content projection for **bodies**, not labels.
 
 ## Layout pitfalls (read before building forms)
 
@@ -29,30 +29,36 @@ Width control for `pp-input` / `pp-textarea` is **context-aware**: use `[fullWid
 
 ## Available PDX Libraries
 
-| Package                   | What it provides                                                                                                                                                             |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@pdx/pp-theme`           | Colors, typography (AkkuratStd), spacing tokens, Material 3 theme, TailwindCSS integration                                                                                   |
-| `@pdx/pp-icons`           | SVG icon webfont (`pp-icon pp-icon-*`)                                                                                                                                       |
-| `@pdx/pp-button`          | `PPButtonComponent`, `PPIconButtonComponent`, `PPFloatingActionButtonComponent`                                                                                              |
-| `@pdx/pp-input`           | `PPInputComponent`, `PPTextareaComponent`                                                                                                                                    |
-| `@pdx/pp-form`            | `PPFormComponent`, `PPFormSectionComponent`, `PPFormStackComponent`, `PPFormBlockComponent`, `PPFormTextblockComponent`, `PPFormActionsComponent` (structural form scaffold) |
-| `@pdx/pp-checkbox`        | `PPCheckboxComponent` (three-state, ControlValueAccessor)                                                                                                                    |
-| `@pdx/pp-radio`           | `PPRadioButtonComponent`, `PPRadioGroupComponent`                                                                                                                            |
-| `@pdx/pp-chip`            | `PPChipComponent`, `PPChipListComponent`                                                                                                                                     |
-| `@pdx/pp-dialog`          | `PPDialogComponent` (shell for MatDialog)                                                                                                                                    |
-| `@pdx/pp-select`          | `PPSelectComponent`, `PPMultiselectComponent` (single/multi dropdown)                                                                                                        |
-| `@pdx/pp-menu`            | `PPMenuComponent`, `PPMenuMultiselectComponent` (standalone dropdown menus)                                                                                                  |
-| `@pdx/pp-list`            | `PPListComponent` (listbox with `default`/`single`/`singleRadio`/`multi` variants)                                                                                           |
-| `@pdx/pp-tab`             | `PPTabGroupComponent`, `PPTabComponent`, `PPTabContentDirective`                                                                                                             |
-| `@pdx/pp-expansion-panel` | `PPExpansionPanelComponent`, `PPExpansionPanelItemComponent` (collapsible sections, optional accordion)                                                                      |
-| `@pdx/pp-tree`            | `PPTreeComponent` (hierarchical data, drag-and-drop, sorting)                                                                                                                |
-| `@pdx/pp-sidenav`         | `PPSidenavComponent` + item/group/sub-item (app-shell side navigation)                                                                                                       |
-| `@pdx/pp-top-navigation`  | `PPTopNavigationComponent` (app-shell top navigation with dropdown submenus)                                                                                                 |
-| `@pdx/pp-button-toggle`   | `PPButtonToggleComponent`, `PPButtonToggleGroupComponent` (segmented control / view-mode toggle)                                                                             |
-| `@pdx/pp-slide-toggle`    | `PPSlideToggleComponent` (on/off switch with optional label, ControlValueAccessor)                                                                                           |
-| `@pdx/pp-paginator`       | `PPPaginatorComponent` (page navigation + page-size selector)                                                                                                                |
-| `@pdx/pp-datepicker`      | `PPDatepickerComponent` (single / range / month-year date picker, CDK overlay)                                                                                               |
-| `@pdx/pp-toolbar`         | `PPToolbarComponent` (app-shell desktop toolbar — station-select + logout), `PPToolbarMobileComponent` (mobile page header — back + title + actions + notifications)         |
+| Package                      | What it provides                                                                                                                                                             |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@pdx/pp-theme`              | Colors, typography (AkkuratStd), spacing tokens, Material 3 theme, TailwindCSS integration                                                                                   |
+| `@pdx/pp-icons`              | SVG icon webfont (`pp-icon pp-icon-*`)                                                                                                                                       |
+| `@pdx/pp-button`             | `PPButtonComponent`, `PPIconButtonComponent`, `PPFloatingActionButtonComponent`                                                                                              |
+| `@pdx/pp-input`              | `PPInputComponent`, `PPTextareaComponent`                                                                                                                                    |
+| `@pdx/pp-form`               | `PPFormComponent`, `PPFormSectionComponent`, `PPFormStackComponent`, `PPFormBlockComponent`, `PPFormTextblockComponent`, `PPFormActionsComponent` (structural form scaffold) |
+| `@pdx/pp-checkbox`           | `PPCheckboxComponent` (three-state, ControlValueAccessor)                                                                                                                    |
+| `@pdx/pp-radio`              | `PPRadioButtonComponent`, `PPRadioGroupComponent`                                                                                                                            |
+| `@pdx/pp-chip`               | `PPChipComponent`, `PPChipListComponent`                                                                                                                                     |
+| `@pdx/pp-dialog`             | `PPDialogComponent` (shell for MatDialog)                                                                                                                                    |
+| `@pdx/pp-select`             | `PPSelectComponent`, `PPMultiselectComponent` (single/multi dropdown)                                                                                                        |
+| `@pdx/pp-menu`               | `PPMenuComponent`, `PPMenuMultiselectComponent` (standalone dropdown menus)                                                                                                  |
+| `@pdx/pp-list`               | `PPListComponent` (listbox with `default`/`single`/`singleRadio`/`multi` variants)                                                                                           |
+| `@pdx/pp-tab`                | `PPTabGroupComponent`, `PPTabComponent`, `PPTabContentDirective`                                                                                                             |
+| `@pdx/pp-expansion-panel`    | `PPExpansionPanelComponent`, `PPExpansionPanelItemComponent` (collapsible sections, optional accordion)                                                                      |
+| `@pdx/pp-tree`               | `PPTreeComponent` (hierarchical data, drag-and-drop, sorting)                                                                                                                |
+| `@pdx/pp-sidenav`            | `PPSidenavComponent` + item/group/sub-item (app-shell side navigation)                                                                                                       |
+| `@pdx/pp-top-navigation`     | `PPTopNavigationComponent` (app-shell top navigation with dropdown submenus)                                                                                                 |
+| `@pdx/pp-button-toggle`      | `PPButtonToggleComponent`, `PPButtonToggleGroupComponent` (segmented control / view-mode toggle)                                                                             |
+| `@pdx/pp-slide-toggle`       | `PPSlideToggleComponent` (on/off switch with optional label, ControlValueAccessor)                                                                                           |
+| `@pdx/pp-paginator`          | `PPPaginatorComponent` (page navigation + page-size selector)                                                                                                                |
+| `@pdx/pp-datepicker`         | `PPDatepickerComponent` (single / range / month-year date picker, CDK overlay)                                                                                               |
+| `@pdx/pp-toolbar`            | `PPToolbarComponent` (app-shell desktop toolbar — station-select + logout), `PPToolbarMobileComponent` (mobile page header — back + title + actions + notifications)         |
+| `@pdx/pp-autocomplete`       | `PPAutocompleteComponent` (free-text combobox with filtered suggestions)                                                                                                     |
+| `@pdx/pp-timepicker`         | `PPTimepickerComponent` (24h HH:mm time picker — desktop overlay / mobile bottom-sheet)                                                                                      |
+| `@pdx/pp-tooltip`            | `PPTooltipComponent` (minimal / basic / extended tooltip)                                                                                                                    |
+| `@pdx/pp-inline-message`     | `PPInlineMessageComponent` (persistent inline status message — info / success / warning / error)                                                                             |
+| `@pdx/pp-progress-indicator` | `PPProgressIndicatorComponent` (linear / circular, determinate / indeterminate)                                                                                              |
+| `@pdx/pp-table`              | `PPTableComponent` (+ column / row sub-components — sortable, paginated, expandable data table)                                                                              |
 
 ## Component Replacement Rules
 
@@ -82,8 +88,14 @@ Replace Angular Material components with PDX equivalents:
 | `mat-slide-toggle`                                   | `PPSlideToggleComponent`                                             |
 | `mat-paginator`                                      | `PPPaginatorComponent`                                               |
 | `mat-datepicker` / `mat-date-range-picker`           | `PPDatepickerComponent` (`type="single" \| "range" \| "month-year"`) |
+| `mat-autocomplete`                                   | `PPAutocompleteComponent`                                            |
+| `mat-tooltip`                                        | `PPTooltipComponent`                                                 |
+| `mat-progress-bar`, `mat-progress-spinner`           | `PPProgressIndicatorComponent`                                       |
+| `mat-table`                                          | `PPTableComponent` (+ column / row sub-components)                   |
+| `<input type="time">` / custom time inputs           | `PPTimepickerComponent`                                              |
+| Custom inline alert / banner markup                  | `PPInlineMessageComponent`                                           |
 
-**No PDX replacement yet** — use Angular Material with pp-theme: autocomplete, progress bar/spinner, snackbar, tooltip, table, sort, `mat-toolbar` (generic container use only).
+**No PDX replacement yet** — use Angular Material with pp-theme: snackbar, sort, `mat-toolbar` (generic container use only).
 
 ## Navigation (app-shell only — not a drop-in replacement)
 

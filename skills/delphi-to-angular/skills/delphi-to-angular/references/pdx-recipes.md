@@ -342,7 +342,7 @@ protected onPage(event: PPPaginatorPageEvent): void {
 }
 ```
 
-Pair with `mat-table` for paged table conversions. **`pageIndex` is zero-based** (Material convention) — visible page labels in the UI are 1-based. **Page-size options are hard-coded** to `[10, 25, 50, 100]` in v1.0.1; not configurable. Pass translation keys for every ARIA label so screen readers respect the user's locale.
+Pair with a data table for paged conversions — note `@pdx/pp-table` (`PPTableComponent`) already embeds a paginator, so a standalone `pp-paginator` is mainly for paging non-`pp-table` lists. **`pageIndex` is zero-based** (Material convention) — visible page labels in the UI are 1-based. **Page-size options are hard-coded** to `[10, 25, 50, 100]` in v1.0.1; not configurable. Pass translation keys for every ARIA label so screen readers respect the user's locale.
 
 Use `[hidePageSize]="true"` when the page size is fixed by product requirements and the dropdown adds noise.
 

@@ -26,6 +26,12 @@
       "category": "development"
     },
     {
+      "name": "design-review-for-developers",
+      "source": "./skills/design-review-for-developers",
+      "description": "Performs a short, structured design review of a single design-system component against its Figma source — checking visual fidelity, states, accessibility, and implementation consistency from a developer's perspective. Includes a POLYPOINT/PDX-specific addendum. Not for full-page or layout reviews.",
+      "category": "development"
+    },
+    {
       "name": "research",
       "source": "./skills/research",
       "description": "Deeply investigate a codebase topic and produce a structured research document with architecture diagrams, glossary, and actionable findings",

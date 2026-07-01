@@ -592,7 +592,7 @@ background: var(--mat-sys-surface-container);
 color: #717479;
 ```
 
-Each palette emits an unsuffixed base token (`--pp-primary`) plus discrete shade keys: `50, 100, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 920, 940, 950, 960, 980, 990` — `50` darkest, `990` lightest. There is **no** `1000`. The unsuffixed base is the brand color (not shade `500`). For SCSS use `$pp-primary` / `$pp-primary-990` etc.; for CSS use `var(--pp-primary)` / `var(--pp-primary-990)`. There is no `--color-pp-*` prefix.
+Each palette emits an unsuffixed base token (`--pp-primary`) plus discrete shade keys: `50, 100, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 920, 940, 950, 960, 980, 990` — `50` darkest, `990` lightest. There is **no** `1000`. The unsuffixed base is the brand color; shade `500` is defined as an alias of it (`--pp-primary-500: var(--pp-primary)`). For SCSS use `$pp-primary` / `$pp-primary-990` etc.; for CSS use `var(--pp-primary)` / `var(--pp-primary-990)`. The raw color tokens use the `--pp-` prefix; the Tailwind theme layer additionally maps each one to a `--color-pp-` alias (e.g. `--color-pp-primary: var(--pp-primary)`), which is what the `text-pp-*` / `bg-pp-*` utilities resolve to.
 
 ## Route Pattern
 

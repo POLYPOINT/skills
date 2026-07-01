@@ -186,7 +186,7 @@ Instead of SCSS imports, styles can be added to the `angular.json` styles array:
 }
 ```
 
-The CSS custom-property prefix is **`--pp-`** (not `--color-pp-`). Each palette emits an unsuffixed base (e.g. `--pp-primary`) plus discrete shade keys: `50, 100, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 920, 940, 950, 960, 980, 990` (`50` darkest → `990` lightest). There is no `1000`.
+The raw CSS custom-property prefix is **`--pp-`**; the Tailwind theme layer additionally exposes a `--color-pp-` alias for each token (e.g. `--color-pp-primary: var(--pp-primary)`), which is what the `text-pp-*` / `bg-pp-*` utilities resolve to. Each palette emits an unsuffixed base (e.g. `--pp-primary`) plus discrete shade keys: `50, 100, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 920, 940, 950, 960, 980, 990` (`50` darkest → `990` lightest). There is no `1000`.
 
 ### With TailwindCSS
 
