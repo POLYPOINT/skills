@@ -7,7 +7,7 @@ completed/abandoned. Requires: az CLI with the azure-devops extension, logged in
 
 Usage:
   python3 -u watch_pr.py --org https://dev.azure.com/polypoint --project SaaS \
-      --repo SaaS --pr 10711 --minutes 60 --state-file /path/to/state.json
+      --repo SaaS --pr 12345 --minutes 60 --state-file /path/to/state.json
 """
 import argparse
 import json
@@ -131,6 +131,10 @@ def main():
     try:
         with open(opts.state_file) as f:
             state = json.load(f)
+        # A foreign schema (e.g. a notes file written by someone else) would KeyError inside
+        # poll() on every iteration and silently poison the whole watch — start fresh instead.
+        if not isinstance(state, dict) or 'threads' not in state:
+            raise ValueError('not a watcher state file')
     except (OSError, ValueError):
         state = {'threads': {}, 'policies': {}, 'statuses': {}, 'votes': {}, 'pr_status': 'active', 'commit': ''}
         try:

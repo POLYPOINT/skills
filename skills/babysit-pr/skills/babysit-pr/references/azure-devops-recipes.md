@@ -54,13 +54,14 @@ Relevant fields per thread: `id`, `status` (`active`, `fixed`, `wontFix`, `close
 A `PATCH` on the thread accepts a reply and a status change together:
 
 ```bash
-printf '%s' '{"comments": [{"parentCommentId": 1, "content": "Fixed in <short-sha> — <what changed>.", "commentType": 1}], "status": "fixed"}' > "$SCRATCH/reply-<THREAD_ID>.json"
+printf '%s' '{"comments": [{"parentCommentId": 1, "content": "@itpolypoint.ch Fixed in <short-sha> — <what changed>.", "commentType": 1}], "status": "fixed"}' > "$SCRATCH/reply-<THREAD_ID>.json"
 az devops invoke --area git --resource pullRequestThreads \
   --route-parameters project=<PROJECT> repositoryId=<REPO> pullRequestId=<PR_ID> threadId=<THREAD_ID> \
   --http-method PATCH --in-file "$SCRATCH/reply-<THREAD_ID>.json" \
   --organization https://dev.azure.com/polypoint --api-version 7.1 -o none
 ```
 
+- The leading `@itpolypoint.ch` is required on CodeRabbit threads — without it CodeRabbit never reacts (see CodeRabbit specifics below). Drop it when replying to a human.
 - Omit `"status"` to reply without resolving.
 - `--in-file` is required — az cannot take the JSON body inline. Write the payload with `printf '%s'` (no trailing newline needed) to a scratchpad file.
 - Escape carefully: the payload is JSON inside single-quoted shell. For embedded double quotes use `\"`, for a literal single quote close/reopen the shell quote (`'"'"'`).
