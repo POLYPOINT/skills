@@ -1,0 +1,10 @@
+{
+  "name": "babysit-pr",
+  "description": "Babysit an Azure DevOps pull request for a time window — watch for new review comments (CodeRabbit and human) and CI state changes via the az CLI, verify each finding against current code, fix still-valid issues minimally, reply to and resolve threads, and diagnose failing builds.",
+  "version": "1.0.0",
+  "author": {
+    "name": "POLYPOINT"
+  },
+  "keywords": ["azure-devops", "pull-request", "code-review", "coderabbit", "ci", "monitoring", "polypoint"],
+  "category": "development"
+}

@@ -48,6 +48,12 @@
       "source": "./skills/playwright-api",
       "description": "Create Playwright API tests based on a playwright e2e test, it will test the corner cases missed by the e2e test",
       "category": "testing"
+    },
+    {
+      "name": "babysit-pr",
+      "source": "./skills/babysit-pr",
+      "description": "Babysit an Azure DevOps pull request for a time window — watch for new review comments (CodeRabbit and human) and CI state changes via the az CLI, verify each finding against current code, fix still-valid issues minimally, reply to and resolve threads, and diagnose failing builds.",
+      "category": "development"
     }
   ]
 }

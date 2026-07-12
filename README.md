@@ -26,6 +26,7 @@ Skills can:
 | **research**                     | Deeply investigate a codebase topic and produce a structured research document with architecture diagrams, glossary, and actionable findings.                                                                                    | `/research <topic>`                           |
 | **playwright-e2e**               | Creates Playwright E2E tests from an annotated codegen recording — enriches it with resilient selectors via Chrome exploration and generates Page Object Model tests.                                                            | `/playwright-e2e path/to/recording.spec.ts`   |
 | **playwright-api**               | Generates Playwright API-level corner-case tests from an existing E2E test file or a description — discovers API endpoints and exercises corner cases via `APIRequestContext` (no browser).                                      | `/playwright-api tests/e2e/login.spec.ts`     |
+| **babysit-pr**                   | Time-boxed watch over an Azure DevOps PR — polls comments, CI, and votes via the az CLI, verifies each review finding against current code, fixes still-valid issues minimally, replies to and resolves threads.                 | `/babysit-pr <pr-url> for 1 hour`             |
 
 ## Repository Structure
 
@@ -65,6 +66,7 @@ Works the same in the terminal CLI, VS Code extension, and JetBrains plugin.
 /plugin install research
 /plugin install playwright-e2e
 /plugin install playwright-api
+/plugin install babysit-pr
 ```
 
 **Update to latest version:**
@@ -83,6 +85,7 @@ Once installed, invoke with `/skill-name`:
 /research Authentication flow in the API layer
 /playwright-e2e path/to/recording.spec.ts
 /playwright-api tests/e2e/login.spec.ts
+/babysit-pr https://dev.azure.com/polypoint/SaaS/_git/SaaS/pullrequest/12345 for 1 hour
 ```
 
 <details>
