@@ -2,7 +2,7 @@
 name: pdx
 description: This skill should be used when applying the PDX (POLYPOINT Design Experience) design system to Angular code — installing or using `@pdx/*` libraries, replacing Angular Material components with PDX equivalents, applying PDX design tokens or typography, building forms with `pp-form`, or auditing existing UI for PDX consistency. Triggers on phrases like "apply PDX styles", "use PDX libs", "use POLYPOINT components", "make it POLYPOINT-styled", "replace mat-button with pp-button", or "audit Material usage".
 metadata:
-  version: '1.10.0'
+  version: '1.11.0'
 ---
 
 # PDX — POLYPOINT Design Experience
@@ -15,14 +15,18 @@ Apply the PDX design system to Angular frontends. PDX provides reusable Angular 
 
 ## Label rule
 
-PDX form controls (`pp-button`, `pp-checkbox`, `pp-radio-button`, `pp-input`, `pp-textarea`, `pp-select`, `pp-multiselect`, `pp-slide-toggle`, `pp-datepicker`, `pp-timepicker`, `pp-autocomplete`) take their visible text via a `label` input — **they do not project content**. `<pp-checkbox>Text</pp-checkbox>` and `<pp-button>Save</pp-button>` render with an empty label — the projected text is silently dropped. Always pass `label="..."` (or bind it: `[label]="'save' | translate"`), use a self-closing tag, and never wrap content. Add `id="..."` on `pp-checkbox` / `pp-radio-button` for `for`/`htmlFor` linkage. Exceptions: icon-only buttons (`pp-icon-button`, `pp-floating-action-button`) have no `label` input — identify them via `ariaLabel` instead; `pp-chip` falls back to `ng-content` when `label` is unset; `pp-button-toggle` takes its label via content projection (segmented-control children); `pp-dialog` and `pp-tab` use content projection for **bodies**, not labels.
+PDX form controls (`pp-button`, `pp-checkbox`, `pp-radio-button`, `pp-input`, `pp-textarea`, `pp-select`, `pp-multiselect`, `pp-slide-toggle`, `pp-datepicker`, `pp-timepicker`, `pp-autocomplete`) take their visible text via a `label` input — **they do not project content**. `<pp-checkbox>Text</pp-checkbox>` and `<pp-button>Save</pp-button>` render with an empty label — the projected text is silently dropped. Always pass `label="..."` (or bind it: `[label]="'save' | translate"`), use a self-closing tag, and never wrap content. Add `id="..."` on `pp-checkbox` / `pp-radio-button` for `for`/`htmlFor` linkage. Exceptions: icon-only buttons (`pp-icon-button`, `pp-floating-action-button`) have no `label` input — identify them via `ariaLabel` instead; `pp-chip` falls back to `ng-content` when `label` is unset; `pp-button-toggle` takes its label via content projection (segmented-control children); `pp-badge` takes its text via content projection only (no `label` input); `pp-link` has a `label` input that falls back to displaying the `url` when unset; `pp-dialog` and `pp-tab` use content projection for **bodies**, not labels.
+
+## Required / mandatory fields
+
+Mark mandatory form fields with the **`required` input** — it renders the label asterisk (`*`) for you; never hardcode `*` into a label string. Available on `pp-input`, `pp-textarea`, `pp-autocomplete`, `pp-datepicker`, and `pp-timepicker`. It is **purely visual** — wire the actual validator (`Validators.required` / a Signal Forms `validate()` rule) on the bound control yourself. `pp-select`, `pp-multiselect`, `pp-checkbox`, `pp-radio-group`, and `pp-slide-toggle` have **no** `required` input (and no asterisk mechanism) — for a mandatory select, enforce via the validator and surface the error state (`isError` + `supportingText`).
 
 ## Layout pitfalls (read before building forms)
 
 PDX form primitives have hard sizing constraints that can clip or wrap content. Before composing a multi-column form or a many-button action bar, check the **Layout pitfalls** section under `@pdx/pp-form` in [references/component-inventory.md](references/component-inventory.md):
 
 - `pp-form-block` has `min-width: 14.375rem` (230 px). Two blocks side by side need ≥ 508 px or the second wraps.
-- `pp-form-actions` is a responsive `auto-fit` grid of `9.375rem` (150 px) tracks with `0.75rem` gap. Buttons wrap onto new rows when the container is narrower than `n × 150 px + gaps`. Alignment via `--left` / `--center` / `--right` modifiers (default right). For tightly-controlled multi-button bars, build a custom flex action bar instead.
+- `pp-form-actions` is a responsive `auto-fit` grid of `9.375rem` (150 px) tracks with `1rem` gap. Buttons wrap onto new rows when the container is narrower than `n × 150 px + gaps`. Alignment via `--left` / `--center` / `--right` / `--full-width` modifiers (default right). Exactly three projected buttons switch to a split layout automatically (first left, remaining two right). For other tightly-controlled multi-button bars, build a custom flex action bar instead.
 - No nested `<header>` inside `pp-form` — `pp-form-section` already renders one. Two `<header>` descendants on the page = duplicate banner landmarks = axe violation. Use `<div>` for visual section headers inside the form.
 
 Width control for `pp-input` / `pp-textarea` is **context-aware**: use `[fullWidth]="true"` only inside a `pp-form-block` / column layout that should fill its column. For standalone inputs (toolbars, narrow filters, inline search), pick `size="sm"` or `size="lg"` instead.
@@ -36,7 +40,7 @@ Width control for `pp-input` / `pp-textarea` is **context-aware**: use `[fullWid
 | `@pdx/pp-button`             | `PPButtonComponent`, `PPIconButtonComponent`, `PPFloatingActionButtonComponent`                                                                                              |
 | `@pdx/pp-input`              | `PPInputComponent`, `PPTextareaComponent`                                                                                                                                    |
 | `@pdx/pp-form`               | `PPFormComponent`, `PPFormSectionComponent`, `PPFormStackComponent`, `PPFormBlockComponent`, `PPFormTextblockComponent`, `PPFormActionsComponent` (structural form scaffold) |
-| `@pdx/pp-checkbox`           | `PPCheckboxComponent` (three-state, ControlValueAccessor)                                                                                                                    |
+| `@pdx/pp-checkbox`           | `PPCheckboxComponent` (boolean form value, separate `indeterminate` model, ControlValueAccessor)                                                                             |
 | `@pdx/pp-radio`              | `PPRadioButtonComponent`, `PPRadioGroupComponent`                                                                                                                            |
 | `@pdx/pp-chip`               | `PPChipComponent`, `PPChipListComponent`                                                                                                                                     |
 | `@pdx/pp-dialog`             | `PPDialogComponent` (shell for MatDialog)                                                                                                                                    |
@@ -59,43 +63,49 @@ Width control for `pp-input` / `pp-textarea` is **context-aware**: use `[fullWid
 | `@pdx/pp-inline-message`     | `PPInlineMessageComponent` (persistent inline status message — info / success / warning / error)                                                                             |
 | `@pdx/pp-progress-indicator` | `PPProgressIndicatorComponent` (linear / circular, determinate / indeterminate)                                                                                              |
 | `@pdx/pp-table`              | `PPTableComponent` (+ column / row sub-components — sortable, paginated, expandable data table)                                                                              |
+| `@pdx/pp-link`               | `PPLinkComponent` (styled text link with optional leading icon and trailing arrow)                                                                                           |
+| `@pdx/pp-badge`              | `PPBadgeComponent` (status/label pill, 11 colors), `PPNotificationBadgeComponent` (count bubble / dot, caps at 999+)                                                         |
+| `@pdx/pp-snackbar`           | `PPSnackbarService` + `provideSnackbar` (queued transient notifications with undo / action buttons — replaces `MatSnackBar`)                                                 |
 
 ## Component Replacement Rules
 
 Replace Angular Material components with PDX equivalents:
 
-| Instead of                                           | Use                                                                  |
-| ---------------------------------------------------- | -------------------------------------------------------------------- |
-| `mat-button`, `mat-raised-button`, `mat-flat-button` | `PPButtonComponent`                                                  |
-| `mat-icon-button`                                    | `PPIconButtonComponent`                                              |
-| `mat-fab`, `mat-mini-fab`                            | `PPFloatingActionButtonComponent`                                    |
-| `mat-form-field` + `matInput`                        | `PPInputComponent`                                                   |
-| `mat-form-field` + `<textarea matInput>`             | `PPTextareaComponent`                                                |
-| `mat-checkbox`                                       | `PPCheckboxComponent`                                                |
-| `mat-radio-button` / `mat-radio-group`               | `PPRadioButtonComponent` / `PPRadioGroupComponent`                   |
-| `mat-chip` / `mat-chip-set`                          | `PPChipComponent` / `PPChipListComponent`                            |
-| Custom dialog templates                              | `PPDialogComponent` (still opened via `MatDialog` service)           |
-| `mat-tree`                                           | `PPTreeComponent`                                                    |
-| `mat-select`                                         | `PPSelectComponent`                                                  |
-| `mat-select` (multiple)                              | `PPMultiselectComponent`                                             |
-| `mat-menu`                                           | `PPMenuComponent` / `PPMenuMultiselectComponent`                     |
-| `mat-tab-group` + `mat-tab`                          | `PPTabGroupComponent` + `PPTabComponent`                             |
-| `mat-selection-list` / `mat-list`                    | `PPListComponent`                                                    |
-| `mat-expansion-panel`                                | `PPExpansionPanelComponent` + `PPExpansionPanelItemComponent`        |
-| Custom form layout divs / ad-hoc Flex/Grid shells    | `PPFormComponent` (+ section / stack / block / textblock / actions)  |
-| `mat-icon`, FontAwesome                              | `<span class="pp-icon pp-icon-*">`                                   |
-| `mat-button-toggle` / `mat-button-toggle-group`      | `PPButtonToggleComponent` / `PPButtonToggleGroupComponent`           |
-| `mat-slide-toggle`                                   | `PPSlideToggleComponent`                                             |
-| `mat-paginator`                                      | `PPPaginatorComponent`                                               |
-| `mat-datepicker` / `mat-date-range-picker`           | `PPDatepickerComponent` (`type="single" \| "range" \| "month-year"`) |
-| `mat-autocomplete`                                   | `PPAutocompleteComponent`                                            |
-| `mat-tooltip`                                        | `PPTooltipComponent`                                                 |
-| `mat-progress-bar`, `mat-progress-spinner`           | `PPProgressIndicatorComponent`                                       |
-| `mat-table`                                          | `PPTableComponent` (+ column / row sub-components)                   |
-| `<input type="time">` / custom time inputs           | `PPTimepickerComponent`                                              |
-| Custom inline alert / banner markup                  | `PPInlineMessageComponent`                                           |
+| Instead of                                           | Use                                                                                       |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `mat-button`, `mat-raised-button`, `mat-flat-button` | `PPButtonComponent`                                                                       |
+| `mat-icon-button`                                    | `PPIconButtonComponent`                                                                   |
+| `mat-fab`, `mat-mini-fab`                            | `PPFloatingActionButtonComponent`                                                         |
+| `mat-form-field` + `matInput`                        | `PPInputComponent`                                                                        |
+| `mat-form-field` + `<textarea matInput>`             | `PPTextareaComponent`                                                                     |
+| `mat-checkbox`                                       | `PPCheckboxComponent`                                                                     |
+| `mat-radio-button` / `mat-radio-group`               | `PPRadioButtonComponent` / `PPRadioGroupComponent`                                        |
+| `mat-chip` / `mat-chip-set`                          | `PPChipComponent` / `PPChipListComponent`                                                 |
+| Custom dialog templates                              | `PPDialogComponent` (still opened via `MatDialog` service)                                |
+| `mat-tree`                                           | `PPTreeComponent`                                                                         |
+| `mat-select`                                         | `PPSelectComponent`                                                                       |
+| `mat-select` (multiple)                              | `PPMultiselectComponent`                                                                  |
+| `mat-menu`                                           | `PPMenuComponent` / `PPMenuMultiselectComponent`                                          |
+| `mat-tab-group` + `mat-tab`                          | `PPTabGroupComponent` + `PPTabComponent`                                                  |
+| `mat-selection-list` / `mat-list`                    | `PPListComponent`                                                                         |
+| `mat-expansion-panel`                                | `PPExpansionPanelComponent` + `PPExpansionPanelItemComponent`                             |
+| Custom form layout divs / ad-hoc Flex/Grid shells    | `PPFormComponent` (+ section / stack / block / textblock / actions)                       |
+| `mat-icon`, FontAwesome                              | `<span class="pp-icon pp-icon-*">`                                                        |
+| `mat-button-toggle` / `mat-button-toggle-group`      | `PPButtonToggleComponent` / `PPButtonToggleGroupComponent`                                |
+| `mat-slide-toggle`                                   | `PPSlideToggleComponent`                                                                  |
+| `mat-paginator`                                      | `PPPaginatorComponent`                                                                    |
+| `mat-datepicker` / `mat-date-range-picker`           | `PPDatepickerComponent` (`type="single" \| "range" \| "month-year"`)                      |
+| `mat-autocomplete`                                   | `PPAutocompleteComponent`                                                                 |
+| `mat-tooltip`                                        | `PPTooltipComponent`                                                                      |
+| `mat-progress-bar`, `mat-progress-spinner`           | `PPProgressIndicatorComponent`                                                            |
+| `mat-table`                                          | `PPTableComponent` (+ column / row sub-components)                                        |
+| `<input type="time">` / custom time inputs           | `PPTimepickerComponent`                                                                   |
+| Custom inline alert / banner markup                  | `PPInlineMessageComponent`                                                                |
+| `MatSnackBar` / `mat-snackbar`                       | `PPSnackbarService` (`@pdx/pp-snackbar`, opened via service — see component-inventory.md) |
+| Plain `<a>` styled as a link / custom link styles    | `PPLinkComponent`                                                                         |
+| Custom status pills / count bubbles                  | `PPBadgeComponent` / `PPNotificationBadgeComponent`                                       |
 
-**No PDX replacement yet** — use Angular Material with pp-theme: snackbar, sort, `mat-toolbar` (generic container use only).
+**No PDX replacement yet** — use Angular Material with pp-theme: sort, `mat-toolbar` (generic container use only).
 
 ## Navigation (app-shell only — not a drop-in replacement)
 

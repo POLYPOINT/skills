@@ -66,7 +66,7 @@ Material 3 theme configuration with primary and tertiary palettes mapped to PDX 
 
 ---
 
-## @pdx/pp-icons (v6.5.4)
+## @pdx/pp-icons (v6.5.5)
 
 SVG icon set packaged as a webfont. No Angular dependencies.
 
@@ -480,7 +480,7 @@ Row for form-level buttons (e.g. Cancel / Save). Use `<pp-button>` children.
 The PDX form primitives have a few hard-coded sizing constraints that can clip or wrap content unexpectedly. Detect them up front rather than fighting CSS at the end.
 
 - **`pp-form-block` has `min-width: 14.375rem` (230 px).** Two blocks side by side inside a `pp-form-stack layout="horizontal"` need at least **508 px** of available width to render in one row (`230 + 48 gap + 230`). When the surrounding column is narrower (e.g. tabs share space with a 12 rem photo column on the right), the second block wraps under the first. Inspect the available width along the layout chain (`max-width` + `grid-template-columns` + nested stacks). If the room is `< 508 px`, either stack the blocks vertically (drop `layout="horizontal"`), or override the floor per-scope by setting the `--pp-form-block-min` custom property (e.g. `--pp-form-block-min: 0`) on the block.
-- **`pp-form-actions` is a responsive `auto-fit` grid** (`grid-template-columns: repeat(auto-fit, 9.375rem); gap: 1rem;`). Each track is 150 px wide; buttons fit per row only while the container is wide enough (`n × 150 px + (n − 1) × 16 px`), and wrap onto new rows otherwise. The `alignment` input maps to `--left` / `--center` / `--right` / `--full-width` modifiers controlling `justify-content` (default `right`); `'full-width'` stretches the buttons to fill the row. For tightly-controlled multi-button bars (e.g. one secondary action floated left, primary on the right with a spacer), build a custom flex action bar instead. Reserve `pp-form-actions` for the canonical Cancel + Save / OK pair.
+- **`pp-form-actions` is a responsive `auto-fit` grid** (`grid-template-columns: repeat(auto-fit, 9.375rem); gap: 1rem;`). Each track is 150 px wide; buttons fit per row only while the container is wide enough (`n × 150 px + (n − 1) × 16 px`), and wrap onto new rows otherwise. The `alignment` input maps to `--left` / `--center` / `--right` / `--full-width` modifiers controlling `justify-content` (default `right`); `'full-width'` stretches the buttons to fill the row. Exactly three projected buttons switch to a split layout automatically (first button left, remaining two grouped right) regardless of `alignment`. For other tightly-controlled multi-button bars, build a custom flex action bar instead. Reserve `pp-form-actions` for the canonical Cancel + Save / OK pair (or the native three-button split).
 - **No nested `<header>` inside `pp-form`.** `pp-form-section` already renders a `<header>` for its title block. Adding another `<header>` descendant for a section banner produces two banner landmarks on the page — an axe / a11y violation. Use `<div class="…__header">` with appropriate styling for any visual section header inside a PDX form.
 
 ### Peer Dependencies
@@ -489,58 +489,64 @@ The PDX form primitives have a few hard-coded sizing constraints that can clip o
 
 ---
 
-## @pdx/pp-checkbox (v1.2.0)
+## @pdx/pp-checkbox (v2.0.0)
 
-Accessible checkbox with three states, error display, and forms integration.
+Checkbox with label, error, disabled and indeterminate states, and forms integration.
+
+> **Breaking change in v2.0.0:** the form value is now a plain **`boolean`**. The tri-state `CheckboxState` enum and the `state` input are **removed**. Bind `[checked]` / `[(checked)]` instead of `[state]`; the indeterminate visual is a separate `indeterminate` model and is never part of the form value. `PPCheckboxChangeEvent` no longer carries `state`. This matches `mat-checkbox` semantics. Existing code on the 1.x enum API needs migrating — see the table below.
 
 ### Components
 
 #### PPCheckboxComponent
 
 ```typescript
-import { PPCheckboxComponent, CheckboxState } from '@pdx/pp-checkbox';
+import { PPCheckboxComponent } from '@pdx/pp-checkbox';
 ```
 
 ```html
-<pp-checkbox id="terms" label="Accept terms" />
-<pp-checkbox id="all" label="Select all" [state]="CheckboxState.Indeterminate" />
+<pp-checkbox id="terms" label="Accept terms" [(checked)]="accepted" />
+<pp-checkbox id="all" label="Select all" [checked]="allSelected()" [indeterminate]="someSelected()" />
 <pp-checkbox id="err" label="Required field" [error]="true" />
 ```
 
-| Input            | Type                               | Default      | Description                                                                                                                                                                                      |
-| ---------------- | ---------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `id`             | `string`                           | `''`         | Unique identifier                                                                                                                                                                                |
-| `label`          | `string`                           | `''`         | Display label                                                                                                                                                                                    |
-| `state`          | `CheckboxState`                    | `Unselected` | Current state                                                                                                                                                                                    |
-| `error`          | `boolean`                          | `false`      | Error state                                                                                                                                                                                      |
-| `disabled`       | `boolean`                          | `false`      | Disabled state                                                                                                                                                                                   |
-| `ariaLabel`      | `string \| null`                   | `null`       | Accessibility label                                                                                                                                                                              |
-| `labelWrap`      | `'wrap' \| 'nowrap' \| 'truncate'` | `'wrap'`     | Long-label behaviour. `'wrap'` flows onto multiple lines. `'nowrap'` keeps a single line and overflows the parent. `'truncate'` clips with an ellipsis and exposes the full label via a tooltip. |
-| `ariaLabelledby` | `string \| null`                   | `null`       | ID of the element labelling this checkbox                                                                                                                                                        |
-| `tabIndex`       | `number \| null`                   | `null`       | Tab index for keyboard navigation                                                                                                                                                                |
+| Input            | Type                               | Default  | Description                                                                                                                                                                                      |
+| ---------------- | ---------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`             | `string`                           | `''`     | Unique identifier                                                                                                                                                                                |
+| `label`          | `string`                           | `''`     | Display label                                                                                                                                                                                    |
+| `checked`        | `ModelSignal<boolean>`             | `false`  | Checked state. Two-way `[(checked)]`. Inside a form, the form control's value takes precedence.                                                                                                  |
+| `indeterminate`  | `ModelSignal<boolean>`             | `false`  | Indeterminate **visual** state — independent of `checked`, never part of the form value. Cleared automatically when the user clicks; the new value is emitted through `indeterminateChange`.     |
+| `error`          | `boolean`                          | `false`  | Error state                                                                                                                                                                                      |
+| `disabled`       | `boolean`                          | `false`  | Disabled state (form control's disabled state takes precedence inside a form)                                                                                                                    |
+| `ariaLabel`      | `string \| undefined`              | —        | Accessibility label                                                                                                                                                                              |
+| `labelWrap`      | `'wrap' \| 'nowrap' \| 'truncate'` | `'wrap'` | Long-label behaviour. `'wrap'` flows onto multiple lines. `'nowrap'` keeps a single line and overflows the parent. `'truncate'` clips with an ellipsis and exposes the full label via a tooltip. |
+| `ariaLabelledby` | `string \| null`                   | `null`   | ID of the element labelling this checkbox                                                                                                                                                        |
+| `tabIndex`       | `number \| null`                   | `null`   | Tab index for keyboard navigation                                                                                                                                                                |
 
 **Outputs:**
 
-- `checkboxChange` — emits `PPCheckboxChangeEvent`
-- `indeterminateChange` — emits `PPCheckboxChangeEvent`
+- `checkboxChange` — emits `PPCheckboxChangeEvent` when the user toggles the checkbox
+- `indeterminateChange` — emits `boolean` (via the `indeterminate` model) when the indeterminate state clears
 
 ### Models
 
 ```typescript
-enum CheckboxState {
-  Selected = 'selected',
-  Unselected = 'unselected',
-  Indeterminate = 'indeterminate',
-}
-
 interface PPCheckboxChangeEvent {
   id: string;
-  state: CheckboxState;
   checked: boolean;
 }
 ```
 
-**Forms:** Implements `ControlValueAccessor`. Supports both `boolean` and `CheckboxState` values.
+**Forms:** Implements `ControlValueAccessor`; the form value is a plain **`boolean`**. `null` / `undefined` written by the forms API are treated as unchecked.
+
+### Migrating legacy (v1.x) usage
+
+| v1.x                                               | v2.x                               |
+| -------------------------------------------------- | ---------------------------------- |
+| `[state]="CheckboxState.Selected"`                 | `[checked]="true"`                 |
+| `[state]="CheckboxState.Indeterminate"`            | `[indeterminate]="true"`           |
+| `import { CheckboxState } from '@pdx/pp-checkbox'` | Remove — the enum no longer exists |
+| `event.state === CheckboxState.Selected`           | `event.checked`                    |
+| Form value `CheckboxState`                         | Form value `boolean`               |
 
 ### Peer Dependencies
 
@@ -860,7 +866,7 @@ Both functions take `readonly TreeData[]` and return a new `TreeData[]` — safe
 
 ---
 
-## @pdx/pp-select (v1.2.0)
+## @pdx/pp-select (v1.3.0)
 
 Accessible dropdown fields for single and multiple selection. Floating label animation, optional leading icons, error/disabled states, supporting text, and full Angular forms integration via `ControlValueAccessor`.
 
@@ -882,17 +888,18 @@ Reactive form integration:
 <pp-select label="Country" [options]="countryOptions" [formControl]="countryControl" />
 ```
 
-| Input            | Type                  | Default     | Description                                             |
-| ---------------- | --------------------- | ----------- | ------------------------------------------------------- |
-| `label`          | `string` _(required)_ | —           | Floating label text                                     |
-| `options`        | `PPMenuItem[]`        | `[]`        | List of options to display                              |
-| `value`          | `string \| number`    | `''`        | ID of the currently selected option                     |
-| `isDisabled`     | `boolean`             | `false`     | Disables the trigger and prevents dropdown from opening |
-| `isError`        | `boolean`             | `false`     | Error state styling for border and supporting text      |
-| `size`           | `'large' \| 'small'`  | `'large'`   | `large`: 2.5rem height, `small`: 2rem height            |
-| `icon`           | `string`              | `''`        | Leading icon CSS class (e.g. `'pp-icon-global_world'`)  |
-| `supportingText` | `string`              | `''`        | Helper text below the trigger                           |
-| `ariaLabel`      | `string \| undefined` | `undefined` | Accessible label (falls back to `label`)                |
+| Input            | Type                                                   | Default     | Description                                                                                                                                                                                                                                                        |
+| ---------------- | ------------------------------------------------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `label`          | `string` _(required)_                                  | —           | Floating label text                                                                                                                                                                                                                                                |
+| `options`        | `PPMenuItem[]`                                         | `[]`        | List of options to display                                                                                                                                                                                                                                         |
+| `value`          | `string \| number`                                     | `''`        | ID of the currently selected option                                                                                                                                                                                                                                |
+| `isDisabled`     | `boolean`                                              | `false`     | Disables the trigger and prevents dropdown from opening                                                                                                                                                                                                            |
+| `isError`        | `boolean`                                              | `false`     | Error state styling for border and supporting text                                                                                                                                                                                                                 |
+| `size`           | `'large' \| 'small'`                                   | `'large'`   | `large`: 2.5rem height, `small`: 2rem height                                                                                                                                                                                                                       |
+| `icon`           | `string`                                               | `''`        | Leading icon CSS class (e.g. `'pp-icon-global_world'`)                                                                                                                                                                                                             |
+| `supportingText` | `string`                                               | `''`        | Helper text below the trigger                                                                                                                                                                                                                                      |
+| `ariaLabel`      | `string \| undefined`                                  | `undefined` | Accessible label (falls back to `label`)                                                                                                                                                                                                                           |
+| `labelSpace`     | `PPSelectLabelSpace` (`'auto' \| 'always' \| 'never'`) | `'auto'`    | Reserves 8px above the trigger for the floating-label notch — same semantics as on `pp-input`. `'auto'` reserves when `label` is non-empty; `'always'` keeps label-less selects aligned with labeled fields in the same row; `'never'` opts out (legacy overflow). |
 
 **Output:** `selectionChange` emits `PPSelectChangeEvent` (`{ id: string | number }`).
 
@@ -930,6 +937,7 @@ Reactive form integration:
 | `icon`           | `string`                        | `''`        | Leading icon CSS class                                  |
 | `supportingText` | `string`                        | `''`        | Helper text below the trigger                           |
 | `ariaLabel`      | `string \| undefined`           | `undefined` | Accessible label (falls back to `label`)                |
+| `labelSpace`     | `PPSelectLabelSpace`            | `'auto'`    | Same semantics as on `pp-select` (see above)            |
 
 **Output:** `selectionChange` emits `PPMultiselectChangeEvent` (`{ ids: readonly (string | number)[] }`).
 
@@ -952,7 +960,7 @@ interface PPMenuItem {
 }
 ```
 
-Change event types are exported from `@pdx/pp-select`:
+Change event types and the label-space type are exported from `@pdx/pp-select`:
 
 ```typescript
 interface PPSelectChangeEvent {
@@ -962,6 +970,8 @@ interface PPSelectChangeEvent {
 interface PPMultiselectChangeEvent {
   readonly ids: readonly (string | number)[];
 }
+
+type PPSelectLabelSpace = 'auto' | 'always' | 'never';
 ```
 
 ### Peer Dependencies
@@ -970,7 +980,7 @@ interface PPMultiselectChangeEvent {
 
 ---
 
-## @pdx/pp-menu (v1.3.0)
+## @pdx/pp-menu (v1.4.0)
 
 Standalone dropdown menu components for single and multiple selection. Used internally by `@pdx/pp-select` and as the context menu for `@pdx/pp-tree`. Can also be used directly for custom dropdown implementations.
 
@@ -1037,6 +1047,8 @@ import { PPMenuMultiselectComponent } from '@pdx/pp-menu';
 - `selectionChange` — emits `PPMenuMultiselectChangeEvent` (`{ ids: readonly (string | number)[] }`)
 - `escapeKey` — emits `void` when `Escape` is pressed (the parent owns closing the menu)
 
+**Note:** `pp-menu-multiselect` does **not** act on the per-item `disabled`, `icon`, or `hasDivider` fields of `PPMenuItem` — it renders and toggles every item, and applies its component-level `icon` input to all rows. Those three fields are only honored by the single-select `pp-menu` (where `disabled` mutes the item and blocks click/Enter/Space).
+
 ### Models
 
 ```typescript
@@ -1064,7 +1076,7 @@ interface PPMenuMultiselectChangeEvent {
 
 ---
 
-## @pdx/pp-list (v2.1.0)
+## @pdx/pp-list (v2.2.0)
 
 Accessible listbox with four selection variants, keyboard navigation, leading/trailing icons, overline + supporting text per item. Use when you need an in-page list (not a dropdown — use `pp-select`/`pp-menu` for those).
 
@@ -1157,21 +1169,21 @@ enum ListSize {
 
 ---
 
-## @pdx/pp-tab (v1.1.0)
+## @pdx/pp-tab (v1.2.0)
 
-Secondary tab navigation component with icons, disabled states, content panels, keyboard navigation, and full accessibility.
+Secondary tab navigation component with icons, notification badges, two sizes, disabled states, content panels, keyboard navigation, and full accessibility.
 
 ### Components
 
 #### PPTabGroupComponent
 
 ```typescript
-import { PPTabGroupComponent, PPTabComponent, PPTabContentDirective } from '@pdx/pp-tab';
+import { PPTabGroupComponent, PPTabComponent, PPTabContentDirective, PPTabSize, PP_TAB_SIZE } from '@pdx/pp-tab';
 ```
 
 ```html
-<pp-tab-group [(selectedIndex)]="activeTab">
-  <pp-tab label="Overview" icon="pp-icon-dashboard">
+<pp-tab-group [(selectedIndex)]="activeTab" size="sm">
+  <pp-tab label="Overview" icon="pp-icon-dashboard" [notificationCount]="3">
     <ng-template ppTabContent>
       <p>Overview content goes here.</p>
     </ng-template>
@@ -1184,26 +1196,37 @@ import { PPTabGroupComponent, PPTabComponent, PPTabContentDirective } from '@pdx
 </pp-tab-group>
 ```
 
-| Input           | Type      | Default | Description                                               |
-| --------------- | --------- | ------- | --------------------------------------------------------- |
-| `selectedIndex` | `number`  | `0`     | Index of the active tab. Supports two-way binding `[()]`. |
-| `fullWidth`     | `boolean` | `false` | When true, tabs stretch to fill the full width equally.   |
+| Input           | Type        | Default | Description                                                                                                                                                |
+| --------------- | ----------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `selectedIndex` | `number`    | `0`     | Index of the active tab. Supports two-way binding `[()]`.                                                                                                  |
+| `size`          | `PPTabSize` | `'md'`  | Tab height for the whole group — `'sm'` (3rem / 48px) or `'md'` (3.625rem / 58px). Propagated to every child tab; a child's own `size` input overrides it. |
+| `fullWidth`     | `boolean`   | `false` | When true, tabs stretch to fill the full width equally.                                                                                                    |
 
 **Output:** `selectedIndexChange` emits the new index (via two-way binding).
+
+**Overflow behavior:** when the tabs don't fit the container, the group renders scroll-arrow buttons and 2rem gradient edge-fades (`linear-gradient` overlays, toggled by scroll position) on the cut-off side — no consumer wiring needed.
 
 #### PPTabComponent
 
 ```html
 <pp-tab label="Tab 1" />
 <pp-tab label="Dashboard" icon="pp-icon-dashboard" />
+<pp-tab label="Inbox" [notificationCount]="12" />
 <pp-tab label="Disabled" [disabled]="true" />
 ```
 
-| Input      | Type             | Default | Description                                  |
-| ---------- | ---------------- | ------- | -------------------------------------------- |
-| `label`    | `string`         | `''`    | Text label displayed in the tab              |
-| `icon`     | `string \| null` | `null`  | Icon class name (e.g. `'pp-icon-dashboard'`) |
-| `disabled` | `boolean`        | `false` | Disables the tab when true                   |
+| Input               | Type                | Default | Description                                                                                                                   |
+| ------------------- | ------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `label`             | `string`            | `''`    | Text label displayed in the tab                                                                                               |
+| `icon`              | `string \| null`    | `null`  | Icon class name (e.g. `'pp-icon-dashboard'`) — renders as a **leading icon before the label**; the label always stays visible |
+| `size`              | `PPTabSize \| null` | `null`  | Per-tab size override; falls back to the group's `size`, then `'md'`                                                          |
+| `notificationCount` | `number \| null`    | `null`  | Renders a `pp-notification-badge` next to the label; hidden when `null` or `0`                                                |
+| `disabled`          | `boolean`           | `false` | Disables the tab when true                                                                                                    |
+
+```typescript
+const PP_TAB_SIZE = { SM: 'sm', MD: 'md' } as const;
+type PPTabSize = (typeof PP_TAB_SIZE)[keyof typeof PP_TAB_SIZE]; // 'sm' | 'md'
+```
 
 #### PPTabContentDirective
 
@@ -1232,17 +1255,50 @@ Consumer-managed content (without `ppTabContent`):
 } }
 ```
 
+### Height stabilization in dialogs
+
+The tab group renders **only the active panel** into one shared `.pp-tab-group__body`, so a container sized by its content — typically a `MatDialog` — shrinks when the user switches to a shorter tab and grows back on return. There is no built-in height-stabilization input; the consumer-side fix is a **grow-only `min-height` pin** on the body:
+
+```typescript
+private readonly host = inject(ElementRef<HTMLElement>);
+private maxTabBodyHeight = 0;
+
+/**
+ * Pin the shared tab body's min-height to the tallest panel seen so the
+ * dialog doesn't shrink when switching to a shorter tab. Grow-only: it
+ * settles on the max height and never collapses on tab switches.
+ */
+private stabilizeTabHeight(): void {
+  const body = this.host.nativeElement.querySelector<HTMLElement>('.pp-tab-group__body');
+  if (body && body.offsetHeight > this.maxTabBodyHeight) {
+    this.maxTabBodyHeight = body.offsetHeight;
+    body.style.minHeight = `${this.maxTabBodyHeight}px`;
+  }
+}
+```
+
+Call it after the initial render (`afterNextRender(() => this.stabilizeTabHeight())`) and after every tab switch, once the newly selected panel has rendered:
+
+```typescript
+protected onTabChange(): void {
+  requestAnimationFrame(() => this.stabilizeTabHeight());
+}
+```
+
+Only apply this when the surrounding container derives its height from the tab content (dialogs, popovers). Routed full-page tab groups don't need it. Grow-only matters: clamping to the first panel's height would clip taller tabs, and resetting on switch reintroduces the jump.
+
 ### Design Tokens
 
-- **Text (unselected):** `$pp-secondary-300`
+- **Text (unselected/enabled):** `$pp-secondary-300`
 - **Text (selected/hover):** `$pp-primary`
 - **Text (disabled):** `$pp-secondary-700`
+- **Focus ring:** `$pp-primary-300` outline
 - **Indicator (selected):** `$pp-primary`
 - **Divider:** `$pp-secondary-800`
 
 ### Peer Dependencies
 
-`@angular/common`, `@angular/core`, `@pdx/pp-theme`
+`@angular/common`, `@angular/core`, `@pdx/pp-badge` (for `notificationCount`), `@pdx/pp-theme`
 
 ---
 
@@ -1882,7 +1938,7 @@ Range selection requires two clicks: the first anchors the start, the second clo
 
 ---
 
-## @pdx/pp-autocomplete (v1.1.0)
+## @pdx/pp-autocomplete (v1.1.1)
 
 Free-text combobox with filtered suggestions. The form value is always the input string; selecting an item writes its display value into the field, and `selectionChange` emits the matched item in parallel. Built on top of `@pdx/pp-input`.
 
@@ -1898,20 +1954,20 @@ import { PPAutocompleteComponent, AutocompleteItem } from '@pdx/pp-autocomplete'
 <pp-autocomplete label="Search" [items]="items" [formControl]="query" (selectionChange)="onSelect($event)" />
 ```
 
-| Input        | Type                                                 | Default                               | Description                                                                                           |
-| ------------ | ---------------------------------------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `value`      | `string`                                             | `''`                                  | Field text; two-way via `[(value)]`. A full, case-insensitive match marks that item as the selection. |
-| `items`      | `AutocompleteItem[]`                                 | `[]`                                  | Items to filter and offer as suggestions.                                                             |
-| `label`      | `string`                                             | required                              | Floating label (also drives `aria-label`).                                                            |
-| `helperText` | `string`                                             | `''`                                  | Helper text below the field.                                                                          |
-| `size`       | `'sm' \| 'lg'`                                       | `'lg'`                                | Field size — matches `pp-input`.                                                                      |
-| `fullWidth`  | `boolean`                                            | `false`                               | Stretch field + dropdown to the host width.                                                           |
-| `disabled`   | `boolean`                                            | `false`                               | Disables the field and panel.                                                                         |
-| `readonly`   | `boolean`                                            | `false`                               | Renders the field readonly.                                                                           |
-| `required`   | `boolean`                                            | `false`                               | Marks the field required (reflected on `aria-required`).                                              |
-| `invalid`    | `boolean`                                            | `false`                               | Error visual state.                                                                                   |
-| `displayFn`  | `(item: AutocompleteItem) => string`                 | `(i) => i.label`                      | Maps an item to the text shown when it is selected.                                                   |
-| `filterFn`   | `(query: string, item: AutocompleteItem) => boolean` | case-insensitive substring on `label` | Predicate used to filter items against the query.                                                     |
+| Input        | Type                                                 | Default                               | Description                                                                                                                                           |
+| ------------ | ---------------------------------------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `value`      | `string`                                             | `''`                                  | Field text; two-way via `[(value)]`. A full, case-insensitive match marks that item as the selection.                                                 |
+| `items`      | `AutocompleteItem[]`                                 | `[]`                                  | Items to filter and offer as suggestions.                                                                                                             |
+| `label`      | `string`                                             | required                              | Floating label (also drives `aria-label`).                                                                                                            |
+| `helperText` | `string`                                             | `''`                                  | Helper text below the field.                                                                                                                          |
+| `size`       | `'sm' \| 'lg'`                                       | `'lg'`                                | Field size — matches `pp-input`.                                                                                                                      |
+| `fullWidth`  | `boolean`                                            | `false`                               | Stretch field + dropdown to the host width; the dropdown panel matches the input width.                                                               |
+| `disabled`   | `boolean`                                            | `false`                               | Disables the field and panel.                                                                                                                         |
+| `readonly`   | `boolean`                                            | `false`                               | Renders the field readonly.                                                                                                                           |
+| `required`   | `boolean`                                            | `false`                               | Forwarded to the inner `pp-input`, which renders the label asterisk and the native `required` attribute. Purely visual — wire the validator yourself. |
+| `invalid`    | `boolean`                                            | `false`                               | Error visual state.                                                                                                                                   |
+| `displayFn`  | `(item: AutocompleteItem) => string`                 | `(i) => i.label`                      | Maps an item to the text shown when it is selected.                                                                                                   |
+| `filterFn`   | `(query: string, item: AutocompleteItem) => boolean` | case-insensitive substring on `label` | Predicate used to filter items against the query.                                                                                                     |
 
 **Outputs:**
 
@@ -2144,9 +2200,11 @@ type PPProgressIndicatorCircularSize =
 
 ---
 
-## @pdx/pp-table (v1.0.3)
+## @pdx/pp-table (v1.1.1)
 
 Tabular interface for structured data: pagination, sorting, row expansion, grouped multi-level headers, and interactive cells (checkbox, slide toggle, button, chip, menu) declared as a Signal-driven `PPTable` data model. The table is assembled from a family of structural components.
+
+> **Legacy note:** older table configs used `checkbox.state: WritableSignal<CheckboxState>`. The current config uses separate `checked` / `indeterminate` boolean signals, following the `pp-checkbox` boolean form value — migrate any `state`-based config you encounter.
 
 ### Components
 
@@ -2169,9 +2227,13 @@ import { PPTableComponent } from '@pdx/pp-table';
 
 The component owns pagination, sorting, and row reorder/duplicate/delete internally.
 
+**Height-bounded scrolling:** the host is a flex column and `.pp-table-content` flexes to fill it — constrain the height of `<pp-table>` (or its container) and the body region scrolls vertically on its own. The old `::ng-deep .pp-table-content { overflow-y: auto; max-height: … }` consumer hack is no longer needed; remove it when found.
+
 #### Structural & column components
 
 Also exported and composed under `pp-table`: `PPTableHeadingComponent` (`pp-table-heading`), `PPTableHeadingColumnComponent` (`pp-table-heading-column`, CVA — sortable header cell), `PPTableGroupedColumnsComponent` / `PPTableGroupedColumnComponent` (multi-level headers), `PPTableBodyComponent` (`pp-table-body`), `PPTableRowComponent` (`pp-table-row`), `PPTableColumnComponent` (`pp-table-column` — renders text / checkbox / slide-toggle / button / chip per the `PPTableColumn` model), `PPTableExpandableColumnComponent` / `PPTableExpandableRowComponent` (CVA, two-way `[(expanded)]`), and `PPTableMenuColumnComponent` (`pp-table-menu-column` — row-action menu).
+
+**`PPTableMenuColumnComponent`** has an `ariaLabel: InputSignal<string>` (default `'Row actions'`) applied to both the trigger button and the inner `pp-menu`. Note: the data-driven `[data]` API does not forward a per-row aria-label — `PPTableColumn.menu` only carries `items` + `onSelect`, so rows rendered through `[data]` use the default; override only by composing `pp-table-menu-column` directly.
 
 ### Models
 
@@ -2197,12 +2259,205 @@ interface PPTableHeadingColumn {
 
 // PPTableColumn carries the cell content; one of: text/headline, checkbox, slideToggle,
 // button, chip, rating, status, or menu. Interactive cell state is held in WritableSignals.
+// Interactive cell configs (v1.1.x shapes):
+interface PPTableColumn {
+  // …text / headline / chip / status / rating fields…
+  button?: {
+    label: string;
+    variant?: 'filled' | 'outlined' | 'text' | 'tonal';
+    size?: 'sm' | 'md' | 'lg';
+    icon?: string;
+    disabled?: WritableSignal<boolean>;
+    ariaLabel?: string; // accessible name — required for icon-only buttons
+    onClick?: (event: MouseEvent) => void;
+  };
+  checkbox?: {
+    label?: string;
+    checked?: WritableSignal<boolean>; // replaces the legacy state: WritableSignal<CheckboxState>
+    indeterminate?: WritableSignal<boolean>;
+    disabled?: WritableSignal<boolean>;
+    ariaLabel?: string;
+  };
+  slideToggle?: {
+    label?: string | null;
+    checked: WritableSignal<boolean>;
+    disabled?: WritableSignal<boolean>;
+    size?: 'sm' | 'lg';
+    ariaLabel?: string;
+  };
+  menu?: {
+    items: PPMenuItem[];
+    onSelect: (event: PPMenuSelectEvent) => void;
+  };
+}
+
 type PPTableLayout = 'auto' | 'fixed';
 ```
 
 ### Peer Dependencies
 
-`@angular/common`, `@angular/core`, `@angular/forms`, `@pdx/pp-button`, `@pdx/pp-checkbox`, `@pdx/pp-chip`, `@pdx/pp-menu`, `@pdx/pp-paginator`, `@pdx/pp-slide-toggle`
+`@angular/common`, `@angular/core`, `@angular/forms`, `@pdx/pp-button`, `@pdx/pp-checkbox` (`^2.0.0`), `@pdx/pp-chip`, `@pdx/pp-menu`, `@pdx/pp-paginator`, `@pdx/pp-slide-toggle`
+
+---
+
+## @pdx/pp-link (v1.0.0)
+
+Styled text link rendering a native `<a>`, with optional leading icon and trailing arrow.
+
+### Components
+
+#### PPLinkComponent
+
+```typescript
+import { PPLinkComponent } from '@pdx/pp-link';
+```
+
+```html
+<pp-link url="https://polypoint.ch" label="Visit Polypoint" />
+<pp-link url="https://polypoint.ch" label="Polypoint Website" leadingIcon="pp-icon-polypoint" [trailingIcon]="true" />
+```
+
+| Input          | Type             | Default  | Description                                                                                     |
+| -------------- | ---------------- | -------- | ----------------------------------------------------------------------------------------------- |
+| `url`          | `string`         | required | Destination URL. The input is `url`, **not** `href`.                                            |
+| `label`        | `string \| null` | `null`   | Link text — falls back to displaying the `url` when unset.                                      |
+| `ariaLabel`    | `string \| null` | `null`   | Accessible name — falls back to `label ?? url`.                                                 |
+| `leadingIcon`  | `string \| null` | `null`   | CSS icon class shown before the label (e.g. `pp-icon-polypoint`).                               |
+| `trailingIcon` | `boolean`        | `true`   | Show the trailing arrow (`pp-icon-arrow_right_arrow_next`). Accepts `booleanAttribute` strings. |
+| `disabled`     | `boolean`        | `false`  | Removes `href`, sets `tabindex="-1"` and `aria-disabled="true"`.                                |
+
+No outputs — it is a plain anchor. There is no `size` input.
+
+### Peer Dependencies
+
+`@angular/core`, `@pdx/pp-theme`
+
+---
+
+## @pdx/pp-badge (v1.0.0)
+
+Compact, non-interactive badges. `pp-badge` is a status/label pill; `pp-notification-badge` is an error-colored count bubble or dot.
+
+### Components
+
+#### PPBadgeComponent
+
+```typescript
+import { PPBadgeComponent, BadgeColor, BadgeAppearance } from '@pdx/pp-badge';
+```
+
+```html
+<pp-badge color="success" appearance="status" icon="pp-icon-check_circle">Active</pp-badge>
+<pp-badge color="purple" appearance="label">Category</pp-badge>
+```
+
+| Input        | Type              | Default     | Description                                                            |
+| ------------ | ----------------- | ----------- | ---------------------------------------------------------------------- |
+| `color`      | `BadgeColor`      | `'neutral'` | Palette — background `$pp-<color>-960`, text/border `$pp-<color>-300`. |
+| `appearance` | `BadgeAppearance` | `'status'`  | `'status'` (1px border) or `'label'` (borderless).                     |
+| `icon`       | `string \| null`  | `null`      | Optional leading icon class.                                           |
+| `ariaLabel`  | `string \| null`  | `null`      | When the projected text isn't descriptive enough.                      |
+
+**Text is projected via `ng-content`** — there is no `label` input (exception to the PDX label rule).
+
+#### PPNotificationBadgeComponent
+
+```html
+<pp-notification-badge [count]="3" ariaLabel="3 unread notifications" />
+<pp-notification-badge ariaLabel="New activity" />
+```
+
+| Input       | Type             | Default | Description                                                                                                  |
+| ----------- | ---------------- | ------- | ------------------------------------------------------------------------------------------------------------ |
+| `count`     | `number \| null` | `null`  | Numeric bubble when a number (`0` renders as `0`); bare **dot** when `null`. Counts above 999 render `999+`. |
+| `ariaLabel` | `string \| null` | `null`  | When set, the host becomes a `role="status"` live region and the raw number is `aria-hidden`.                |
+
+### Models
+
+```typescript
+type BadgeColor =
+  | 'neutral' // maps to the secondary palette
+  | 'info'
+  | 'success'
+  | 'warning'
+  | 'error'
+  | 'purple'
+  | 'dark-blue'
+  | 'green'
+  | 'orange'
+  | 'blue'
+  | 'yellow';
+
+type BadgeAppearance = 'status' | 'label';
+```
+
+### Peer Dependencies
+
+`@angular/core`, `@pdx/pp-theme`
+
+---
+
+## @pdx/pp-snackbar (v1.0.0)
+
+Transient, queued notification (snackbar / toast) — **the PDX replacement for Angular Material's `MatSnackBar`**. Service-driven: snackbars are opened via `PPSnackbarService` (rendered through a CDK overlay); do not place `<pp-snackbar>` in templates.
+
+### Setup
+
+```typescript
+// app.config.ts
+import { provideSnackbar } from '@pdx/pp-snackbar';
+
+providers: [provideSnackbar({ autoDismissDelay: 3000 })]; // defaults are optional
+```
+
+### Usage
+
+```typescript
+import { inject } from '@angular/core';
+import { PPSnackbarService } from '@pdx/pp-snackbar';
+
+private readonly snackbar = inject(PPSnackbarService);
+
+const ref = this.snackbar.open({ message: this.translate.instant('common.item_deleted'), undoable: true });
+ref.onUndo().subscribe(() => { /* restore */ });
+ref.afterDismissed().subscribe((reason) => {
+  if (reason === 'timeout' || reason === 'dismiss') { /* finalize */ }
+});
+```
+
+### Service API
+
+- `open(config: PPSnackbarConfig): PPSnackbarRef` — merges the provided config over the `provideSnackbar` defaults, enqueues, shows when idle (FIFO — one snackbar visible at a time).
+- `dismiss(ref?, reason?)` — dismisses the active (or given) snackbar.
+
+`PPSnackbarRef`: `dismiss(reason?)`, `afterDismissed(): Observable<PPSnackbarDismissReason>`, `onAction()`, `onSecondaryAction()`, `onUndo()` (all `Observable<void>`).
+
+### Config (`PPSnackbarConfig` — fields mirror component inputs)
+
+| Field                                                           | Type                                                       | Default                       | Description                                              |
+| --------------------------------------------------------------- | ---------------------------------------------------------- | ----------------------------- | -------------------------------------------------------- |
+| `message`                                                       | `string`                                                   | `''` (required)               | Main content.                                            |
+| `title`                                                         | `string \| null`                                           | `null`                        | Optional title line.                                     |
+| `status`                                                        | `'neutral' \| 'info' \| 'success' \| 'warning' \| 'error'` | `'neutral'`                   | Semantic status — drives color + leading icon.           |
+| `variant`                                                       | `'filled' \| 'outlined'`                                   | `'filled'`                    | Visual style.                                            |
+| `withLeadingIcon`                                               | `boolean`                                                  | `true`                        | Show the status icon.                                    |
+| `undoable`                                                      | `boolean`                                                  | `true`                        | Show the undo button.                                    |
+| `dismissable`                                                   | `boolean`                                                  | `true`                        | Show the close button.                                   |
+| `autoDismiss` / `autoDismissDelay`                              | `boolean` / `number`                                       | `true` / `5000`               | Auto-dismiss after N ms (dismiss reason `'timeout'`).    |
+| `primaryActionButtonLabel` / `secondaryActionButtonLabel`       | `string \| null`                                           | `null`                        | Optional action buttons (filled / outlined `pp-button`). |
+| `dismissAriaLabel` / `undoAriaLabel` / `…ActionButtonAriaLabel` | `string`                                                   | `'Dismiss'` / `'Undo'` / `''` | Accessible names — pass translated values.               |
+
+`PPSnackbarDismissReason`: `'timeout' | 'action' | 'undo' | 'dismiss' | 'manual'`.
+
+**Positioning:** desktop → top-right; mobile (`< 480px`) → bottom-center, near-full width. **Animations:** consumer apps must provide `provideAnimationsAsync()`.
+
+### Exports
+
+`PPSnackbarComponent`, `PPSnackbarService`, `PPSnackbarConfig`, `PPSnackbarRef`, `provideSnackbar`, `PP_SNACKBAR_DEFAULTS`, `PP_SNACKBAR_DATA`, `PPSnackbarStatus`, `PPSnackbarVariant`, `PPSnackbarDismissReason`.
+
+### Peer Dependencies
+
+`@angular/core`, `@angular/cdk`, `@pdx/pp-button`, `rxjs`
 
 ---
 
@@ -2210,45 +2465,48 @@ type PPTableLayout = 'auto' | 'fixed';
 
 When a PDX component exists, always use it instead of Angular Material or custom implementations.
 
-| Need               | PDX Component                                                        | Replaces                                                        |
-| ------------------ | -------------------------------------------------------------------- | --------------------------------------------------------------- |
-| Standard button    | `PPButtonComponent`                                                  | `mat-button`, `mat-raised-button`, `mat-flat-button`            |
-| Icon button        | `PPIconButtonComponent`                                              | `mat-icon-button`                                               |
-| FAB                | `PPFloatingActionButtonComponent`                                    | `mat-fab`, `mat-mini-fab`                                       |
-| Text input         | `PPInputComponent`                                                   | `mat-form-field` + `matInput`                                   |
-| Textarea           | `PPTextareaComponent`                                                | `mat-form-field` + `matInput` + `<textarea>`                    |
-| Checkbox           | `PPCheckboxComponent`                                                | `mat-checkbox`                                                  |
-| Radio button       | `PPRadioButtonComponent`                                             | `mat-radio-button`                                              |
-| Radio group        | `PPRadioGroupComponent`                                              | `mat-radio-group`                                               |
-| Chip               | `PPChipComponent`                                                    | `mat-chip`                                                      |
-| Chip list          | `PPChipListComponent`                                                | `mat-chip-listbox`, `mat-chip-set`                              |
-| Dialog             | `PPDialogComponent`                                                  | Custom dialog templates (still use `MatDialog` service to open) |
-| Tree               | `PPTreeComponent`                                                    | `mat-tree`, custom tree implementations                         |
-| Select             | `PPSelectComponent`                                                  | `mat-select`                                                    |
-| Multiselect        | `PPMultiselectComponent`                                             | `mat-select` (multiple)                                         |
-| Menu               | `PPMenuComponent`                                                    | `mat-menu`                                                      |
-| Menu multiselect   | `PPMenuMultiselectComponent`                                         | `mat-menu` (multi-select)                                       |
-| Tab group          | `PPTabGroupComponent`                                                | `mat-tab-group`                                                 |
-| Tab                | `PPTabComponent`                                                     | `mat-tab`                                                       |
-| List               | `PPListComponent`                                                    | `mat-selection-list`, `mat-list`                                |
-| Expansion panel    | `PPExpansionPanelComponent` + `PPExpansionPanelItemComponent`        | `mat-expansion-panel`                                           |
-| Form scaffold      | `PPFormComponent` (+ section / stack / block / textblock / actions)  | Custom form layout divs / ad-hoc Flex/Grid shells               |
-| Icons              | `pp-icon pp-icon-*`                                                  | `mat-icon`, FontAwesome, other icon libraries                   |
-| Button toggle      | `PPButtonToggleComponent` + `PPButtonToggleGroupComponent`           | `mat-button-toggle`, `mat-button-toggle-group`                  |
-| Slide toggle       | `PPSlideToggleComponent`                                             | `mat-slide-toggle`                                              |
-| Paginator          | `PPPaginatorComponent`                                               | `mat-paginator`                                                 |
-| Date picker        | `PPDatepickerComponent` (`type="single" \| "range" \| "month-year"`) | `mat-datepicker`, `mat-date-range-picker`                       |
-| Time picker        | `PPTimepickerComponent`                                              | custom time inputs / `<input type="time">`                      |
-| Autocomplete       | `PPAutocompleteComponent`                                            | `mat-autocomplete`                                              |
-| Progress indicator | `PPProgressIndicatorComponent`                                       | `mat-progress-bar`, `mat-progress-spinner`                      |
-| Table              | `PPTableComponent` (+ column / row sub-components)                   | `mat-table`                                                     |
-| Tooltip            | `PPTooltipComponent`                                                 | `mat-tooltip`                                                   |
-| Inline message     | `PPInlineMessageComponent`                                           | custom inline alert / banner markup                             |
+| Need                | PDX Component                                                        | Replaces                                                        |
+| ------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Standard button     | `PPButtonComponent`                                                  | `mat-button`, `mat-raised-button`, `mat-flat-button`            |
+| Icon button         | `PPIconButtonComponent`                                              | `mat-icon-button`                                               |
+| FAB                 | `PPFloatingActionButtonComponent`                                    | `mat-fab`, `mat-mini-fab`                                       |
+| Text input          | `PPInputComponent`                                                   | `mat-form-field` + `matInput`                                   |
+| Textarea            | `PPTextareaComponent`                                                | `mat-form-field` + `matInput` + `<textarea>`                    |
+| Checkbox            | `PPCheckboxComponent`                                                | `mat-checkbox`                                                  |
+| Radio button        | `PPRadioButtonComponent`                                             | `mat-radio-button`                                              |
+| Radio group         | `PPRadioGroupComponent`                                              | `mat-radio-group`                                               |
+| Chip                | `PPChipComponent`                                                    | `mat-chip`                                                      |
+| Chip list           | `PPChipListComponent`                                                | `mat-chip-listbox`, `mat-chip-set`                              |
+| Dialog              | `PPDialogComponent`                                                  | Custom dialog templates (still use `MatDialog` service to open) |
+| Tree                | `PPTreeComponent`                                                    | `mat-tree`, custom tree implementations                         |
+| Select              | `PPSelectComponent`                                                  | `mat-select`                                                    |
+| Multiselect         | `PPMultiselectComponent`                                             | `mat-select` (multiple)                                         |
+| Menu                | `PPMenuComponent`                                                    | `mat-menu`                                                      |
+| Menu multiselect    | `PPMenuMultiselectComponent`                                         | `mat-menu` (multi-select)                                       |
+| Tab group           | `PPTabGroupComponent`                                                | `mat-tab-group`                                                 |
+| Tab                 | `PPTabComponent`                                                     | `mat-tab`                                                       |
+| List                | `PPListComponent`                                                    | `mat-selection-list`, `mat-list`                                |
+| Expansion panel     | `PPExpansionPanelComponent` + `PPExpansionPanelItemComponent`        | `mat-expansion-panel`                                           |
+| Form scaffold       | `PPFormComponent` (+ section / stack / block / textblock / actions)  | Custom form layout divs / ad-hoc Flex/Grid shells               |
+| Icons               | `pp-icon pp-icon-*`                                                  | `mat-icon`, FontAwesome, other icon libraries                   |
+| Button toggle       | `PPButtonToggleComponent` + `PPButtonToggleGroupComponent`           | `mat-button-toggle`, `mat-button-toggle-group`                  |
+| Slide toggle        | `PPSlideToggleComponent`                                             | `mat-slide-toggle`                                              |
+| Paginator           | `PPPaginatorComponent`                                               | `mat-paginator`                                                 |
+| Date picker         | `PPDatepickerComponent` (`type="single" \| "range" \| "month-year"`) | `mat-datepicker`, `mat-date-range-picker`                       |
+| Time picker         | `PPTimepickerComponent`                                              | custom time inputs / `<input type="time">`                      |
+| Autocomplete        | `PPAutocompleteComponent`                                            | `mat-autocomplete`                                              |
+| Progress indicator  | `PPProgressIndicatorComponent`                                       | `mat-progress-bar`, `mat-progress-spinner`                      |
+| Table               | `PPTableComponent` (+ column / row sub-components)                   | `mat-table`                                                     |
+| Tooltip             | `PPTooltipComponent`                                                 | `mat-tooltip`                                                   |
+| Inline message      | `PPInlineMessageComponent`                                           | custom inline alert / banner markup                             |
+| Snackbar / toast    | `PPSnackbarService` (`@pdx/pp-snackbar`)                             | `MatSnackBar` / `mat-snackbar`                                  |
+| Text link           | `PPLinkComponent`                                                    | plain `<a>` with custom link styles                             |
+| Status / label pill | `PPBadgeComponent`                                                   | custom pill / tag markup                                        |
+| Notification count  | `PPNotificationBadgeComponent`                                       | `matBadge`, custom count bubbles                                |
 
 `pp-sidenav`, `pp-top-navigation`, and `pp-toolbar` / `pp-toolbar-mobile` are **not** in this drop-in table. They are app-shell design decisions — use them only when introducing or redesigning global navigation / shell chrome. See the "Navigation (app-shell only)" section in [../SKILL.md](../SKILL.md) for the applicability rules.
 
 **Components without a PDX replacement yet** — use Angular Material with PDX theme applied:
 
-- Snackbar (`mat-snackbar`)
 - Sort (`mat-sort`)
 - Toolbar (`mat-toolbar`) — as a generic container, page header, dialog header, etc. (not as app-shell top navigation — for that, see `pp-top-navigation` above)

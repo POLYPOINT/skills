@@ -5,7 +5,7 @@ argument-hint: '[analyze|generate] [path/to/file.dfm] [screenshot-path] [path/to
 disable-model-invocation: true
 compatibility: Designed for Claude Code. Uses argument-hint and disable-model-invocation Claude Code extensions.
 metadata:
-  version: '1.10.2'
+  version: '1.11.0'
 ---
 
 # Delphi-to-Angular Conversion
@@ -89,6 +89,8 @@ Extract from the DFM file:
 Extract from the PAS file:
 
 - Event handlers and their logic (OnClick, OnChange, OnCreate, etc.)
+- **`OnDblClick` handlers** — list each one separately. Double-click does not exist in the web app (undiscoverable, no touch support, invisible to screen readers); each handler's action must be re-homed to an explicit affordance (row action button, kebab/context menu entry, or selection + toolbar action). See component-mapping.md § Events.
+- **Validation logic** — empty-checks before save, `raise` / message-box guards on missing values. These identify the mandatory fields (→ `[required]` asterisk) and the `validate()` rules; validation fires only after the first save attempt (see angular-conventions.md § Signal Forms).
 - Private fields (`F` prefix = state, `i` prefix = interface)
 - `Sync*` methods — these become `computed()` signals
 - Filter methods (`Apply*Filter`) — these become signal-based filtering
@@ -123,6 +125,13 @@ For each `ShowModal` / `CreateForm` target traced from the PAS, list the resulti
 1. <DialogComponentName> — opens from <event/button>, <purpose>
 2. ...
 
+### Double-click replacements
+
+For each `OnDblClick` handler found in the PAS, state the explicit affordance that replaces it (never a `(dblclick)` binding):
+
+1. <Delphi control>.OnDblClick (<action>) -> <row kebab menu entry | inline action icon-button | selection + toolbar button>
+2. ...
+
 ### Reused utilities
 
 List anything found in the reuse-pass that the generated code will import (test-data builders, translation service, lock service, tree helpers, etc.) so the plan doesn't re-invent them.
@@ -144,7 +153,8 @@ List anything found in the reuse-pass that the generated code will import (test-
 ### Form model (if applicable)
 
 - <formName>: signal<{ <field>: <type>, ... }>
-  - Validation: <validate() rules>
+  - Mandatory fields: <fields derived from PAS empty-checks — get `[required]` asterisk + gated validator>
+  - Validation: <validate() rules — all gated on the `submitted` signal, errors appear only after the first save attempt>
   - Drives: <what computed signals depend on it>
 
 ### Route
@@ -259,7 +269,7 @@ For every component spec, include the axe a11y assertion (see the spec template 
 Run two lint passes over the generated code before reporting done. Both are documented in [references/angular-conventions.md](references/angular-conventions.md).
 
 - **Signal-store / reactivity lint pass.** Catch mirror-signal+effect copies, dep-less `computed()`, missing `untracked()` around state writes inside `effect()`, granular dirty flags no one reads, and stores exposing raw objects when only a label is consumed.
-- **Convention check pass.** Visibility modifiers on every member (including `input()` / `output()`), named constants over magic literals, no dead injections, comments explain WHY not WHAT, smart-vs-dumb component check (no child both `inject()`s a store and exposes an `input()` for the same data).
+- **Convention check pass.** Visibility modifiers on every member (including `input()` / `output()`), named constants over magic literals, no dead injections, comments explain WHY not WHAT, smart-vs-dumb component check (no child both `inject()`s a store and exposes an `input()` for the same data), no `(dblclick)` bindings (every Delphi double-click action re-homed to an explicit affordance), form validators gated on the `submitted` signal, mandatory fields carry `[required]`.
 
 ### Step 6: Validate
 
@@ -287,8 +297,8 @@ List all generated files with a one-line description of each. Highlight:
 
 - **[references/component-mapping.md](references/component-mapping.md)** — Delphi VCL → Angular component mapping tables and German-English domain glossary. Load during analyze phase.
 - **[references/delphi-patterns.md](references/delphi-patterns.md)** — P2 Delphi codebase structure, file naming, DFM/PAS anatomy, `inherited` keyword, base-class reading, ShowModal tracing. Load during analyze phase.
-- **[references/angular-conventions.md](references/angular-conventions.md)** — Angular patterns (component, store, signal forms, i18n, testing, a11y, smart-vs-dumb components, optimistic UI, locking, mat-tree, post-generate lint passes). Load during generate phase.
-- **[references/pdx-recipes.md](references/pdx-recipes.md)** — PDX component recipes, icon naming, layout pitfalls, width-control rule, two-column layout, right-rail aside. Load during generate phase.
+- **[references/angular-conventions.md](references/angular-conventions.md)** — Angular patterns (component, store, signal forms incl. validation-after-first-submit and required-asterisk rules, i18n, testing, a11y, smart-vs-dumb components, optimistic UI, locking, mat-tree, post-generate lint passes). Load during generate phase.
+- **[references/pdx-recipes.md](references/pdx-recipes.md)** — PDX component recipes, icon naming, layout pitfalls, width-control rule, two-column layout, right-rail aside, row-actions (double-click replacement), snackbar. Load during generate phase.
 
 ### Example Files
 
