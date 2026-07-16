@@ -9,7 +9,7 @@ description: >-
   pep-driver toolchain.
 compatibility: Designed for Claude Code on macOS. Requires the companion `pep-driver` toolchain (the `pep` CLI + agent), `sshpass`, SSH access to the tenant box (creds resolved from the ansible inventory), and an open RDP session on the box while driving.
 metadata:
-  version: '1.0.0'
+  version: '1.0.1'
 ---
 
 # PEP verify / drive
@@ -19,9 +19,10 @@ inside the target box's interactive session, reached over SSH — so no fragile 
 keystrokes over the RDP video stream. Claude runs the `pep` CLI on the Mac; it talks to an in-session agent over
 loopback.
 
-The companion toolchain (`pep-driver`) provides the CLI and agent. It lives at **`~/dev/polypoint/pep-driver`** by
-convention; the CLI is `~/dev/polypoint/pep-driver/cli/pep` (run with `python3`). It is a separate repository from this
-skills marketplace — this skill orchestrates it.
+The companion toolchain (`pep-driver`) provides the CLI and agent. It is a separate POLYPOINT-internal repository from
+this skills marketplace — this skill orchestrates it. Clone it from Azure DevOps
+(`https://dev.azure.com/polypoint/cloud/_git/pep-driver`) to **`~/dev/polypoint/pep-driver`** (the path this skill
+assumes by convention); the CLI is then `~/dev/polypoint/pep-driver/cli/pep` (run with `python3`).
 
 ## Architecture in one paragraph
 
@@ -34,7 +35,7 @@ element's own rectangle.
 ## STEP 1 — Prerequisite check (always run first)
 
 Check each; if something's missing, offer to fix it (see STEP 2). Run these and read the results before doing anything
-else (replace `PEPD` with the toolchain path, default `~/dev/polypoint/pep-driver`):
+else (the toolchain path defaults to `~/dev/polypoint/pep-driver`):
 
 ```bash
 # a) toolchain repo present?
@@ -58,8 +59,11 @@ Interpreting (e): `agent: UP ... interactive=True` → ready, go to STEP 3. `DOW
 
 ## STEP 2 — Bootstrap (only what's missing; ask before slow/network steps)
 
-- **(a) Missing toolchain repo**: `pep-driver` is a separate companion repo. If absent, ask the user where to clone it
-  from (it is POLYPOINT-internal tooling, not a public clone) or point at an existing checkout via `PEPD`.
+- **(a) Missing toolchain repo**: `pep-driver` is a separate companion repo (POLYPOINT-internal). If absent, clone it:
+  ```bash
+  git clone git@ssh.dev.azure.com:v3/polypoint/cloud/pep-driver ~/dev/polypoint/pep-driver
+  ```
+  Or point at an existing checkout elsewhere (adjust the paths in the commands below).
 - **(b) Missing ansible inventory**: the CLI reads SSH creds from
   `~/dev/polypoint/shared/devops/ansible/inventories/*/<tenant>/hosts`. If that repo isn't cloned, offer to clone it
   (ask the user for the remote URL if you don't know it) or set `PEP_ANSIBLE_ROOT` to where it lives.
