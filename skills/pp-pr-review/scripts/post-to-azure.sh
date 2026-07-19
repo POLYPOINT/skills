@@ -3,8 +3,8 @@
 # Posts the drafted review comments to an Azure DevOps pull request as threads.
 # This script is GUARDED: the PreToolUse hook (guard-post.sh) blocks it unless
 # ./.pr-review/.post-approved exists, which is written only by approve-post.sh
-# after the developer's explicit "yes". Do not call this directly to bypass
-# the gate.
+# after the developer's explicit "yes". This script also consumes that marker
+# itself before posting, preserving one-shot approval outside a hook runtime.
 #
 # Usage: post-to-azure.sh [feature-branch]
 #
@@ -36,6 +36,10 @@ command -v jq   >/dev/null 2>&1 || err "jq is required to build and parse API pa
 # not `echo` $PAT/$AUTH, and never run this script through a tracer.
 
 [ -f "$DRAFT" ] || err "no draft comments at $DRAFT."
+
+APPROVAL_MARKER="$WORKDIR/.post-approved"
+[ -f "$APPROVAL_MARKER" ] || err "posting has not been approved for this run."
+rm -f "$APPROVAL_MARKER"
 
 # Resolve org / project / repo: explicit env override > values derived by
 # verify-repo.sh (recorded in run.meta) > error. No per-repo config needed.

@@ -1,7 +1,7 @@
 # pp-pr-review
 
-A Claude Code plugin that runs a **gated, sub-agent-driven pull request review**
-for Azure DevOps repositories. Automated tools (CodeRabbit, linters) already
+A Claude Code and Codex plugin that runs a **gated, sub-agent-driven pull
+request review** for Azure DevOps repositories. Automated tools (CodeRabbit, linters) already
 catch style and simple bugs; this plugin helps a developer do the *high-level*
 review — does the change do what the ticket asked, are the tests meaningful, is
 it secure, efficient, and leak-free, what's missing — and then posts the
@@ -13,7 +13,8 @@ clean and the triage sharp.
 
 ## What it does
 
-`/pp-pr-review <feature-branch> <target-branch> <jira-ticket>` runs:
+`/pp-pr-review <azure-devops-pr-url>` in Claude Code, or `$pp-pr-review` with
+the PR URL in Codex, runs:
 
 1. **Init** (deterministic script) — clean working dir, run metadata.
 2. **Verify repository** (blocking) — confirms you started the review from a
@@ -55,7 +56,8 @@ clean and the triage sharp.
 Each review dimension is a **skill**, so its heuristics (including the cited
 pattern catalogs for security/SQL-JPA/memory/performance) can be refined
 independently of the orchestration. The orchestration spine lives in the
-`pp-pr-review` **command**. The posting gate is hardened by a **hook**.
+shared `pp-pr-review` **command**, loaded through a Codex entry **skill**. The
+posting gate is hardened by a **hook** on both hosts.
 
 The pattern catalogs are tuned to the team's stacks — **Java/Spring/JPA-Hibernate,
 TypeScript/Node, and Angular** — and each is explicitly **not exhaustive**: the
@@ -66,8 +68,10 @@ sub-agents are told to also flag issues beyond the listed examples.
 ```
 pp-pr-review/
 ├── .claude-plugin/plugin.json
+├── .codex-plugin/plugin.json
 ├── commands/pp-pr-review.md            orchestrator (the workflow spine + gates)
 ├── skills/
+│   ├── pp-pr-review/SKILL.md         Codex entry point
 │   ├── redact-jira/SKILL.md         privacy-safe ticket (sub-agent)
 │   ├── review-core-logic/SKILL.md   summary + hot spots + logic findings
 │   ├── review-tests/SKILL.md        test findings
@@ -101,21 +105,28 @@ git-ignored automatically.
 
 ## Installing the plugin manually (local, all your projects)
 
-For local/manual use straight from this checkout — before it's published to a
-deployed marketplace (those instructions live elsewhere). The plugin ships with a
-bundled marketplace `pp-pr-review-marketplace` (marketplace name:
-**`polypoint-internal`**, plugin name: **`pp-pr-review`**). Installing at **user
-scope** (the default) makes it available in **every project** you open with Claude
-Code — you do not install it per-repository.
+### Codex
 
-### Option A — install from the local checkout (quickest)
+Register this repository's marketplace, then install the plugin into the
+user-wide Codex configuration:
 
-From any Claude Code session, add the marketplace by its directory path, then
-install the plugin:
+```bash
+codex plugin marketplace add /ABSOLUTE/PATH/TO/polypoint-skills
+codex plugin add pp-pr-review@polypoint-skills
+```
+
+Start a new thread after installation. Open `/hooks` in the Codex CLI, inspect
+the bundled hook, and trust it before using automatic posting. Verify the
+installation with `codex plugin list`.
+
+### Claude Code
+
+The repository root is a Claude Code marketplace named `polypoint-skills`.
+Installing at user scope makes the plugin available in every project:
 
 ```
-/plugin marketplace add /ABSOLUTE/PATH/TO/review-plugin/pp-pr-review-plugin/pp-pr-review-marketplace
-/plugin install pp-pr-review@polypoint-internal
+/plugin marketplace add /ABSOLUTE/PATH/TO/polypoint-skills
+/plugin install pp-pr-review@polypoint-skills
 ```
 
 `marketplace add` defaults to `--scope user`, and `install` defaults to user
@@ -123,39 +134,13 @@ scope, so the plugin is now enabled across all your projects. Verify with
 `/plugin` (it should list `pp-pr-review` as enabled) and confirm `/pp-pr-review`
 is available.
 
-### Option B — declare it in user settings (persistent, all projects)
-
-Add this to your **`~/.claude/settings.json`** (user-level = all projects). Claude
-Code picks it up on the next start — no commands needed:
-
-```json
-{
-  "extraKnownMarketplaces": {
-    "polypoint-internal": {
-      "source": {
-        "source": "directory",
-        "path": "/ABSOLUTE/PATH/TO/review-plugin/pp-pr-review-plugin/pp-pr-review-marketplace"
-      }
-    }
-  },
-  "enabledPlugins": {
-    "pp-pr-review@polypoint-internal": true
-  }
-}
-```
-
 ### Updating after the plugin changes
 
 The marketplace caches its contents, so after editing skills/commands refresh it:
 
 ```
-/plugin marketplace update polypoint-internal
+/plugin marketplace update polypoint-skills
 ```
-
-> Note: there are two copies of the plugin in this repo — the source tree
-> (`pp-pr-review-plugin/pp-pr-review/`) and the marketplace copy
-> (`pp-pr-review-marketplace/plugins/pp-pr-review/`). The marketplace serves its
-> own copy, so keep them in sync (they are byte-identical today).
 
 ### Trying it on a real PR
 
@@ -193,7 +178,7 @@ this order:
 2. **`AZDO_PAT`** environment variable (PAT with *Code (read & write)*) — only if
    you prefer to provide one explicitly.
 
-> **The token never passes through Claude.** It is read inside the shell script
+> **The token never passes through Claude Code or Codex.** It is read inside the shell script
 > and used solely to call Azure DevOps — it is never printed, written to disk, or
 > shown to the assistant. **Do not paste a PAT into the chat;** if you need to set
 > one, `export AZDO_PAT=…` in your own shell, or (preferred) configure it in your
@@ -214,9 +199,9 @@ The posting gate is enforced two ways. The orchestrator stops and asks for a
 clear "yes". Independently, a `PreToolUse` hook intercepts any attempt to run
 `post-to-azure.sh` and blocks it unless `./.pr-review/.post-approved` exists.
 That marker is written only by `approve-post.sh`, which the orchestrator runs
-solely after the developer's explicit approval, and the hook consumes the
-marker on use so one approval posts exactly once. This converts a soft
-instruction into a hard stop.
+solely after the developer's explicit approval. The posting script consumes the
+marker before making network requests so one approval authorizes one posting
+attempt. This converts a soft instruction into a mechanical guardrail.
 
 ## Security note for reviewers / org admins
 

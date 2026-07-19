@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
-# PreToolUse guard. Claude Code invokes this before every Bash tool call and
-# passes the tool input as JSON on stdin. We inspect the command being run.
+# PreToolUse guard. Claude Code and Codex invoke this before matching Bash tool
+# calls and pass the tool input as JSON on stdin. We inspect the command being
+# run.
 # If it is the post-to-azure script, we ALLOW it only when the approval marker
 # file exists in the current run directory. Otherwise we BLOCK it.
 #
@@ -10,7 +11,7 @@
 # without the marker, and the marker is only written by approve-post.sh, which
 # the orchestrator runs solely after an explicit developer "yes".
 #
-# Hook protocol: exit 0 = allow. exit 2 = block (stderr is shown to the model).
+# Hook protocol: exit 0 = allow. Exit 2 blocks the call and surfaces stderr.
 # Any other nonzero is treated as a non-blocking error, so we fail safe by
 # allowing unrelated commands through and only ever blocking deliberately.
 
@@ -33,9 +34,9 @@ case "$cmd" in
   *post-to-azure.sh*)
     marker="./.pr-review/.post-approved"
     if [ -f "$marker" ]; then
-      # Approved. Allow, and consume the marker so it cannot be reused for a
-      # second silent post in the same run.
-      rm -f "$marker"
+      # Approved. The posting script consumes the marker immediately before it
+      # makes network requests, keeping the one-shot gate effective even when
+      # the script is invoked outside a supported hook runtime.
       exit 0
     fi
     echo "BLOCKED: posting to the PR requires explicit developer approval for this run. The post step has not been approved (no ./.pr-review/.post-approved marker). Ask the developer to confirm posting; approval is recorded by approve-post.sh, which runs only on a clear 'yes'. Do not attempt to bypass this." >&2

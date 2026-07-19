@@ -4,8 +4,8 @@
 # by writing the marker file that the PreToolUse guard hook requires.
 #
 # The orchestrator runs this ONLY after the developer answers "yes" to the
-# irreversible posting gate. The guard hook consumes (deletes) the marker when
-# the post script runs, so each approval is good for exactly one post.
+# irreversible posting gate. The post script consumes (deletes) the marker
+# before making network requests, so each approval is good for one attempt.
 
 set -euo pipefail
 

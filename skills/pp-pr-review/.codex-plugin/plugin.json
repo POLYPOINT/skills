@@ -1,0 +1,29 @@
+{
+  "name": "pp-pr-review",
+  "version": "0.15.0",
+  "description": "Gated, sub-agent-driven PR review for Azure DevOps. Verifies the repository, redacts PII, runs focused analyses in parallel, triages findings with the developer, then drafts and posts PR comments only after explicit confirmation.",
+  "author": {
+    "name": "POLYPOINT"
+  },
+  "keywords": [
+    "code-review",
+    "pull-request",
+    "azure-devops",
+    "jira",
+    "security",
+    "performance",
+    "internal"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "POLYPOINT PR Review",
+    "shortDescription": "Gated Azure DevOps pull-request reviews",
+    "longDescription": "Run a structured Azure DevOps pull-request review with parallel specialist analyses, developer-led triage, privacy checks, comment drafting, and an explicit approval gate before posting.",
+    "developerName": "POLYPOINT",
+    "category": "Developer Tools",
+    "capabilities": ["Read", "Write", "Network"],
+    "defaultPrompt": [
+      "Use pp-pr-review to review this Azure DevOps pull request."
+    ]
+  }
+}
