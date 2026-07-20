@@ -191,3 +191,26 @@ no-op on days that already carry stamps — use PEP for those.
   immediately. On a shared/prod-adjacent tenant, confirm the target employee/day with the user before mutating.
 - Keep the RDP session connected while driving (a disconnected session stops rendering and UIA gets flaky; a reconnect
   may land in a new session — relaunch the agent there). Unattended operation is out of scope.
+
+## UsrAdmin (Benutzeradministration) — user/role/permission admin
+
+The per-user PEP/myPP **function permissions** (e.g. myPP "Stempel löschen", "Blöcke löschen", "Pikett löschen" that
+api-pp exposes via `/legacy-time-recording/permissions`) are NOT in PEP — they live in the separate `usradmin.exe`
+(same folder as pepwin.exe, e.g. `D:\POLYPOINT\`). The toolchain drives it end-to-end; full map in the pep-driver
+repo `docs/USRADMIN-UI-MAP.md`.
+
+```bash
+$P exec 'D:\POLYPOINT\usradmin.exe' --cwd 'D:\POLYPOINT'  # launch inside the RDP session
+# login window class=TfrmKeycloakLogin — a Keycloak form in embedded Chromium (OPAQUE to UIA):
+#   clickin fractions fy≈0.512 (user) / 0.611 (pw) / 0.74,0.894 (Anmelden) + keys.
+# main window class=TfrmUsrAdminMain22; top tabs Benutzer/Gruppen/Rollen/Knoten/RAP Profile.
+# Rollen → double-click a role → class=TfPolyRechte rights editor:
+#   left TTreeView is UIA-readable (treeitem="Mobile-App"); the rights matrix
+#   (Lesen/Drucken/Ändern/Löschen/Erstellen/Ausführen) is owner-drawn → screenshot + clickin.
+#   OK persists; "Abbrechen" is ambiguous → use button="Abbrechen"[0].
+```
+
+Key facts: a user's myPP time-recording rights come from their **PEP-application role** (Benutzer detail →
+"Mitglied in Gruppe"; the myPOLYPOINT role only carries app-UI rights). Mobile-App category rows map to P2 functions
+306/1033/307/1032 (`PermissionDetailSetter.java` in pp-services). The `pep exec` op launches any program inside the
+RDP session (as a child of the in-session agent), making its windows drivable like PEP's.
