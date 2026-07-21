@@ -1,0 +1,10 @@
+{
+  "name": "improve",
+  "description": "Reflect on how the skills used in the current session performed and upload concrete HTML improvement plans to Whetstone for asynchronous human review — run /improve after any skill-driven task instead of baking a self-improvement section into every skill.",
+  "version": "1.0.0",
+  "author": {
+    "name": "POLYPOINT"
+  },
+  "keywords": ["whetstone", "skill-improvement", "reflection", "meta", "feedback", "polypoint"],
+  "category": "development"
+}
