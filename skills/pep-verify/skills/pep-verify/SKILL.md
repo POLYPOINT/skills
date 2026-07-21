@@ -214,3 +214,22 @@ Key facts: a user's myPP time-recording rights come from their **PEP-application
 "Mitglied in Gruppe"; the myPOLYPOINT role only carries app-UI rights). Mobile-App category rows map to P2 functions
 306/1033/307/1032 (`PermissionDetailSetter.java` in pp-services). The `pep exec` op launches any program inside the
 RDP session (as a child of the in-session agent), making its windows drivable like PEP's.
+
+Session gotchas (verified 2026-07-21):
+- **usradmin session timeout**: after idle, next action pops "Die Session ist
+  abgelaufen. Das Programm wird beendet." — OK exits the app; relaunch via
+  `exec` + re-login. PEP shows its own "Bitte melden Sie sich neu an." re-login
+  (username prefilled, CEF → fraction clicks) and can hold foreground.
+- **Grid-scroll trap**: after OK on TfPolyRechte the Rollen grid may
+  scroll/re-select — a blind dbl-click then opens the WRONG role. Always verify
+  `read … TfPolyRechte > edit[0]` (Titel) before touching the matrix;
+  `button="Abbrechen"[0]` out if wrong. OK is also ambiguous → `button="OK"[0]`.
+- **Disconnected RDP session**: UIA reads still work, but screenshots fail
+  ("screen grab failed") and mouse/keys fail ("no active desktop"). Reactivate
+  by opening an RDP connection (macOS "Windows App" + .rdp file with
+  `full address`/`username` auto-connects with stored creds); `tscon` needs the
+  session password.
+- **Wire oracle**: verify permission toggles via
+  `/api/mobile/unified-time-recording/v1/days` `allowed_actions` (e.g. DELETE
+  vanishing per stamp) rather than matrix pixels — it proves exactly which
+  function your click hit.
