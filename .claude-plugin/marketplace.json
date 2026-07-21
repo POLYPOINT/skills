@@ -50,6 +50,12 @@
       "category": "testing"
     },
     {
+      "name": "improve",
+      "source": "./skills/improve",
+      "description": "Reflect on how the skills used in the current session performed and upload concrete HTML improvement plans to Whetstone for asynchronous human review — run /improve after any skill-driven task instead of baking a self-improvement section into every skill.",
+      "category": "development"
+    },
+    {
       "name": "babysit-pr",
       "source": "./skills/babysit-pr",
       "description": "Babysit an Azure DevOps pull request for a time window — watch for new review comments (CodeRabbit and human) and CI state changes via the az CLI, verify each finding against current code, fix still-valid issues minimally, reply to and resolve threads, and diagnose failing builds.",
