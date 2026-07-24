@@ -156,6 +156,17 @@ Textareas should fill the available width **when the layout calls for it** — f
 
 ---
 
+## Sliders
+
+Use `PPSliderComponent` / `PPRangeSliderComponent` (`@pdx/pp-slider`) for bounded numeric values and intervals. These replace `mat-slider`.
+
+- Use sliders **only for small predefined ranges** — a large or unbounded numeric entry stays an input or select.
+- The current value renders permanently above the handle (no hover tooltip); an optional unit line sits below it.
+- When precise entry matters, enable the synced `pp-select` via `maxLabelSelect` / `minLabelSelect` instead of adding a separate input.
+- Every handle needs an accessible name (`ariaLabel` or `ariaLabelledby`).
+
+---
+
 ## Tabs
 
 Use `PPTabGroupComponent` + `PPTabComponent` (`@pdx/pp-tab`) for all tabbed navigation. These replace `mat-tab-group` + `mat-tab`.
@@ -163,7 +174,7 @@ Use `PPTabGroupComponent` + `PPTabComponent` (`@pdx/pp-tab`) for all tabbed navi
 - Text size: `1rem`
 - Selected tab text color: `$pp-primary` (mint/teal)
 - Unselected tab text color: `$pp-secondary-300`
-- Disabled tab text color: `$pp-secondary-700`
+- Disabled tab text color: `$pp-secondary`
 - Active indicator: 2px bar in `$pp-primary` that slides beneath the active tab with a smooth transition
 - Tabs support optional leading icons (e.g. `pp-icon-dashboard`)
 - Use `fullWidth` when tabs should stretch to fill the container equally

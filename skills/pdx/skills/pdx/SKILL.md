@@ -2,7 +2,7 @@
 name: pdx
 description: This skill should be used when applying the PDX (POLYPOINT Design Experience) design system to Angular code — installing or using `@pdx/*` libraries, replacing Angular Material components with PDX equivalents, applying PDX design tokens or typography, building forms with `pp-form`, or auditing existing UI for PDX consistency. Triggers on phrases like "apply PDX styles", "use PDX libs", "use POLYPOINT components", "make it POLYPOINT-styled", "replace mat-button with pp-button", or "audit Material usage".
 metadata:
-  version: '1.11.0'
+  version: '1.12.0'
 ---
 
 # PDX — POLYPOINT Design Experience
@@ -13,6 +13,10 @@ Apply the PDX design system to Angular frontends. PDX provides reusable Angular 
 
 **When a PDX component exists, always use it instead of Angular Material or custom implementations.** Only fall back to Angular Material (with PDX theme applied) for components that do not yet have a PDX equivalent.
 
+## Report library gaps — never work around them silently
+
+When the `pp-*` component chosen for a use case doesn't support the behavior needed and a workaround is required (CSS that fights the component's internals, DOM queries into its markup, re-implementing a missing input/output, wrapper code that patches sizing or focus behavior), apply the workaround **and report it to the user**: name the component, the behavior it lacks, the workaround used, and whether that behavior should be implemented in the library instead. The user decides whether to file it as a PDX improvement — a workaround that goes unreported silently becomes permanent.
+
 ## Label rule
 
 PDX form controls (`pp-button`, `pp-checkbox`, `pp-radio-button`, `pp-input`, `pp-textarea`, `pp-select`, `pp-multiselect`, `pp-slide-toggle`, `pp-datepicker`, `pp-timepicker`, `pp-autocomplete`) take their visible text via a `label` input — **they do not project content**. `<pp-checkbox>Text</pp-checkbox>` and `<pp-button>Save</pp-button>` render with an empty label — the projected text is silently dropped. Always pass `label="..."` (or bind it: `[label]="'save' | translate"`), use a self-closing tag, and never wrap content. Add `id="..."` on `pp-checkbox` / `pp-radio-button` for `for`/`htmlFor` linkage. Exceptions: icon-only buttons (`pp-icon-button`, `pp-floating-action-button`) have no `label` input — identify them via `ariaLabel` instead; `pp-chip` falls back to `ng-content` when `label` is unset; `pp-button-toggle` takes its label via content projection (segmented-control children); `pp-badge` takes its text via content projection only (no `label` input); `pp-link` has a `label` input that falls back to displaying the `url` when unset; `pp-dialog` and `pp-tab` use content projection for **bodies**, not labels.
@@ -20,6 +24,32 @@ PDX form controls (`pp-button`, `pp-checkbox`, `pp-radio-button`, `pp-input`, `p
 ## Required / mandatory fields
 
 Mark mandatory form fields with the **`required` input** — it renders the label asterisk (`*`) for you; never hardcode `*` into a label string. Available on `pp-input`, `pp-textarea`, `pp-autocomplete`, `pp-datepicker`, and `pp-timepicker`. It is **purely visual** — wire the actual validator (`Validators.required` / a Signal Forms `validate()` rule) on the bound control yourself. `pp-select`, `pp-multiselect`, `pp-checkbox`, `pp-radio-group`, and `pp-slide-toggle` have **no** `required` input (and no asterisk mechanism) — for a mandatory select, enforce via the validator and surface the error state (`isError` + `supportingText`).
+
+## Row alignment with floating-label fields
+
+Floating-label fields (`pp-input`, `pp-textarea`, `pp-select`, `pp-multiselect`, `pp-autocomplete`, `pp-datepicker`, `pp-timepicker`) reserve **top-only** space for the floated label whenever `label` is non-empty (`labelSpace` default `'auto'`; `0.5rem`, `pp-textarea` `0.75rem`). Siblings that reserve nothing — `pp-button`, `pp-icon-button`, `pp-chip`, static text — sit visibly higher in a plain flex row. This is intrinsic to floating labels (Angular Material hands the same problem to the consumer). Because the reservation is top-only, the fix is always the same — **apply it automatically whenever a floating-label field shares a row with a non-reserving sibling**:
+
+- **Default: `align-items: flex-end`** on the row — bottom edges line up.
+
+  ```html
+  <div class="search-row">
+    <pp-input label="Search" leadingIcon="pp-icon-search" size="sm" />
+    <pp-button label="New" variant="filled" (click)="create()" />
+  </div>
+  ```
+
+  ```scss
+  .search-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+  }
+  ```
+
+- **Toolbars: `align-items: baseline`** — aligns the field's text baseline with the button label's baseline.
+- **Escape hatch: `labelSpace="never"`** on the field — drops the reservation entirely. Only for fields without a label, or when the floated label may overflow into empty space above.
+
+Caveats: `helperText` / `supportingText` extends the field **below** the control, so `flex-end` would align the sibling with the helper text — keep helper text off fields in mixed rows. For rows containing _only_ fields where some are label-less, set `labelSpace="always"` on the label-less ones instead (see [references/component-inventory.md](references/component-inventory.md)).
 
 ## Layout pitfalls (read before building forms)
 
@@ -54,6 +84,7 @@ Width control for `pp-input` / `pp-textarea` is **context-aware**: use `[fullWid
 | `@pdx/pp-top-navigation`     | `PPTopNavigationComponent` (app-shell top navigation with dropdown submenus)                                                                                                 |
 | `@pdx/pp-button-toggle`      | `PPButtonToggleComponent`, `PPButtonToggleGroupComponent` (segmented control / view-mode toggle)                                                                             |
 | `@pdx/pp-slide-toggle`       | `PPSlideToggleComponent` (on/off switch with optional label, ControlValueAccessor)                                                                                           |
+| `@pdx/pp-slider`             | `PPSliderComponent`, `PPRangeSliderComponent` (numeric value / interval sliders with value labels above the handles, optional synced `pp-select` inputs, CVA)                |
 | `@pdx/pp-paginator`          | `PPPaginatorComponent` (page navigation + page-size selector)                                                                                                                |
 | `@pdx/pp-datepicker`         | `PPDatepickerComponent` (single / range / month-year date picker, CDK overlay)                                                                                               |
 | `@pdx/pp-toolbar`            | `PPToolbarComponent` (app-shell desktop toolbar — station-select + logout), `PPToolbarMobileComponent` (mobile page header — back + title + actions + notifications)         |
@@ -93,6 +124,7 @@ Replace Angular Material components with PDX equivalents:
 | `mat-icon`, FontAwesome                              | `<span class="pp-icon pp-icon-*">`                                                        |
 | `mat-button-toggle` / `mat-button-toggle-group`      | `PPButtonToggleComponent` / `PPButtonToggleGroupComponent`                                |
 | `mat-slide-toggle`                                   | `PPSlideToggleComponent`                                                                  |
+| `mat-slider` (single / `<input matSliderThumb>` ×2)  | `PPSliderComponent` / `PPRangeSliderComponent` (`@pdx/pp-slider`)                         |
 | `mat-paginator`                                      | `PPPaginatorComponent`                                                                    |
 | `mat-datepicker` / `mat-date-range-picker`           | `PPDatepickerComponent` (`type="single" \| "range" \| "month-year"`)                      |
 | `mat-autocomplete`                                   | `PPAutocompleteComponent`                                                                 |

@@ -112,7 +112,34 @@ Don't blanket-apply `fullWidth` everywhere — a full-width input inside a narro
 
 ### Mixed labeled / label-less rows — `labelSpace`
 
-`pp-input` and `pp-textarea` reserve 8px above the field for the floating-label notch only when `label` is non-empty. In a row that mixes labeled and label-less inputs aligned with `align-items: center`, the label-less fields sit higher than the labeled ones. Pass `labelSpace="always"` on the label-less inputs in such a row to keep them vertically aligned. Use `labelSpace="never"` only for tight legacy layouts that already account for the overflow; the default `'auto'` is correct everywhere else. `pp-select` and `pp-multiselect` have the same `labelSpace` input (`@pdx/pp-select` ≥ 1.3) for rows mixing inputs and selects.
+Floating-label fields reserve **top-only** space for the floating-label notch when `label` is non-empty (`labelSpace` default `'auto'`; 8px — `pp-textarea` 12px). All seven field components have the `labelSpace` input: `pp-input` / `pp-textarea`, `pp-select` / `pp-multiselect` (`@pdx/pp-select` ≥ 1.3), `pp-autocomplete` (≥ 1.2), `pp-datepicker` (≥ 2.1), and `pp-timepicker` (≥ 1.2).
+
+In a row that mixes labeled and label-less **fields** aligned with `align-items: center`, the label-less fields sit higher than the labeled ones. Pass `labelSpace="always"` on the label-less fields in such a row to keep them vertically aligned. Use `labelSpace="never"` only for tight legacy layouts that already account for the overflow; the default `'auto'` is correct everywhere else.
+
+### Fields beside buttons / chips / text — align the row `flex-end`
+
+A floating-label field next to a sibling that reserves no top space (`pp-button`, `pp-icon-button`, `pp-chip`, static text) won't line up — the field reserves 8px on top, the button doesn't. This is intrinsic to floating labels. Because the reservation is top-only, the fix is always the same — **apply it whenever a conversion puts a field and a non-reserving sibling on one row** (Delphi search bars, filter rows, edit+button pairs):
+
+```html
+<div class="search-row">
+  <pp-input [label]="'common.search' | translate" leadingIcon="pp-icon-search" size="sm" />
+  <pp-button [label]="'common.new' | translate" variant="filled" (click)="create()" />
+</div>
+```
+
+```scss
+.search-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+```
+
+- `align-items: flex-end` — the default; bottom edges line up.
+- `align-items: baseline` — for toolbar rows; aligns the field's text baseline with the button label's baseline.
+- `labelSpace="never"` on the field — escape hatch that drops the reservation; only for fields without a label or when the floated label may overflow into empty space above.
+
+Caveat: `helperText` / `supportingText` extends the field **below** the control, so `flex-end` would align the sibling with the helper text — keep helper text off fields in mixed rows.
 
 ### Read-only fields
 
@@ -270,6 +297,10 @@ private buildRowMenuItems(): PPMenuItem[] {
 
 Selection-based fallback: single-click selects the row/node, and a toolbar button acts on the selection. Use this when the action bar already exists (e.g. converted `TListPanel` CRUD toolbars).
 
+### Insert/edit feedback — `pp-table` row highlight
+
+Delphi grids keep the inserted/edited row in view implicitly; on the web the row can land on another page and the user loses it. `@pdx/pp-table` ≥ 1.2 covers this: give rows stable ids (`PPTableRow.id`) and set the table's `[highlight]` input after the mutation — `{ id, scrollIntoView: true }` after an insert (auto-jumps pagination to the row's page and scrolls to it), `{ id }` after an edit. Pass a **fresh object each time** or change detection won't re-trigger; `highlightDuration` (default 3000 ms) controls the fade. Pair with the `pp-snackbar` confirmation.
+
 ## pp-tab
 
 ```typescript
@@ -297,7 +328,7 @@ For consumer-managed content (no `ppTabContent` directive), use `[(selectedIndex
 
 ### Tabs inside dialogs — stabilize the height
 
-A Delphi `TPageControl` has a fixed pixel height, so its dialog never resizes on tab switches. `pp-tab-group` renders **only the active panel** into one shared `.pp-tab-group__body`, so a converted dialog sized by its content shrinks when the user switches to a shorter tab — a jarring jump the Delphi original never had. Fix it with a **grow-only `min-height` pin** on the tab body (there is no built-in input for this):
+A Delphi `TPageControl` has a fixed pixel height, so its dialog never resizes on tab switches. `pp-tab-group` renders **only the active panel** into one shared `.pp-tab-group__body`, so a converted dialog sized by its content shrinks when the user switches to a shorter tab — a jarring jump the Delphi original never had. Fix it with a **grow-only `min-height` pin** on the tab body (there is no built-in input for this — a library gap; mention it in the conversion summary per § Report PDX library gaps):
 
 ```typescript
 private readonly host = inject(ElementRef<HTMLElement>);
@@ -338,9 +369,11 @@ import { PPMenuComponent, PPMenuItem } from '@pdx/pp-menu';
 <pp-menu #contextMenu [items]="menuItems()" (itemSelect)="onMenuAction($event)" />
 ```
 
-`PPTreeComponent` displays hierarchical data with selection, expansion, drag-and-drop reordering, sorting, and context menus. Data via `TreeData[]`. The `moreMenu` input accepts a `PPMenuComponent` reference — the tree node toggles `isOpen` and sets `triggerElement` automatically.
+`PPTreeComponent` displays hierarchical data with selection, expansion, drag-and-drop reordering, and context menus. Data via `TreeData[]`. The `moreMenu` input accepts a `PPMenuComponent` reference — the tree node toggles `isOpen` and sets `triggerElement` automatically.
 
-When `pp-tree` doesn't expose a feature you need (custom node templates, lazy loading via `childrenAccessor`, etc.), see the `mat-tree` recipe in [angular-conventions.md](angular-conventions.md).
+**No sort feature** (`@pdx/pp-tree` v3 removed `showSortButton` / `sortNode` / `sortNodeInTree`): Delphi sort up/down buttons next to a tree become toolbar `pp-icon-button`s that reorder the `TreeData[]` signal yourself.
+
+When `pp-tree` doesn't expose a feature you need (custom node templates, lazy loading via `childrenAccessor`, etc.), see the `mat-tree` recipe in [angular-conventions.md](angular-conventions.md) — and report the gap (see § Report PDX library gaps below).
 
 ## pp-expansion-panel
 
@@ -376,6 +409,40 @@ import { PPSlideToggleComponent } from '@pdx/pp-slide-toggle';
 On/off switch for binary settings. Implements `ControlValueAccessor` — bind via `[formField]` for Signal Forms, `[formControl]` / `formControlName` for reactive forms, or two-way `[(checked)]` for non-form usage. Sizes: `'lg'` (default, 52×32) and `'sm'` (34×20). `labelPosition` can be `'before'` (left) or `'after'` (right, default).
 
 **Do not blanket-replace `TCheckBox`.** Many Delphi checkboxes are opt-in choices (terms acceptance, multi-select filters) — those stay as `pp-checkbox`. Use `pp-slide-toggle` only when the semantics are "this setting is on/off" (notifications enabled, dark mode, auto-save).
+
+## pp-slider / pp-range-slider
+
+```typescript
+import { PPSliderComponent, PPRangeSliderComponent, PPSliderRange } from '@pdx/pp-slider';
+
+protected readonly maxShifts = new FormControl<number | null>(10);
+protected readonly shiftWindow = new FormControl<PPSliderRange | null>({ start: 2, end: 8 });
+```
+
+```html
+<!-- single value — replaces TTrackBar -->
+<pp-slider [min]="0" [max]="15" unit="Shifts" [ariaLabel]="'shifts.max' | translate" [formControl]="maxShifts" />
+
+<!-- with a synced pp-select for precise entry -->
+<pp-slider
+  [min]="0"
+  [max]="15"
+  [ariaLabel]="'shifts.max' | translate"
+  [maxLabelSelect]="'shifts.max' | translate"
+  [formControl]="maxShifts"
+/>
+
+<!-- interval — replaces a min/max TTrackBar (or TSpinEdit) pair -->
+<pp-range-slider
+  [min]="0"
+  [max]="15"
+  [ariaLabelStart]="'shifts.min' | translate"
+  [ariaLabelEnd]="'shifts.max' | translate"
+  [formControl]="shiftWindow"
+/>
+```
+
+Both are `ControlValueAccessor`s: `pp-slider` commits a `number` (falls back to `min` on `null`); `pp-range-slider` commits a `PPSliderRange` (`{ start, end }`; `null` = whole range). The current value renders permanently above the handle — there is no hover tooltip. Provide `ariaLabel` (or `ariaLabelledby`) on every handle. A non-empty `maxLabelSelect` / `minLabelSelect` renders a synced `pp-select` for precise entry — use it whenever the Delphi source pairs the track bar with a numeric edit. Use sliders only for small predefined ranges; a large or unbounded numeric entry stays an input/select.
 
 ## pp-button-toggle / pp-button-toggle-group
 
@@ -633,6 +700,10 @@ Reserve `<pp-form-actions>` for OK / Cancel / Save / Next; use `<aside>` for the
 
 `@pdx/pp-sidenav` and `@pdx/pp-top-navigation` are app-shell components, never emitted from a Delphi conversion. See [component-mapping.md § Shell-level components](component-mapping.md#shell-level-components) for the full rule.
 
+## Report PDX library gaps
+
+When the `pp-*` component chosen for a use case doesn't support the behavior needed and a workaround is required — CSS that fights the component's internals, DOM queries into its markup (like the tab height-stabilization pin above), re-implementing a missing input/output, wrapper code that patches sizing or focus behavior — apply the workaround **and report it to the user** in the conversion summary: name the component, the behavior it lacks, the workaround used, and whether that behavior should be implemented in the library instead. The user decides whether to file it as a PDX improvement — a workaround that goes unreported silently becomes permanent.
+
 ## General rules summary
 
 - Prefer `@pdx/pp-button` over `MatButtonModule` for all buttons.
@@ -645,6 +716,7 @@ Reserve `<pp-form-actions>` for OK / Cancel / Save / Next; use `<aside>` for the
 - Prefer `@pdx/pp-list` over `MatListModule` / `MatSelectionList`.
 - Prefer `@pdx/pp-expansion-panel` over `MatExpansionModule`.
 - Prefer `@pdx/pp-slide-toggle` over `MatSlideToggleModule` for on/off settings — but keep `pp-checkbox` for opt-in checkboxes.
+- Prefer `@pdx/pp-slider` over `MatSliderModule` for bounded numeric values and intervals (`pp-slider` / `pp-range-slider`).
 - Prefer `@pdx/pp-paginator` over `MatPaginatorModule` for paged tables and lists.
 - For segmented-control / view-mode toggles, use `@pdx/pp-button-toggle` + `pp-button-toggle-group` (not for form radios — those use `pp-radio-group`). Children of `pp-button-toggle-group` take their label via content projection, not a `label` input.
 - Wrap every converted `TForm` body in `<pp-form>` with the structural primitives.
