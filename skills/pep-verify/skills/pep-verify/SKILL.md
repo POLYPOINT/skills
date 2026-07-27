@@ -9,7 +9,7 @@ description: >-
   companion pep-driver toolchain.
 compatibility: Designed for Claude Code on macOS. Requires the companion `pep-driver` toolchain (the `pep` CLI + agent), `sshpass` (SSH boxes) or `pywinrm` (WinRM boxes), access to the ansible inventory for tenant creds, and an open RDP session on the box while driving.
 metadata:
-  version: '1.1.1'
+  version: '1.1.2'
 ---
 
 # PEP verify / drive
@@ -37,7 +37,10 @@ element's own rectangle.
 Run this skill's `scripts/preflight.sh` with the tenant name. Installs land in different places, so locate it once:
 
 ```bash
-PF=$(find ~/.claude -path '*pep-verify*/scripts/preflight.sh' 2>/dev/null | head -1)
+PF="$CLAUDE_PLUGIN_ROOT/skills/pep-verify/scripts/preflight.sh"   # set when running as a plugin
+# fallback: sorted so the pinned plugins/cache/ install wins over the marketplaces/ checkout,
+# which can be a newer revision than the SKILL.md you are reading
+[ -x "$PF" ] || PF=$(find ~/.claude -path '*pep-verify*/scripts/preflight.sh' 2>/dev/null | sort | head -1)
 "$PF" <tenant>          # e.g. ct-zinc-master (SSH), preview-feature (WinRM)
 ```
 
