@@ -218,7 +218,7 @@ Prominent FAB for primary screen actions. Selector is the full **`pp-floating-ac
 
 ---
 
-## @pdx/pp-input (v2.4.1)
+## @pdx/pp-input (v2.4.2)
 
 Text inputs and textareas with validation, helper text, tooltips, and forms integration.
 
@@ -230,6 +230,8 @@ Inputs render at their **natural width** by default. Pick the width strategy fro
 - **Standalone, in a toolbar / narrow filter / inline search** — leave `fullWidth` off and pick `size="sm"` (default) or `size="lg"` for the intrinsic width that fits the container.
 
 Don't blanket-apply `fullWidth` everywhere — a full-width input inside a narrow toolbar visually overflows; a natural-width input inside a 30 rem form-block looks broken. Same rule applies to `pp-textarea`.
+
+**Row alignment:** the floating-label reservation (`labelSpace`) is top-only. When a field shares a row with a sibling that reserves nothing (`pp-button`, `pp-icon-button`, `pp-chip`, static text), align the row with `align-items: flex-end` (or `baseline` in toolbars) — see "Row alignment with floating-label fields" in [../SKILL.md](../SKILL.md). For rows of fields only where some are label-less, use `labelSpace="always"` on the label-less ones.
 
 ### Components
 
@@ -291,23 +293,23 @@ import { PPTextareaComponent } from '@pdx/pp-input';
 <pp-textarea label="Comments" [autoGrowth]="true" helperText="Tell us what you think" />
 ```
 
-| Input        | Type                            | Default     | Description                                                                                                                                                |
-| ------------ | ------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `label`      | `string`                        | required    | Field label                                                                                                                                                |
-| `autoGrowth` | `boolean`                       | `false`     | Auto-expanding height                                                                                                                                      |
-| `resizable`  | `boolean`                       | `false`     | User-resizable textarea                                                                                                                                    |
-| `helperText` | `string \| undefined`           | `undefined` | Guidance text below field                                                                                                                                  |
-| `tooltip`    | `string \| undefined`           | `undefined` | Hover hint text                                                                                                                                            |
-| `required`   | `boolean`                       | `false`     | Shows required marker                                                                                                                                      |
-| `optional`   | `boolean`                       | `false`     | Shows "(optional)"                                                                                                                                         |
-| `invalid`    | `boolean`                       | `false`     | Error state                                                                                                                                                |
-| `disabled`   | `boolean`                       | `false`     | Disabled state                                                                                                                                             |
-| `readonly`   | `boolean`                       | `false`     | Read-only state                                                                                                                                            |
-| `fullWidth`  | `boolean`                       | `false`     | Full-width field                                                                                                                                           |
-| `value`      | `string`                        | `''`        | Current value                                                                                                                                              |
-| `id`         | `string \| undefined`           | `undefined` | Unique identifier for element                                                                                                                              |
-| `ariaLabel`  | `string \| undefined`           | `undefined` | Accessibility label                                                                                                                                        |
-| `labelSpace` | `'auto' \| 'always' \| 'never'` | `'auto'`    | Same semantics as on `pp-input` — reserves the floating-label notch space. Use `'always'` to align a label-less textarea with neighbouring labeled fields. |
+| Input        | Type                            | Default     | Description                                                                                                                                                                      |
+| ------------ | ------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `label`      | `string`                        | required    | Field label                                                                                                                                                                      |
+| `autoGrowth` | `boolean`                       | `false`     | Auto-expanding height                                                                                                                                                            |
+| `resizable`  | `boolean`                       | `false`     | User-resizable textarea                                                                                                                                                          |
+| `helperText` | `string \| undefined`           | `undefined` | Guidance text below field                                                                                                                                                        |
+| `tooltip`    | `string \| undefined`           | `undefined` | Hover hint text                                                                                                                                                                  |
+| `required`   | `boolean`                       | `false`     | Shows required marker                                                                                                                                                            |
+| `optional`   | `boolean`                       | `false`     | Shows "(optional)"                                                                                                                                                               |
+| `invalid`    | `boolean`                       | `false`     | Error state                                                                                                                                                                      |
+| `disabled`   | `boolean`                       | `false`     | Disabled state                                                                                                                                                                   |
+| `readonly`   | `boolean`                       | `false`     | Read-only state                                                                                                                                                                  |
+| `fullWidth`  | `boolean`                       | `false`     | Full-width field                                                                                                                                                                 |
+| `value`      | `string`                        | `''`        | Current value                                                                                                                                                                    |
+| `id`         | `string \| undefined`           | `undefined` | Unique identifier for element                                                                                                                                                    |
+| `ariaLabel`  | `string \| undefined`           | `undefined` | Accessibility label                                                                                                                                                              |
+| `labelSpace` | `'auto' \| 'always' \| 'never'` | `'auto'`    | Same tri-state semantics as on `pp-input` — but the textarea reserves `0.75rem` (12px), not 8px. Use `'always'` to align a label-less textarea with neighbouring labeled fields. |
 
 **Output:** `textareaChange` emits the new value.
 
@@ -758,9 +760,11 @@ Provides overlay and backdrop styling. The `as pp-dialog` alias is **required** 
 
 ---
 
-## @pdx/pp-tree (v2.0.1)
+## @pdx/pp-tree (v3.1.0)
 
-Flexible tree component for hierarchical data. Supports selection, expansion, drag-and-drop, sorting, and context menus via `PPMenuComponent`.
+Flexible tree component for hierarchical data. Supports selection, expansion, drag-and-drop reordering, and context menus via `PPMenuComponent`.
+
+> **v3 (PDX-83) breaking changes:** the sort feature is gone — `showSortButton` input, `sortNode` output, `NodeSortEvent`, `SORT_DIRECTIONS`, and `sortNodeInTree` no longer exist. Internal CSS classes were renamed to `pp-`-prefixed BEM (`pp-tree-node__content--selected` etc.) — any consumer CSS targeting old internal class names breaks. Nodes now render pressed-state feedback for mouse and touch internally.
 
 ### Components
 
@@ -793,9 +797,8 @@ import { PPMenuComponent, PPMenuItem } from '@pdx/pp-menu';
 | `folderMode`     | `boolean`                 | `false`  | Folder/document icons                                                                                                                                                                              |
 | `showDragButton` | `boolean`                 | `false`  | Show drag handles                                                                                                                                                                                  |
 | `showAddButton`  | `boolean`                 | `false`  | Show add child buttons (respects per-node `hideAddButton`)                                                                                                                                         |
-| `showSortButton` | `boolean`                 | `false`  | Show sort up/down buttons                                                                                                                                                                          |
 | `moreMenu`       | `PPMenuComponent \| null` | `null`   | Reference to a `PPMenuComponent` instance for the "more actions" context menu. The tree node toggles `isOpen` and sets `triggerElement` automatically; items and events are owned by the consumer. |
-| `ariaLabel*`     | `string \| null`          | `null`   | Various ARIA labels for buttons (drag, add, more, sort up/down, expand, collapse)                                                                                                                  |
+| `ariaLabel*`     | `string \| null`          | `null`   | Five ARIA label inputs for the node buttons: `ariaLabelDrag`, `ariaLabelAdd`, `ariaLabelMore`, `ariaLabelExpand`, `ariaLabelCollapse`                                                              |
 
 **Outputs:**
 
@@ -804,7 +807,6 @@ import { PPMenuComponent, PPMenuItem } from '@pdx/pp-menu';
 - `collapseNode` — emits node id
 - `addNode` — emits node id
 - `moveNode` — emits `NodeMoveEvent`
-- `sortNode` — emits `NodeSortEvent`
 - `treeChange` — emits updated full tree
 
 #### PPTreeNodeComponent
@@ -830,35 +832,23 @@ interface NodeMoveEvent {
   position: 'before' | 'after' | 'inside';
 }
 
-interface NodeSortEvent {
-  nodeId: string;
-  direction: 'up' | 'down';
-}
-
 const DROP_POSITIONS = { BEFORE: 'before', AFTER: 'after', INSIDE: 'inside' } as const;
 type DropPosition = (typeof DROP_POSITIONS)[keyof typeof DROP_POSITIONS];
-
-const SORT_DIRECTIONS = { UP: 'up', DOWN: 'down' } as const;
-type SortDirection = (typeof SORT_DIRECTIONS)[keyof typeof SORT_DIRECTIONS];
 ```
 
 ### Tree update utilities
 
-The tree emits `NodeMoveEvent` and `NodeSortEvent` but does not mutate `data` itself. Use these pure helpers to compute the new tree:
+The tree emits `NodeMoveEvent` but does not mutate `data` itself. Use the pure helper to compute the new tree:
 
 ```typescript
-import { moveNodeInTree, sortNodeInTree } from '@pdx/pp-tree';
+import { moveNodeInTree } from '@pdx/pp-tree';
 
 protected onMove(event: NodeMoveEvent): void {
   this.treeData.set(moveNodeInTree(this.treeData(), event));
 }
-
-protected onSort(event: NodeSortEvent): void {
-  this.treeData.set(sortNodeInTree(this.treeData(), event));
-}
 ```
 
-Both functions take `readonly TreeData[]` and return a new `TreeData[]` — safe for signal updates.
+`moveNodeInTree` takes `readonly TreeData[]` and returns a new `TreeData[]` — safe for signal updates. Alternatively, the `treeChange` output already emits the pre-computed new tree after a drag — binding `(treeChange)` alone is enough when no custom move validation is needed.
 
 ### Peer Dependencies
 
@@ -1169,7 +1159,7 @@ enum ListSize {
 
 ---
 
-## @pdx/pp-tab (v1.2.0)
+## @pdx/pp-tab (v1.2.2)
 
 Secondary tab navigation component with icons, notification badges, two sizes, disabled states, content panels, keyboard navigation, and full accessibility.
 
@@ -1290,9 +1280,11 @@ Only apply this when the surrounding container derives its height from the tab c
 ### Design Tokens
 
 - **Text (unselected/enabled):** `$pp-secondary-300`
-- **Text (selected/hover):** `$pp-primary`
-- **Text (disabled):** `$pp-secondary-700`
-- **Focus ring:** `$pp-primary-300` outline
+- **Text (selected):** `$pp-primary`; hovering a **selected** tab shifts text/icon to `$pp-primary-300`
+- **Hover (unselected tab):** text keeps its color; background `$pp-primary-990`
+- **Focus:** text/icon `$pp-primary-300`, background `$pp-primary-960`, `0.125rem` outline `$pp-primary-300` (offset `-0.125rem`)
+- **Pressed:** background `$pp-primary-920`
+- **Text (disabled):** `$pp-secondary`
 - **Indicator (selected):** `$pp-primary`
 - **Divider:** `$pp-secondary-800`
 
@@ -1789,6 +1781,114 @@ interface PPSlideToggleChangeEvent {
 
 ---
 
+## @pdx/pp-slider (v2.0.0)
+
+Sliders for selecting a numeric value (`pp-slider`) or an interval (`pp-range-slider`) within a predefined range. The current value renders **permanently** above each handle (there is no hover tooltip), with an optional unit line below it; optional synced `pp-select` dropdowns at the track ends allow precise entry. Both components are signal-based, standalone, and implement `ControlValueAccessor`. Use sliders only for small predefined ranges — when precise input matters, enable the synced select.
+
+### Components
+
+#### PPSliderComponent
+
+```typescript
+import { PPSliderComponent, PPSliderChangeEvent } from '@pdx/pp-slider';
+```
+
+```html
+<pp-slider [min]="0" [max]="15" unit="Shifts" ariaLabel="Shifts" [(value)]="shifts" />
+<pp-slider [min]="0" [max]="15" unit="Shifts" ariaLabel="Shifts" maxLabelSelect="Maximum" [(value)]="shifts" />
+<pp-slider [min]="0" [max]="15" unit="Shifts" ariaLabel="Shifts" [formControl]="shiftsCtrl" />
+```
+
+| Input            | Type                  | Default     | Description                                                                                                                                        |
+| ---------------- | --------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`             | `string`              | `''`        | Identifier reported in `sliderChange`; auto-generated (`pp-slider-*`) when empty.                                                                  |
+| `min`            | `number`              | `0`         | Lowest selectable value.                                                                                                                           |
+| `max`            | `number`              | `100`       | Highest selectable value — always reachable even when the range isn't an exact multiple of `step`.                                                 |
+| `step`           | `number`              | `1`         | Distance between values, anchored at `min`. Fractional steps (`0.1`, `0.5`, …) are fully supported; non-positive/non-finite values fall back to 1. |
+| `unit`           | `string`              | `''`        | Unit line under the value label above the handle; empty hides it. Truncated with an ellipsis above ~9 characters.                                  |
+| `error`          | `boolean`             | `false`     | Error styling + `aria-invalid` on the handle.                                                                                                      |
+| `disabled`       | `boolean`             | `false`     | Disables the slider (combined with the form disabled state — either source disables).                                                              |
+| `maxLabelSelect` | `string`              | `''`        | Floating label of the synced `pp-select` below the track end; a non-empty (trimmed) value renders the select.                                      |
+| `ariaLabel`      | `string \| undefined` | `undefined` | Accessible name of the handle — provide this or `ariaLabelledby`.                                                                                  |
+| `ariaLabelledby` | `string \| undefined` | `undefined` | ID of a visible labeling element.                                                                                                                  |
+| `value`          | `number \| undefined` | `undefined` | Two-way via `[(value)]`. The resolved value defaults to `min` and follows `min` changes until something sets it explicitly (binding, forms, user). |
+
+**Outputs:**
+
+- `valueChange` — emits the new `number` on every user change (companion of `[(value)]`)
+- `sliderChange` — emits `PPSliderChangeEvent` (`{ id, value }`) on handle drag, track click, keyboard, or synced select — only when the snapped value actually changed
+
+Note: `[(value)]` is a hand-rolled two-way binding (aliased input + `valueChange` output), **not** a `model()` — the class property `value` is a readonly `Signal<number>`.
+
+#### PPRangeSliderComponent
+
+```typescript
+import { PPRangeSliderComponent, PPSliderRange, PPRangeSliderChangeEvent } from '@pdx/pp-slider';
+```
+
+```html
+<pp-range-slider
+  [min]="0"
+  [max]="15"
+  unit="Shifts"
+  ariaLabelStart="Minimum shifts"
+  ariaLabelEnd="Maximum shifts"
+  minLabelSelect="Minimum"
+  maxLabelSelect="Maximum"
+  [(value)]="shiftsRange"
+/>
+```
+
+| Input                                       | Type                    | Default     | Description                                                                                  |
+| ------------------------------------------- | ----------------------- | ----------- | -------------------------------------------------------------------------------------------- |
+| `id`                                        | `string`                | `''`        | Identifier reported in `rangeSliderChange`; auto-generated (`pp-range-slider-*`) when empty. |
+| `min` / `max` / `step` / `unit`             | as on `pp-slider`       | —           | Same semantics as on `pp-slider`.                                                            |
+| `error` / `disabled`                        | `boolean`               | `false`     | Error styling / disabled on both handles.                                                    |
+| `minLabelSelect` / `maxLabelSelect`         | `string`                | `''`        | Labels of the synced min/max `pp-select`s; each renders only when its label is non-empty.    |
+| `ariaLabelStart` / `ariaLabelEnd`           | `string \| undefined`   | `undefined` | Accessible names of the start/end handles.                                                   |
+| `ariaLabelledbyStart` / `ariaLabelledbyEnd` | `string \| undefined`   | `undefined` | Visible-label IDs for the start/end handles.                                                 |
+| `value`                                     | `PPSliderRange \| null` | `null`      | `ModelSignal`, two-way `[(value)]`. `null` = whole range selected.                           |
+
+**Outputs:**
+
+- `valueChange` — the `value` model's implicit output (`PPSliderRange | null`)
+- `rangeSliderChange` — emits `PPRangeSliderChangeEvent` (`{ id, value }`) when the user changes the interval; only when the effective interval actually changed. A no-op interaction on a `null` value does not materialize it.
+
+Handles cannot cross — each is clamped by the other (they may meet on the same value); keyboard movement is bounded the same way.
+
+### Models
+
+```typescript
+interface PPSliderRange {
+  readonly start: number;
+  readonly end: number; // never smaller than start
+}
+
+interface PPSliderChangeEvent {
+  readonly id: string;
+  readonly value: number;
+}
+
+interface PPRangeSliderChangeEvent {
+  readonly id: string;
+  readonly value: PPSliderRange;
+}
+```
+
+### Behavior notes
+
+- **Synced selects are label-gated** — they render only while the corresponding `*LabelSelect` input is non-empty after trimming. Ranges up to 300 values list all options; larger ranges show a window of 100 steps on each side of the current value (max 201 items). On the range slider, each select's options are additionally capped by the other handle so the selects cannot cross.
+- **Merged range labels:** when the two per-handle value labels would overlap, they merge into a single centered `start – end` label (collapsing to one value when the handles meet).
+- **Keyboard:** arrows = 1 step, `PageUp` / `PageDown` = 10 steps, `Home` / `End` = bounds.
+- **Disabled:** `not-allowed` cursor; the slider stays focusable (`aria-disabled`) and the synced selects are disabled too; focusing while disabled does not mark the control touched.
+- **Forms:** `pp-slider` form value is `number` (`writeValue(null)` falls back to `min`); `pp-range-slider` form value is `PPSliderRange | null` (`null` selects the whole range). Inside a form, the form control's value takes precedence over the input binding.
+
+### Peer Dependencies
+
+`@angular/cdk`, `@angular/core`, `@angular/forms`, `@pdx/pp-select`, `@pdx/pp-theme`
+
+---
+
 ## @pdx/pp-paginator (v1.0.1)
 
 Page navigation with previous/next buttons, numeric page list (with overflow ellipses), and a page-size dropdown. Pair with `mat-table` for paged tables. Replaces `mat-paginator`.
@@ -1851,7 +1951,7 @@ interface PPPaginatorPageEvent {
 
 ---
 
-## @pdx/pp-datepicker (v2.0.0)
+## @pdx/pp-datepicker (v2.1.0)
 
 Signal-based, zoneless-safe date picker with three selection modes — `single` (one calendar day), `range` (a start/end pair), and `month-year` (a month + year combo with **no day selection** — the panel skips the day grid and walks the user through month → year). The calendar overlay is rendered via `@angular/cdk/overlay` with focus trapping, scroll repositioning, and click-outside / `Escape` to close. Weekday/month labels come from `Intl.DateTimeFormat` — no third-party date library required.
 
@@ -1877,22 +1977,23 @@ import { PPDatepickerComponent, PPDateRange, PPDatepickerChangeEvent, PPDatepick
 <pp-datepicker label="Birthday" [formControl]="birthdayCtrl" [required]="true" min="1900-01-01" />
 ```
 
-| Input            | Type                                  | Default    | Description                                                                                                                                                                                                                                                                                           |
-| ---------------- | ------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `type`           | `'single' \| 'range' \| 'month-year'` | `'single'` | Selection type. `single` picks one calendar day → `Date`. `range` picks a start + end day → `PPDateRange`. `month-year` picks **only a month + year, no day** → `Date` anchored to day 1 of the picked month at 00:00 (anchor day is an implementation detail; the user never sees or selects a day). |
-| `label`          | `string`                              | `'Date'`   | Floating label rendered inside the trigger outline.                                                                                                                                                                                                                                                   |
-| `disabled`       | `boolean`                             | `false`    | Disables the trigger.                                                                                                                                                                                                                                                                                 |
-| `readonly`       | `boolean`                             | `false`    | Trigger is focusable but cannot open the overlay.                                                                                                                                                                                                                                                     |
-| `invalid`        | `boolean`                             | `false`    | Renders the trigger in error styling.                                                                                                                                                                                                                                                                 |
-| `required`       | `boolean`                             | `false`    | Decorates the label with a required asterisk. Purely visual — wire `Validators.required` on the bound control to enforce.                                                                                                                                                                             |
-| `optional`       | `boolean`                             | `false`    | Decorates the label with a "(optional)" hint. `required` wins if both are set.                                                                                                                                                                                                                        |
-| `helperText`     | `string`                              | `''`       | Helper text rendered below the trigger.                                                                                                                                                                                                                                                               |
-| `min`            | `Date \| null`                        | `null`     | Inclusive lower bound. Earlier dates render disabled.                                                                                                                                                                                                                                                 |
-| `max`            | `Date \| null`                        | `null`     | Inclusive upper bound. Later dates render disabled.                                                                                                                                                                                                                                                   |
-| `firstDayOfWeek` | `PPDayOfWeek` (`0`-`6`)               | `1`        | First day of the week (`0` = Sunday … `6` = Saturday). Default Monday.                                                                                                                                                                                                                                |
-| `locale`         | `PPSupportedLocale \| string`         | `'en'`     | Locale for weekday/month/header labels. Canonical: `'de-CH' \| 'en' \| 'fr' \| 'it' \| 'nl'`. Arbitrary BCP-47 tags (`'de-DE'`, `'en-US'`, …) are normalised internally.                                                                                                                              |
-| `todayLabel`     | `string`                              | `'Today'`  | Label of the "today" shortcut button in day mode.                                                                                                                                                                                                                                                     |
-| `value`          | `Date \| PPDateRange \| null`         | `null`     | `ModelSignal` — two-way bound selection. Shape varies by `type`.                                                                                                                                                                                                                                      |
+| Input            | Type                                                       | Default    | Description                                                                                                                                                                                                                                                                                           |
+| ---------------- | ---------------------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`           | `'single' \| 'range' \| 'month-year'`                      | `'single'` | Selection type. `single` picks one calendar day → `Date`. `range` picks a start + end day → `PPDateRange`. `month-year` picks **only a month + year, no day** → `Date` anchored to day 1 of the picked month at 00:00 (anchor day is an implementation detail; the user never sees or selects a day). |
+| `label`          | `string`                                                   | `'Date'`   | Floating label rendered inside the trigger outline.                                                                                                                                                                                                                                                   |
+| `disabled`       | `boolean`                                                  | `false`    | Disables the trigger.                                                                                                                                                                                                                                                                                 |
+| `readonly`       | `boolean`                                                  | `false`    | Trigger is focusable but cannot open the overlay.                                                                                                                                                                                                                                                     |
+| `invalid`        | `boolean`                                                  | `false`    | Renders the trigger in error styling.                                                                                                                                                                                                                                                                 |
+| `required`       | `boolean`                                                  | `false`    | Decorates the label with a required asterisk. Purely visual — wire `Validators.required` on the bound control to enforce.                                                                                                                                                                             |
+| `optional`       | `boolean`                                                  | `false`    | Decorates the label with a "(optional)" hint. `required` wins if both are set.                                                                                                                                                                                                                        |
+| `helperText`     | `string`                                                   | `''`       | Helper text rendered below the trigger.                                                                                                                                                                                                                                                               |
+| `min`            | `Date \| null`                                             | `null`     | Inclusive lower bound. Earlier dates render disabled.                                                                                                                                                                                                                                                 |
+| `max`            | `Date \| null`                                             | `null`     | Inclusive upper bound. Later dates render disabled.                                                                                                                                                                                                                                                   |
+| `firstDayOfWeek` | `PPDayOfWeek` (`0`-`6`)                                    | `1`        | First day of the week (`0` = Sunday … `6` = Saturday). Default Monday.                                                                                                                                                                                                                                |
+| `locale`         | `PPSupportedLocale \| string`                              | `'en'`     | Locale for weekday/month/header labels. Canonical: `'de-CH' \| 'en' \| 'fr' \| 'it' \| 'nl'`. Arbitrary BCP-47 tags (`'de-DE'`, `'en-US'`, …) are normalised internally.                                                                                                                              |
+| `labelSpace`     | `PPDatepickerLabelSpace` (`'auto' \| 'always' \| 'never'`) | `'auto'`   | Reserves `0.5rem` (8px) above the trigger for the floating-label notch — same tri-state semantics as `pp-input`. `'auto'` reserves when `label` is non-empty after trimming (whitespace-only labels count as absent); `'always'` keeps label-less triggers aligned in mixed rows; `'never'` opts out. |
+| `todayLabel`     | `string`                                                   | `'Today'`  | Label of the "today" shortcut button in day mode.                                                                                                                                                                                                                                                     |
+| `value`          | `Date \| PPDateRange \| null`                              | `null`     | `ModelSignal` — two-way bound selection. Shape varies by `type`.                                                                                                                                                                                                                                      |
 
 **Outputs:**
 
@@ -1922,7 +2023,7 @@ interface PPDatepickerChangeEvent {
 
 ### Also exported
 
-Besides the types above, `@pdx/pp-datepicker` exports `PPDatepickerValue` (`Date | PPDateRange | null`), the locale helpers `SUPPORTED_LOCALES`, `DEFAULT_SUPPORTED_LOCALE`, `LOCALE_ALIAS_MAP`, and the `resolveLocale` function used to normalise an arbitrary BCP-47 tag to a supported locale.
+Besides the types above, `@pdx/pp-datepicker` exports `PPDatepickerValue` (`Date | PPDateRange | null`), `PPDatepickerLabelSpace` (`'auto' | 'always' | 'never'`), the locale helpers `SUPPORTED_LOCALES`, `DEFAULT_SUPPORTED_LOCALE`, `LOCALE_ALIAS_MAP`, and the `resolveLocale` function used to normalise an arbitrary BCP-47 tag to a supported locale.
 
 ### Keyboard
 
@@ -1938,7 +2039,7 @@ Range selection requires two clicks: the first anchors the start, the second clo
 
 ---
 
-## @pdx/pp-autocomplete (v1.1.1)
+## @pdx/pp-autocomplete (v1.2.0)
 
 Free-text combobox with filtered suggestions. The form value is always the input string; selecting an item writes its display value into the field, and `selectionChange` emits the matched item in parallel. Built on top of `@pdx/pp-input`.
 
@@ -1954,20 +2055,21 @@ import { PPAutocompleteComponent, AutocompleteItem } from '@pdx/pp-autocomplete'
 <pp-autocomplete label="Search" [items]="items" [formControl]="query" (selectionChange)="onSelect($event)" />
 ```
 
-| Input        | Type                                                 | Default                               | Description                                                                                                                                           |
-| ------------ | ---------------------------------------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `value`      | `string`                                             | `''`                                  | Field text; two-way via `[(value)]`. A full, case-insensitive match marks that item as the selection.                                                 |
-| `items`      | `AutocompleteItem[]`                                 | `[]`                                  | Items to filter and offer as suggestions.                                                                                                             |
-| `label`      | `string`                                             | required                              | Floating label (also drives `aria-label`).                                                                                                            |
-| `helperText` | `string`                                             | `''`                                  | Helper text below the field.                                                                                                                          |
-| `size`       | `'sm' \| 'lg'`                                       | `'lg'`                                | Field size — matches `pp-input`.                                                                                                                      |
-| `fullWidth`  | `boolean`                                            | `false`                               | Stretch field + dropdown to the host width; the dropdown panel matches the input width.                                                               |
-| `disabled`   | `boolean`                                            | `false`                               | Disables the field and panel.                                                                                                                         |
-| `readonly`   | `boolean`                                            | `false`                               | Renders the field readonly.                                                                                                                           |
-| `required`   | `boolean`                                            | `false`                               | Forwarded to the inner `pp-input`, which renders the label asterisk and the native `required` attribute. Purely visual — wire the validator yourself. |
-| `invalid`    | `boolean`                                            | `false`                               | Error visual state.                                                                                                                                   |
-| `displayFn`  | `(item: AutocompleteItem) => string`                 | `(i) => i.label`                      | Maps an item to the text shown when it is selected.                                                                                                   |
-| `filterFn`   | `(query: string, item: AutocompleteItem) => boolean` | case-insensitive substring on `label` | Predicate used to filter items against the query.                                                                                                     |
+| Input        | Type                                                  | Default                               | Description                                                                                                                                                                                            |
+| ------------ | ----------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `value`      | `string`                                              | `''`                                  | Field text; two-way via `[(value)]`. A full, case-insensitive match marks that item as the selection.                                                                                                  |
+| `items`      | `AutocompleteItem[]`                                  | `[]`                                  | Items to filter and offer as suggestions.                                                                                                                                                              |
+| `label`      | `string`                                              | required                              | Floating label (also drives `aria-label`).                                                                                                                                                             |
+| `helperText` | `string`                                              | `''`                                  | Helper text below the field.                                                                                                                                                                           |
+| `size`       | `'sm' \| 'lg'`                                        | `'lg'`                                | Field size — matches `pp-input`.                                                                                                                                                                       |
+| `fullWidth`  | `boolean`                                             | `false`                               | Stretch field + dropdown to the host width; the dropdown panel matches the input width.                                                                                                                |
+| `disabled`   | `boolean`                                             | `false`                               | Disables the field and panel.                                                                                                                                                                          |
+| `readonly`   | `boolean`                                             | `false`                               | Renders the field readonly.                                                                                                                                                                            |
+| `required`   | `boolean`                                             | `false`                               | Forwarded to the inner `pp-input`, which renders the label asterisk and the native `required` attribute. Purely visual — wire the validator yourself.                                                  |
+| `invalid`    | `boolean`                                             | `false`                               | Error visual state.                                                                                                                                                                                    |
+| `labelSpace` | `PPInputLabelSpace` (`'auto' \| 'always' \| 'never'`) | `'auto'`                              | Forwarded to the inner `pp-input` — reserves `0.5rem` (8px) above the field for the floating-label notch. Same tri-state semantics as `pp-input`; the type is re-exported from `@pdx/pp-autocomplete`. |
+| `displayFn`  | `(item: AutocompleteItem) => string`                  | `(i) => i.label`                      | Maps an item to the text shown when it is selected.                                                                                                                                                    |
+| `filterFn`   | `(query: string, item: AutocompleteItem) => boolean`  | case-insensitive substring on `label` | Predicate used to filter items against the query.                                                                                                                                                      |
 
 **Outputs:**
 
@@ -1993,7 +2095,7 @@ interface AutocompleteItem {
 
 ---
 
-## @pdx/pp-timepicker (v1.1.2)
+## @pdx/pp-timepicker (v1.2.0)
 
 24h `HH:mm` time picker with a responsive surface. The trigger is a masked native input with a floating label; on desktop (`>= 768px`) it opens a CDK overlay with hour/minute columns, and on mobile it opens an Angular Material `MatBottomSheet` with OK/Cancel actions. Signal-based `model()` two-way binding + `ControlValueAccessor`.
 
@@ -2010,22 +2112,23 @@ import { PPTimepickerComponent, PPTimepickerChangeEvent } from '@pdx/pp-timepick
 <pp-timepicker label="End time" [formControl]="endCtrl" [required]="true" />
 ```
 
-| Input           | Type             | Default        | Description                                       |
-| --------------- | ---------------- | -------------- | ------------------------------------------------- |
-| `label`         | `string`         | required       | Floating label.                                   |
-| `value`         | `string \| null` | `null`         | Committed `HH:mm` value; two-way via `[(value)]`. |
-| `size`          | `'sm' \| 'lg'`   | `'lg'`         | Trigger size.                                     |
-| `disabled`      | `boolean`        | `false`        | Disabled state.                                   |
-| `readonly`      | `boolean`        | `false`        | Read-only trigger.                                |
-| `invalid`       | `boolean`        | `false`        | Error visual state.                               |
-| `required`      | `boolean`        | `false`        | Shows the required marker.                        |
-| `optional`      | `boolean`        | `false`        | Shows the optional hint.                          |
-| `optionalLabel` | `string`         | `'(optional)'` | Text of the optional hint.                        |
-| `helperText`    | `string`         | `''`           | Helper text below the trigger.                    |
-| `okLabel`       | `string`         | `'OK'`         | Mobile bottom-sheet confirm label.                |
-| `cancelLabel`   | `string`         | `'Cancel'`     | Mobile bottom-sheet cancel label.                 |
-| `hourLabel`     | `string`         | `'Hour'`       | Accessible label for the hour column/field.       |
-| `minuteLabel`   | `string`         | `'Minute'`     | Accessible label for the minute column/field.     |
+| Input           | Type                                                       | Default        | Description                                                                                                      |
+| --------------- | ---------------------------------------------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `label`         | `string`                                                   | required       | Floating label.                                                                                                  |
+| `value`         | `string \| null`                                           | `null`         | Committed `HH:mm` value; two-way via `[(value)]`.                                                                |
+| `size`          | `'sm' \| 'lg'`                                             | `'lg'`         | Trigger size.                                                                                                    |
+| `disabled`      | `boolean`                                                  | `false`        | Disabled state.                                                                                                  |
+| `readonly`      | `boolean`                                                  | `false`        | Read-only trigger.                                                                                               |
+| `invalid`       | `boolean`                                                  | `false`        | Error visual state.                                                                                              |
+| `required`      | `boolean`                                                  | `false`        | Shows the required marker.                                                                                       |
+| `optional`      | `boolean`                                                  | `false`        | Shows the optional hint.                                                                                         |
+| `optionalLabel` | `string`                                                   | `'(optional)'` | Text of the optional hint.                                                                                       |
+| `helperText`    | `string`                                                   | `''`           | Helper text below the trigger.                                                                                   |
+| `labelSpace`    | `PPTimepickerLabelSpace` (`'auto' \| 'always' \| 'never'`) | `'auto'`       | Reserves `0.5rem` (8px) above the trigger for the floating-label notch — same tri-state semantics as `pp-input`. |
+| `okLabel`       | `string`                                                   | `'OK'`         | Mobile bottom-sheet confirm label.                                                                               |
+| `cancelLabel`   | `string`                                                   | `'Cancel'`     | Mobile bottom-sheet cancel label.                                                                                |
+| `hourLabel`     | `string`                                                   | `'Hour'`       | Accessible label for the hour column/field.                                                                      |
+| `minuteLabel`   | `string`                                                   | `'Minute'`     | Accessible label for the minute column/field.                                                                    |
 
 **Output:** `timeChange` emits `PPTimepickerChangeEvent` (`{ value: string | null }`).
 
@@ -2200,7 +2303,7 @@ type PPProgressIndicatorCircularSize =
 
 ---
 
-## @pdx/pp-table (v1.1.1)
+## @pdx/pp-table (v1.2.0)
 
 Tabular interface for structured data: pagination, sorting, row expansion, grouped multi-level headers, and interactive cells (checkbox, slide toggle, button, chip, menu) declared as a Signal-driven `PPTable` data model. The table is assembled from a family of structural components.
 
@@ -2218,14 +2321,18 @@ import { PPTableComponent } from '@pdx/pp-table';
 <pp-table [data]="tableData()" [pagination]="true" layout="auto" />
 ```
 
-| Input        | Type              | Default  | Description                                    |
-| ------------ | ----------------- | -------- | ---------------------------------------------- |
-| `data`       | `PPTable \| null` | `null`   | The table model (heading columns + body rows). |
-| `pagination` | `boolean`         | `true`   | Whether the built-in `pp-paginator` is shown.  |
-| `layout`     | `PPTableLayout`   | `'auto'` | `'auto'` or `'fixed'` table layout.            |
-| `scrollable` | `boolean`         | `false`  | Enables horizontal scrolling for wide tables.  |
+| Input               | Type                             | Default  | Description                                                                                                                                                                                                                                |
+| ------------------- | -------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `data`              | `PPTable \| null`                | `null`   | The table model (heading columns + body rows).                                                                                                                                                                                             |
+| `pagination`        | `boolean`                        | `true`   | Whether the built-in `pp-paginator` is shown.                                                                                                                                                                                              |
+| `layout`            | `PPTableLayout`                  | `'auto'` | `'auto'` or `'fixed'` table layout.                                                                                                                                                                                                        |
+| `scrollable`        | `boolean`                        | `false`  | Enables horizontal scrolling for wide tables.                                                                                                                                                                                              |
+| `highlight`         | `PPTableHighlightTarget \| null` | `null`   | Temporarily highlights the row whose `PPTableRow.id` (or projected row `key`) matches `target.id` — insert/edit feedback. Pass a **fresh object** each time, even when re-highlighting the same row, or change detection won't re-trigger. |
+| `highlightDuration` | `number` (`numberAttribute`)     | `3000`   | Highlight duration in ms. `<= 0` keeps the highlight until it is replaced or the component is destroyed.                                                                                                                                   |
 
 The component owns pagination, sorting, and row reorder/duplicate/delete internally.
+
+**Row highlight (v1.2.0):** give rows stable ids (`PPTableRow.id`) and set `[highlight]="{ id, scrollIntoView: true }"` after an insert (`scrollIntoView` scrolls smoothly to the row, respecting `prefers-reduced-motion`, and auto-jumps pagination to the row's page first) or `[highlight]="{ id }"` after an edit. Highlights never stack — a new target clears the previous one. The built-in Duplicate row action highlights + scrolls the inserted row automatically. CSS hook: `.pp-table-row--highlighted` (appears instantly, fades out on removal). For content-projected tables, `PPTableRowComponent` has a `key` input (`string | number | null`, default `null`) the `highlight` target matches against, and a consumer-owned `highlighted` boolean input (default `false`) when you want to control timing yourself. A readonly `highlightedRow: Signal<PPTableRow | null>` is exposed for the `[data]` form.
 
 **Height-bounded scrolling:** the host is a flex column and `.pp-table-content` flexes to fill it — constrain the height of `<pp-table>` (or its container) and the body region scrolls vertically on its own. The old `::ng-deep .pp-table-content { overflow-y: auto; max-height: … }` consumer hack is no longer needed; remove it when found.
 
@@ -2244,8 +2351,15 @@ interface PPTable {
 }
 
 interface PPTableRow {
+  id?: string | number; // stable row id — required to target the row via the `highlight` input
   columns: PPTableColumn[];
   expandableRow?: { columns: PPTableColumn[]; expanded: boolean };
+}
+
+interface PPTableHighlightTarget {
+  id: string | number; // matches PPTableRow.id ([data] form) or pp-table-row `key` (projected form)
+  scrollIntoView?: boolean; // default false — use for inserted rows; omit for edited rows
+  duration?: number; // per-target override of highlightDuration
 }
 
 interface PPTableHeadingColumn {
@@ -2259,7 +2373,7 @@ interface PPTableHeadingColumn {
 
 // PPTableColumn carries the cell content; one of: text/headline, checkbox, slideToggle,
 // button, chip, rating, status, or menu. Interactive cell state is held in WritableSignals.
-// Interactive cell configs (v1.1.x shapes):
+// Interactive cell configs:
 interface PPTableColumn {
   // …text / headline / chip / status / rating fields…
   button?: {
@@ -2491,6 +2605,8 @@ When a PDX component exists, always use it instead of Angular Material or custom
 | Icons               | `pp-icon pp-icon-*`                                                  | `mat-icon`, FontAwesome, other icon libraries                   |
 | Button toggle       | `PPButtonToggleComponent` + `PPButtonToggleGroupComponent`           | `mat-button-toggle`, `mat-button-toggle-group`                  |
 | Slide toggle        | `PPSlideToggleComponent`                                             | `mat-slide-toggle`                                              |
+| Slider              | `PPSliderComponent`                                                  | `mat-slider`                                                    |
+| Range slider        | `PPRangeSliderComponent`                                             | `mat-slider` with two `matSliderThumb` inputs                   |
 | Paginator           | `PPPaginatorComponent`                                               | `mat-paginator`                                                 |
 | Date picker         | `PPDatepickerComponent` (`type="single" \| "range" \| "month-year"`) | `mat-datepicker`, `mat-date-range-picker`                       |
 | Time picker         | `PPTimepickerComponent`                                              | custom time inputs / `<input type="time">`                      |

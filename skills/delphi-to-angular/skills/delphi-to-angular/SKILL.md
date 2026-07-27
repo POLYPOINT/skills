@@ -5,7 +5,7 @@ argument-hint: '[analyze|generate] [path/to/file.dfm] [screenshot-path] [path/to
 disable-model-invocation: true
 compatibility: Designed for Claude Code. Uses argument-hint and disable-model-invocation Claude Code extensions.
 metadata:
-  version: '1.11.0'
+  version: '1.12.0'
 ---
 
 # Delphi-to-Angular Conversion
@@ -287,6 +287,7 @@ List all generated files with a one-line description of each. Highlight:
 
 - Decisions made during generation (translation choices, optimistic UI scope, locking applied).
 - TODO items that need backend work (HTTP endpoints, real auth).
+- **PDX library gaps:** every workaround applied around a `pp-*` component's behavior (CSS fighting internals, DOM queries into component markup, re-implemented inputs/outputs, sizing/focus patches) — name the component, the missing behavior, the workaround, and whether the behavior should be implemented in the library instead, so the user can decide to file a PDX improvement. See pdx-recipes.md § Report PDX library gaps.
 - **Soluling outcome:** translation keys populated from `PolylangSoluling.ntp` (by locale) vs. keys intentionally left absent across all locale files so the human translator authors them in Transifex. List each absent key with its German source so the developer can sanity-check before the next Transifex push.
 
 ---
