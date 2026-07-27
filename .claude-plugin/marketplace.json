@@ -63,6 +63,12 @@
       "source": "./skills/babysit-pr",
       "description": "Babysit an Azure DevOps pull request for a time window — watch for new review comments (CodeRabbit and human) and CI state changes via the az CLI, verify each finding against current code, fix still-valid issues minimally, reply to and resolve threads, and diagnose failing builds.",
       "category": "development"
+    },
+    {
+      "name": "pep-verify",
+      "source": "./skills/pep-verify",
+      "description": "Drive and verify things directly in PEP (POLYPOINT's Delphi/VCL personnel-planning Windows client) on a tenant box over RDP/SSH/WinRM — element-level automation (pywinauto over a loopback agent), not pixel clicking. Runs a preflight check, bootstraps the companion pep-driver toolchain, then runs selector-based UI commands and flows.",
+      "category": "development"
     }
   ]
 }

@@ -17,18 +17,19 @@ Skills can:
 
 ## Available Skills
 
-| Skill                            | Description                                                                                                                                                                                                                      | Usage                                         |
-| :------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------- |
-| **delphi-to-angular**            | Converts Delphi VCL views (.dfm/.pas) to Angular components. Produces full Angular features (component + store + service + tests) matching the POLYPOINT saas repo stack.                                                        | `/delphi-to-angular analyze path/to/file.dfm` |
-| **zn2c-quick-win**               | Guided end-to-end implementation of Zn2C Quick-Win issues from the ZQW Jira board, including Jira transitions, Confluence docs, git worktree workflow, build validation, Azure DevOps PR creation, and review feedback handling. | `/zn2c-quick-win ZQW-123`                     |
-| **pdx**                          | Applies the PDX (POLYPOINT Design Experience) design system to Angular frontends. Guides usage of `@pdx/*` component libraries and design tokens for consistent POLYPOINT UI.                                                    | `/pdx`                                        |
-| **design-review-for-developers** | Short, structured design review of a single design-system component against its Figma source — visual fidelity, states, accessibility, and implementation consistency, with a POLYPOINT/PDX addendum. Not for full-page reviews. | `/design-review-for-developers`               |
-| **research**                     | Deeply investigate a codebase topic and produce a structured research document with architecture diagrams, glossary, and actionable findings.                                                                                    | `/research <topic>`                           |
-| **playwright-e2e**               | Creates Playwright E2E tests from an annotated codegen recording — enriches it with resilient selectors via Chrome exploration and generates Page Object Model tests.                                                            | `/playwright-e2e path/to/recording.spec.ts`   |
-| **playwright-api**               | Generates Playwright API-level corner-case tests from an existing E2E test file or a description — discovers API endpoints and exercises corner cases via `APIRequestContext` (no browser).                                      | `/playwright-api tests/e2e/login.spec.ts`     |
-| **babysit-pr**                   | Time-boxed watch over an Azure DevOps PR — polls comments, CI, and votes via the az CLI, verifies each review finding against current code, fixes still-valid issues minimally, replies to and resolves threads.                 | `/babysit-pr <pr-url> for 1 hour`             |
-| **pp-pr-review**                 | Gated, sub-agent-driven review of an Azure DevOps PR — repository verification, JIRA PII redaction, parallel specialist reviews (logic, security, performance, SQL/JPA, tests), developer-led triage, and comment posting only with explicit approval.  | `/pp-pr-review <pr-url>`                      |
-| **improve**                      | Reflects on how the skills used in the current session performed and uploads concrete HTML improvement plans to Whetstone for asynchronous human review. Run it after any skill-driven task; also covers third-party skills.     | `/improve` or `/improve <skill-name>`         |
+| Skill                            | Description                                                                                                                                                                                                                                            | Usage                                         |
+| :------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------- |
+| **delphi-to-angular**            | Converts Delphi VCL views (.dfm/.pas) to Angular components. Produces full Angular features (component + store + service + tests) matching the POLYPOINT saas repo stack.                                                                              | `/delphi-to-angular analyze path/to/file.dfm` |
+| **zn2c-quick-win**               | Guided end-to-end implementation of Zn2C Quick-Win issues from the ZQW Jira board, including Jira transitions, Confluence docs, git worktree workflow, build validation, Azure DevOps PR creation, and review feedback handling.                       | `/zn2c-quick-win ZQW-123`                     |
+| **pdx**                          | Applies the PDX (POLYPOINT Design Experience) design system to Angular frontends. Guides usage of `@pdx/*` component libraries and design tokens for consistent POLYPOINT UI.                                                                          | `/pdx`                                        |
+| **design-review-for-developers** | Short, structured design review of a single design-system component against its Figma source — visual fidelity, states, accessibility, and implementation consistency, with a POLYPOINT/PDX addendum. Not for full-page reviews.                       | `/design-review-for-developers`               |
+| **research**                     | Deeply investigate a codebase topic and produce a structured research document with architecture diagrams, glossary, and actionable findings.                                                                                                          | `/research <topic>`                           |
+| **playwright-e2e**               | Creates Playwright E2E tests from an annotated codegen recording — enriches it with resilient selectors via Chrome exploration and generates Page Object Model tests.                                                                                  | `/playwright-e2e path/to/recording.spec.ts`   |
+| **playwright-api**               | Generates Playwright API-level corner-case tests from an existing E2E test file or a description — discovers API endpoints and exercises corner cases via `APIRequestContext` (no browser).                                                            | `/playwright-api tests/e2e/login.spec.ts`     |
+| **babysit-pr**                   | Time-boxed watch over an Azure DevOps PR — polls comments, CI, and votes via the az CLI, verifies each review finding against current code, fixes still-valid issues minimally, replies to and resolves threads.                                       | `/babysit-pr <pr-url> for 1 hour`             |
+| **pp-pr-review**                 | Gated, sub-agent-driven review of an Azure DevOps PR — repository verification, JIRA PII redaction, parallel specialist reviews (logic, security, performance, SQL/JPA, tests), developer-led triage, and comment posting only with explicit approval. | `/pp-pr-review <pr-url>`                      |
+| **improve**                      | Reflects on how the skills used in the current session performed and uploads concrete HTML improvement plans to Whetstone for asynchronous human review. Run it after any skill-driven task; also covers third-party skills.                           | `/improve` or `/improve <skill-name>`         |
+| **pep-verify**                   | Drives and verifies PEP (the Delphi/VCL planning client) on a tenant box at the element level over SSH/WinRM — preflight + bootstrap of the companion `pep-driver` toolchain, then selector-based UI commands and flows.                               | `/pep-verify on ct-zinc-master`               |
 
 ## Repository Structure
 
@@ -70,6 +71,7 @@ Works the same in the terminal CLI, VS Code extension, and JetBrains plugin.
 /plugin install playwright-api
 /plugin install babysit-pr
 /plugin install improve
+/plugin install pep-verify
 ```
 
 **Update to latest version:**
@@ -90,6 +92,7 @@ Once installed, invoke with `/skill-name`:
 /playwright-api tests/e2e/login.spec.ts
 /babysit-pr https://dev.azure.com/polypoint/SaaS/_git/SaaS/pullrequest/12345 for 1 hour
 /improve playwright-e2e
+/pep-verify on ct-zinc-master
 ```
 
 <details>
