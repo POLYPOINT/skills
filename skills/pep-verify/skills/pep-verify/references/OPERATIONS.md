@@ -17,6 +17,12 @@ when the agent misbehaves, or when working on a box type you haven't driven befo
 | **WinRM** (no sshd, e.g. `preview-feature`) | `ansible_connection=winrm`     | `pywinrm` NTLM (`run_cmd`) | **SMB** `mount_smbfs //DOM;user:pw@host/C$` | `curl.exe` driven by PowerShell, body base64→temp file, response base64 back | `pywinrm`, `mount_smbfs` |
 | **Key-auth** (DeployMate envs)              | `ansible_ssh_private_key_file` | `ssh -i <key>`             | `scp -i`                                    | as SSH                                                                       | the private key on disk  |
 
+**⚠ Check which of these your checkout actually has.** Only the SSH path has always been on
+`pep-driver`'s `main`. WinRM landed 2026-07-22 and key-auth on the `dm142-deploymate-key-auth`
+branch — if `grep -l ansible_connection cli/inventory.py` comes up empty, you are on an older main
+and only SSH boxes will work. `preflight.sh` warns when the checkout is behind origin or carries
+uncommitted changes.
+
 Inventory keys parsed: `ansible_connection`, `ansible_winrm_transport` (default `ntlm`),
 `ansible_winrm_scheme` (default `http`), `ansible_port` (default 5985 / 5986 for https),
 `ansible_user`, `ansible_password`, `ansible_ssh_private_key_file`. Host is taken from the first
