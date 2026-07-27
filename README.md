@@ -17,12 +17,17 @@ Skills can:
 
 ## Available Skills
 
-| Skill                 | Description                                                                                                                                                                                                                      | Usage                                         |
-| :-------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------- |
-| **delphi-to-angular** | Converts Delphi VCL views (.dfm/.pas) to Angular components. Produces full Angular features (component + store + service + tests) matching the POLYPOINT saas repo stack.                                                        | `/delphi-to-angular analyze path/to/file.dfm` |
-| **zn2c-quick-win**    | Guided end-to-end implementation of Zn2C Quick-Win issues from the ZQW Jira board, including Jira transitions, Confluence docs, git worktree workflow, build validation, Azure DevOps PR creation, and review feedback handling. | `/zn2c-quick-win ZQW-123`                     |
-| **pdx**               | Applies the PDX (POLYPOINT Design Experience) design system to Angular frontends. Guides usage of `@pdx/*` component libraries and design tokens for consistent POLYPOINT UI.                                                    | `/pdx`                                        |
-| **research**          | Deeply investigate a codebase topic and produce a structured research document with architecture diagrams, glossary, and actionable findings.                                                                                     | `/research <topic>`                           |
+| Skill                            | Description                                                                                                                                                                                                                      | Usage                                         |
+| :------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------- |
+| **delphi-to-angular**            | Converts Delphi VCL views (.dfm/.pas) to Angular components. Produces full Angular features (component + store + service + tests) matching the POLYPOINT saas repo stack.                                                        | `/delphi-to-angular analyze path/to/file.dfm` |
+| **zn2c-quick-win**               | Guided end-to-end implementation of Zn2C Quick-Win issues from the ZQW Jira board, including Jira transitions, Confluence docs, git worktree workflow, build validation, Azure DevOps PR creation, and review feedback handling. | `/zn2c-quick-win ZQW-123`                     |
+| **pdx**                          | Applies the PDX (POLYPOINT Design Experience) design system to Angular frontends. Guides usage of `@pdx/*` component libraries and design tokens for consistent POLYPOINT UI.                                                    | `/pdx`                                        |
+| **design-review-for-developers** | Short, structured design review of a single design-system component against its Figma source — visual fidelity, states, accessibility, and implementation consistency, with a POLYPOINT/PDX addendum. Not for full-page reviews. | `/design-review-for-developers`               |
+| **research**                     | Deeply investigate a codebase topic and produce a structured research document with architecture diagrams, glossary, and actionable findings.                                                                                    | `/research <topic>`                           |
+| **playwright-e2e**               | Creates Playwright E2E tests from an annotated codegen recording — enriches it with resilient selectors via Chrome exploration and generates Page Object Model tests.                                                            | `/playwright-e2e path/to/recording.spec.ts`   |
+| **playwright-api**               | Generates Playwright API-level corner-case tests from an existing E2E test file or a description — discovers API endpoints and exercises corner cases via `APIRequestContext` (no browser).                                      | `/playwright-api tests/e2e/login.spec.ts`     |
+| **babysit-pr**                   | Time-boxed watch over an Azure DevOps PR — polls comments, CI, and votes via the az CLI, verifies each review finding against current code, fixes still-valid issues minimally, replies to and resolves threads.                 | `/babysit-pr <pr-url> for 1 hour`             |
+| **improve**                      | Reflects on how the skills used in the current session performed and uploads concrete HTML improvement plans to Whetstone for asynchronous human review. Run it after any skill-driven task; also covers third-party skills.     | `/improve` or `/improve <skill-name>`         |
 
 ## Repository Structure
 
@@ -58,7 +63,12 @@ Works the same in the terminal CLI, VS Code extension, and JetBrains plugin.
 /plugin install delphi-to-angular
 /plugin install zn2c-quick-win
 /plugin install pdx
+/plugin install design-review-for-developers
 /plugin install research
+/plugin install playwright-e2e
+/plugin install playwright-api
+/plugin install babysit-pr
+/plugin install improve
 ```
 
 **Update to latest version:**
@@ -73,7 +83,12 @@ Once installed, invoke with `/skill-name`:
 /delphi-to-angular analyze path/to/file.dfm
 /zn2c-quick-win ZQW-123
 /pdx
+/design-review-for-developers
 /research Authentication flow in the API layer
+/playwright-e2e path/to/recording.spec.ts
+/playwright-api tests/e2e/login.spec.ts
+/babysit-pr https://dev.azure.com/polypoint/SaaS/_git/SaaS/pullrequest/12345 for 1 hour
+/improve playwright-e2e
 ```
 
 <details>

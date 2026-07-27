@@ -13,6 +13,10 @@ Thumbs.db
 node_modules/
 .npm
 
+# Python (for any tooling/scripts)
+__pycache__/
+*.pyc
+
 # Misc
 *.log
 .env

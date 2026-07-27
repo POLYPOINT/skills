@@ -65,11 +65,11 @@ Do not introduce custom font sizes outside the scale unless explicitly approved.
 
 PDX defines a structured color system. Always use design tokens — never raw hex or RGB values in component styles.
 
-**Main colors:** Primary, Secondary, Tertiary (+ SystemcolorUI). Each palette emits an unsuffixed base token plus discrete shade keys: `50, 100, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 920, 940, 950, 960, 980, 990` (`50` darkest → `990` lightest). There is **no** `1000` shade — `990` is the lightest. SCSS variables: `$pp-<palette>` (base) + `$pp-<palette>-<shade>`. CSS custom properties: `--pp-<palette>` + `--pp-<palette>-<shade>` (the prefix is `--pp-`, **not** `--color-pp-`).
+**Main colors:** Primary, Secondary, Tertiary (+ SystemcolorUI). Each palette emits an unsuffixed base token plus discrete shade keys: `50, 100, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 920, 940, 950, 960, 980, 990` (`50` darkest → `990` lightest). There is **no** `1000` shade — `990` is the lightest. SCSS variables: `$pp-<palette>` (base) + `$pp-<palette>-<shade>`. CSS custom properties: `--pp-<palette>` + `--pp-<palette>-<shade>` for the raw tokens; the Tailwind theme layer additionally exposes a `--color-pp-<palette>` alias for each (what `text-pp-*` / `bg-pp-*` resolve to).
 
 **Status colors:** Error, Success, Info, Warning, Disabled.
 
-**Accent colors:** Orange, Purple, DarkBlue, Blue, LightBlue, Lightgreen, Green, Yellow.
+**Accent colors:** Orange, Purple, DarkBlue, Blue, LightBlue, Linth green, Green, Yellow.
 
 **Color roles in use:**
 
@@ -144,7 +144,7 @@ Shadows are a **semantic signal for elevation**, not a decorative tool. A shadow
 - **Multiselect display:** Selected values are shown as a comma-separated string with ellipsis overflow. The dropdown stays open during selection to allow toggling multiple items.
 - **Supporting text:** Optional helper text appears below the trigger. When `isError` is true, both the border and supporting text render in the error color.
 - **Leading icon:** Optional, applied to the trigger and passed through to each dropdown item.
-- Options use the `PPMenuItem` interface: `{ id: string, label: string, supportingText: string | null }`. The `supportingText` field provides secondary text on each dropdown option.
+- Options use the `PPMenuItem` interface: `{ id, label, supportingText?, disabled?, icon?, hasDivider? }`. The `supportingText` field provides secondary text on each dropdown option.
 - For form-integrated dropdowns (with label, floating label, ControlValueAccessor), use `pp-select` — not `pp-menu` directly. `pp-select` composes `pp-menu` internally.
 - `pp-menu` is a standalone component in its own right — use it anywhere `mat-menu` would be used: action menus, context menus, three-dot overflow menus (e.g. the `moreMenu` slot in `pp-tree`), or any custom dropdown that is not a form field.
 
@@ -156,6 +156,17 @@ Textareas should fill the available width **when the layout calls for it** — f
 
 ---
 
+## Sliders
+
+Use `PPSliderComponent` / `PPRangeSliderComponent` (`@pdx/pp-slider`) for bounded numeric values and intervals. These replace `mat-slider`.
+
+- Use sliders **only for small predefined ranges** — a large or unbounded numeric entry stays an input or select.
+- The current value renders permanently above the handle (no hover tooltip); an optional unit line sits below it.
+- When precise entry matters, enable the synced `pp-select` via `maxLabelSelect` / `minLabelSelect` instead of adding a separate input.
+- Every handle needs an accessible name (`ariaLabel` or `ariaLabelledby`).
+
+---
+
 ## Tabs
 
 Use `PPTabGroupComponent` + `PPTabComponent` (`@pdx/pp-tab`) for all tabbed navigation. These replace `mat-tab-group` + `mat-tab`.
@@ -163,7 +174,7 @@ Use `PPTabGroupComponent` + `PPTabComponent` (`@pdx/pp-tab`) for all tabbed navi
 - Text size: `1rem`
 - Selected tab text color: `$pp-primary` (mint/teal)
 - Unselected tab text color: `$pp-secondary-300`
-- Disabled tab text color: `$pp-secondary-700`
+- Disabled tab text color: `$pp-secondary`
 - Active indicator: 2px bar in `$pp-primary` that slides beneath the active tab with a smooth transition
 - Tabs support optional leading icons (e.g. `pp-icon-dashboard`)
 - Use `fullWidth` when tabs should stretch to fill the container equally
@@ -181,7 +192,7 @@ Use `PPTabGroupComponent` + `PPTabComponent` (`@pdx/pp-tab`) for all tabbed navi
 - Use `PPMenuMultiselectComponent` for multi-select dropdown lists with leading checkboxes.
 - `pp-menu` is presentational — the parent must control `[isOpen]` and handle closing (outside click, Escape, selection). This makes it composable in different trigger patterns (icon button, three-dot button, custom trigger).
 - For form-integrated dropdowns (label, floating label, validation, `ControlValueAccessor`), use `pp-select` instead — it wraps `pp-menu` with full form field behavior.
-- Menu items follow the `PPMenuItem` interface: `{ id: string, label: string, supportingText: string | null }`
+- Menu items follow the `PPMenuItem` interface: `{ id, label, supportingText?, disabled?, icon?, hasDivider? }`
 - Two sizes: `'large'` (default) and `'small'` for compact contexts
 - Items can display an optional leading icon
 

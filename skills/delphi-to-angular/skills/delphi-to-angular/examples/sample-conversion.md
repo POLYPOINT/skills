@@ -73,7 +73,7 @@ end;
 1. ChooseMonthRangeComponent (dialog)
    - Mapped from: TfrmChooseMonthRange (TDBParForm with bsToolWindow)
    - Layout: simple vertical stack with two month-picker fields and action buttons
-   - Contains: 2x mat-form-field + matInput type="month" (no PDX month picker yet), pp-button x2 inside mat-dialog-actions
+   - Contains: 2x month picker (legacy Material `matInput type="month"` in this sample — new conversions use `pp-datepicker type="month-year"`), pp-button x2 inside mat-dialog-actions
 
 ### Connected dialogs
 - None traced from the PAS
@@ -89,7 +89,8 @@ end;
 
 ### Form model
 - monthRangeForm: signal<{ firstMonth: string, lastMonth: string }>
-  - Validation: both required; firstMonth <= lastMonth (custom validate())
+  - Mandatory fields: firstMonth, lastMonth (from the Delphi empty-check before OK) — `[required]` asterisk + gated validator
+  - Validation: both required; firstMonth <= lastMonth (custom validate()) — gated on `submitted`, errors appear only after the first OK press
 - Drives: confirm() compares the two and closes the dialog with Temporal.PlainYearMonth values
 
 ### Route
@@ -105,6 +106,8 @@ List the user-visible strings that need a translation key. Keys in locale JSON f
 - Validation messages: "Start month is required", "End month is required"
 ```
 
+> **Heads up — this sample predates the Soluling translation workflow.** Current plans list translations under a `### Translations (Soluling)` section: each German string is looked up in `PolylangSoluling.ntp`, matched strings are written to every locale file from the Soluling values, and unmatched strings are intentionally left absent from all locale files (no placeholder) so Transifex flags them. See SKILL.md analyze Step 2.6 / generate Step 2.5.
+
 ---
 
 ## Generate Output
@@ -117,7 +120,7 @@ import { form, FormField, requiredError, validate } from '@angular/forms/signals
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { PPButtonComponent } from '@pdx/pp-button';
 
 interface MonthRangeData {
@@ -140,6 +143,13 @@ export interface MonthRangeResult {
 })
 export class ChooseMonthRangeComponent {
   private readonly dialogRef = inject(MatDialogRef<ChooseMonthRangeComponent, MonthRangeResult | null>);
+  private readonly translate = inject(TranslateService);
+
+  /**
+   * Flips to true on the first OK press. The validators are gated on it, so
+   * no error renders while the user is still picking months.
+   */
+  protected readonly submitted = signal(false);
 
   private readonly model = signal<MonthRangeData>({
     firstMonth: Temporal.Now.plainDateISO().toPlainYearMonth().toString(),
@@ -148,20 +158,26 @@ export class ChooseMonthRangeComponent {
 
   protected readonly monthRangeForm = form(this.model, (schema) => {
     validate(schema.firstMonth, (ctx) => {
+      if (!this.submitted()) {
+        return null; // silent until the first confirm attempt
+      }
       const value = ctx.value();
       if (!value?.trim()) {
         return requiredError({
-          message: 'choose_month_range.first_month_required',
+          message: this.translate.instant('choose_month_range.first_month_required'),
         });
       }
       return null;
     });
 
     validate(schema.lastMonth, (ctx) => {
+      if (!this.submitted()) {
+        return null;
+      }
       const value = ctx.value();
       if (!value?.trim()) {
         return requiredError({
-          message: 'choose_month_range.last_month_required',
+          message: this.translate.instant('choose_month_range.last_month_required'),
         });
       }
       return null;
@@ -169,6 +185,11 @@ export class ChooseMonthRangeComponent {
   });
 
   protected confirm(): void {
+    this.submitted.set(true);
+    if (this.monthRangeForm().invalid()) {
+      return; // keep the dialog open so the errors surface
+    }
+
     const data = this.model();
     const first = Temporal.PlainYearMonth.from(data.firstMonth);
     const last = Temporal.PlainYearMonth.from(data.lastMonth);
@@ -192,11 +213,11 @@ Notes:
 - `Temporal` is a global — no import.
 - Visibility modifiers on every member (`private readonly dialogRef`, `protected readonly monthRangeForm`).
 - `OnPush` change detection.
-- Validators use `validate()` + `requiredError()`. Error messages are translation keys, not raw English.
+- Validators use `validate()` + `requiredError()`, **gated on the `submitted` signal** — errors appear only after the first OK press. Error messages are resolved with `translate.instant(<key>)` — never raw English — so `errors()[0]?.message` can be bound straight into a PDX control's `[helperText]`.
 
 ### choose-month-range.component.html
 
-> **Heads up — this sample predates the canonical `pp-dialog` recipe.** New conversions should wrap the dialog body in `<pp-dialog>` and let it render the title and confirm/dismiss buttons (see the `pp-dialog` section in `pdx-recipes.md`). The `<h2 mat-dialog-title>` + `<mat-dialog-content>` + `<mat-dialog-actions>` pattern shown below is a fallback only when migrating a legacy dialog that isn't ready for the `pp-dialog` shell yet.
+> **Heads up — this sample predates the canonical `pp-dialog` and `pp-datepicker` recipes.** New conversions should wrap the dialog body in `<pp-dialog>` and let it render the title and confirm/dismiss buttons (see the `pp-dialog` section in `pdx-recipes.md`). The `<h2 mat-dialog-title>` + `<mat-dialog-content>` + `<mat-dialog-actions>` pattern shown below is a fallback only when migrating a legacy dialog that isn't ready for the `pp-dialog` shell yet. Likewise, the `matInput type="month"` fields below predate `pp-datepicker` — new conversions replace each `TECMonthEdit` with `<pp-datepicker type="month-year" [required]="true" />` (see the `pp-datepicker` recipe in `pdx-recipes.md`).
 
 ```html
 <h2 mat-dialog-title data-testid="choose-month-range-title">{{ 'choose_month_range.title' | translate }}</h2>
@@ -234,7 +255,7 @@ Notes:
 - Every interactive surface has a `data-testid` so e2e tests don't query by translated text.
 - `pp-button` uses `[label]` binding with the translate pipe — never content projection.
 - `<mat-dialog-actions>` (not `<pp-form-actions>`) because this sample uses the legacy Material dialog shell. New conversions should use `<pp-dialog>` and let it own the footer; see the `pp-dialog` recipe in `pdx-recipes.md`.
-- Month picker uses Material's `<input matInput type="month">` — no native PDX month picker yet.
+- Month picker uses Material's `<input matInput type="month">` — legacy; new conversions use `<pp-datepicker type="month-year">` (see the heads-up above).
 
 ### choose-month-range.component.scss
 

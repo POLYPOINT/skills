@@ -29,7 +29,7 @@ The user must also authenticate against the Azure DevOps feed (e.g. via `vsts-np
 
 ## Bun Configuration
 
-When using Bun as the package manager, add all `@pdx/*` packages to `trustedDependencies` and `minimumReleaseAgeExcludes` in `package.json` to avoid installation issues with the private registry:
+When using Bun as the package manager, add **every installed `@pdx/*` package** — including new additions like `@pdx/pp-badge`, `@pdx/pp-link`, `@pdx/pp-snackbar` — to `trustedDependencies` and `minimumReleaseAgeExcludes` in `package.json` to avoid installation issues with the private registry. Both arrays hold the same full list; keep them in sync with the `@pdx/*` entries in `dependencies`:
 
 ```json
 {
@@ -37,45 +37,15 @@ When using Bun as the package manager, add all `@pdx/*` packages to `trustedDepe
     "@pdx/pp-theme",
     "@pdx/pp-icons",
     "@pdx/pp-button",
-    "@pdx/pp-button-toggle",
     "@pdx/pp-input",
     "@pdx/pp-form",
-    "@pdx/pp-checkbox",
-    "@pdx/pp-radio",
-    "@pdx/pp-chip",
-    "@pdx/pp-dialog",
-    "@pdx/pp-tree",
-    "@pdx/pp-select",
-    "@pdx/pp-menu",
-    "@pdx/pp-list",
-    "@pdx/pp-tab",
-    "@pdx/pp-expansion-panel",
-    "@pdx/pp-sidenav",
-    "@pdx/pp-slide-toggle",
-    "@pdx/pp-top-navigation",
-    "@pdx/pp-paginator"
+    "@pdx/pp-badge",
+    "@pdx/pp-link",
+    "@pdx/pp-snackbar"
+    // …every other installed @pdx/* package
   ],
   "minimumReleaseAgeExcludes": [
-    "@pdx/pp-theme",
-    "@pdx/pp-icons",
-    "@pdx/pp-button",
-    "@pdx/pp-button-toggle",
-    "@pdx/pp-input",
-    "@pdx/pp-form",
-    "@pdx/pp-checkbox",
-    "@pdx/pp-radio",
-    "@pdx/pp-chip",
-    "@pdx/pp-dialog",
-    "@pdx/pp-tree",
-    "@pdx/pp-select",
-    "@pdx/pp-menu",
-    "@pdx/pp-list",
-    "@pdx/pp-tab",
-    "@pdx/pp-expansion-panel",
-    "@pdx/pp-sidenav",
-    "@pdx/pp-slide-toggle",
-    "@pdx/pp-top-navigation",
-    "@pdx/pp-paginator"
+    // same full list as trustedDependencies
   ]
 }
 ```
@@ -88,7 +58,7 @@ Install the theme and icon packages first, then component libraries as needed:
 
 ```bash
 npm install @pdx/pp-theme @pdx/pp-icons
-npm install @pdx/pp-button @pdx/pp-button-toggle @pdx/pp-input @pdx/pp-form @pdx/pp-checkbox @pdx/pp-radio @pdx/pp-chip @pdx/pp-dialog @pdx/pp-tree @pdx/pp-select @pdx/pp-menu @pdx/pp-list @pdx/pp-tab @pdx/pp-expansion-panel @pdx/pp-sidenav @pdx/pp-slide-toggle @pdx/pp-top-navigation @pdx/pp-paginator
+npm install @pdx/pp-button @pdx/pp-button-toggle @pdx/pp-input @pdx/pp-form @pdx/pp-checkbox @pdx/pp-radio @pdx/pp-chip @pdx/pp-dialog @pdx/pp-tree @pdx/pp-select @pdx/pp-menu @pdx/pp-list @pdx/pp-tab @pdx/pp-expansion-panel @pdx/pp-sidenav @pdx/pp-slide-toggle @pdx/pp-top-navigation @pdx/pp-paginator @pdx/pp-badge @pdx/pp-link @pdx/pp-snackbar
 ```
 
 All component libraries have `@pdx/pp-theme` as a peer dependency. Additional peers:
@@ -98,6 +68,9 @@ All component libraries have `@pdx/pp-theme` as a peer dependency. Additional pe
 - `@pdx/pp-menu` requires `@pdx/pp-checkbox`
 - `@pdx/pp-form` requires `@pdx/pp-radio` and `@pdx/pp-menu`
 - `@pdx/pp-list` requires `@pdx/pp-checkbox` and `@pdx/pp-radio`
+- `@pdx/pp-tab` requires `@pdx/pp-badge` (notification badges)
+- `@pdx/pp-table` requires `@pdx/pp-checkbox ^2.0.0`
+- `@pdx/pp-snackbar` requires `@angular/cdk`, `@pdx/pp-button`, and `rxjs` (plus `provideAnimationsAsync()` in the app)
 - `@pdx/pp-top-navigation` requires `@pdx/pp-menu`
 - `@pdx/pp-sidenav` requires `@angular/material` and `@pdx/pp-icons`
 - `@pdx/pp-paginator` requires `@pdx/pp-menu`
@@ -186,7 +159,7 @@ Instead of SCSS imports, styles can be added to the `angular.json` styles array:
 }
 ```
 
-The CSS custom-property prefix is **`--pp-`** (not `--color-pp-`). Each palette emits an unsuffixed base (e.g. `--pp-primary`) plus discrete shade keys: `50, 100, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 920, 940, 950, 960, 980, 990` (`50` darkest → `990` lightest). There is no `1000`.
+The raw CSS custom-property prefix is **`--pp-`**; the Tailwind theme layer additionally exposes a `--color-pp-` alias for each token (e.g. `--color-pp-primary: var(--pp-primary)`), which is what the `text-pp-*` / `bg-pp-*` utilities resolve to. Each palette emits an unsuffixed base (e.g. `--pp-primary`) plus discrete shade keys: `50, 100, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 920, 940, 950, 960, 980, 990` (`50` darkest → `990` lightest). There is no `1000`.
 
 ### With TailwindCSS
 

@@ -124,63 +124,93 @@ The post-generate convention check flags any child component that both `inject()
 
 **Bind PDX inputs with `[formField]` — except `pp-select` / `pp-multiselect`, which use `[formControl]` (legacy reactive forms).** All PDX components implement `ControlValueAccessor`, and `[formField]` bridges to CVA automatically. Mix both APIs in one component when needed.
 
+### Validate only after the first save/submit attempt
+
+Edit/create forms must not show validation errors while the user is still filling them in — errors appear only after the first Save / Create / Submit press. The mechanism is a `submitted` signal that **gates the validators themselves**:
+
+- With `[formField]`, signal forms auto-write `field.invalid()` into the PDX control's `invalid` input, which **overrides any template `[invalid]` guard**. The only reliable way to defer the red state is to defer the field's invalidity itself — every validator returns `null` until `submitted()` is `true`.
+- The save handler flips the flag first, then bails while invalid (keeping the form/dialog open so the errors surface).
+- Error messages render through **`[helperText]`** (`form.field().errors()[0]?.message ?? ''`) — do not bind `[invalid]` or `[error]` manually.
+- Checks outside the form model (e.g. "a tree node must be selected") reuse the same flag via `computed(() => submitted() && …)`.
+
 ```typescript
-import { Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { form, FormField, requiredError, validate } from '@angular/forms/signals';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { PPInputComponent } from '@pdx/pp-input';
 
-interface FilterData {
-  lastName: string;
-  firstName: string;
-  personnelNumber: string;
+interface CategoryData {
+  code: string;
+  name: string;
 }
 
 @Component({
-  selector: 'app-employee-filter',
-  imports: [FormField, PPInputComponent],
+  selector: 'app-category-dialog',
+  imports: [FormField, PPInputComponent, TranslatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <pp-input [label]="'employee.last_name' | translate" [formField]="filterForm.lastName" [fullWidth]="true" />
-    <pp-input [label]="'employee.first_name' | translate" [formField]="filterForm.firstName" [fullWidth]="true" />
-
-    @if (filterForm.lastName().touched() && filterForm.lastName().invalid()) {
-      <ul>
-        @for (error of filterForm.lastName().errors(); track error.kind) {
-          <li>{{ error.message }}</li>
-        }
-      </ul>
-    }
+    <pp-input
+      [label]="'category.code' | translate"
+      [formField]="categoryForm.code"
+      [fullWidth]="true"
+      [required]="true"
+      [helperText]="categoryForm.code().errors()[0]?.message ?? ''"
+    />
   `,
 })
-export class EmployeeFilterComponent {
-  private readonly filterModel = signal<FilterData>({
-    lastName: '',
-    firstName: '',
-    personnelNumber: '',
-  });
+export class CategoryDialogComponent {
+  private readonly translate = inject(TranslateService);
 
-  protected readonly filterForm = form(this.filterModel, (schema) => {
-    validate(schema.lastName, (ctx) => {
+  /**
+   * Flips to true the first time the user presses Save. Field validators are
+   * gated on it, so the form is genuinely valid until a save is attempted —
+   * nothing renders as an error while the user is still typing.
+   */
+  protected readonly submitted = signal(false);
+
+  private readonly categoryModel = signal<CategoryData>({ code: '', name: '' });
+
+  protected readonly categoryForm = form(this.categoryModel, (schema) => {
+    validate(schema.code, (ctx) => {
+      if (!this.submitted()) {
+        return null; // silent until the first save attempt
+      }
       const value = ctx.value();
       if (!value?.trim()) {
-        return requiredError({ message: 'Last name is required' });
+        return requiredError({ message: this.translate.instant('validation.required') });
       }
       if (value.length < 2) {
-        return { kind: 'minLength', message: 'At least 2 characters' };
+        return { kind: 'minLength', message: this.translate.instant('validation.min_length') };
       }
       return null;
     });
   });
+
+  protected save(): void {
+    this.submitted.set(true);
+    if (this.categoryForm().invalid()) {
+      return; // keep the form open so the errors surface; never emit/persist
+    }
+    // …persist…
+  }
 }
 ```
 
 Key points:
 
 - Validators are written with **`validate(schema.field, ctx => ...)`** — there is no named `required()`, `minLength()`, `maxLength()`, etc. in `@angular/forms/signals`.
+- **Gate every validator on the `submitted` signal** (see above). Filter/search forms that never "submit" don't need the gate — it applies to edit/create/save flows.
 - Use **`requiredError({ message })`** for required-field errors.
 - Custom errors take the shape **`{ kind: string, message: string }`** (not `{ name }`).
 - Track errors in templates by **`error.kind`**, not `error.name`.
 - Form-level validity is **`form().invalid()`** — call the form signal first, then `.invalid()`.
 - The `maxlength` HTML attribute is **forbidden** on `[formField]` inputs. Use a `validate()` rule instead.
+
+### Mandatory fields — asterisk via `required`
+
+Mark every mandatory field with the **`[required]="true"` input** — the PDX control renders the label asterisk (`*`) itself; never concatenate `*` into a label string. Available on `pp-input`, `pp-textarea`, `pp-autocomplete`, `pp-datepicker`, and `pp-timepicker`. The input is **purely visual**: the gated `validate()` rule (or `Validators.required` on a `FormControl`) still does the enforcement. `pp-select` / `pp-multiselect` / `pp-checkbox` / `pp-radio-group` / `pp-slide-toggle` have no `required` input — for a mandatory select, enforce via the validator and surface the message via `supportingText` + `isError`.
+
+Derive which Delphi fields are mandatory from the PAS validation logic (empty-check before save, `raise`/message boxes on missing values), not from visual cues alone.
 
 ## Store Pattern
 
@@ -357,7 +387,9 @@ export class FeatureComponent {
   private readonly translate = inject(TranslateService);
 
   protected showSavedToast(): void {
-    this.snackBar.open(this.translate.instant('common.saved'), this.translate.instant('common.dismiss'));
+    // Prefer PPSnackbarService (@pdx/pp-snackbar) when the workspace has it — see pdx-recipes.md § pp-snackbar.
+    // Workspaces still on MatSnackBar: this.snackBar.open(this.translate.instant('common.saved'), …)
+    this.snackbar.open({ message: this.translate.instant('common.saved'), status: 'success' });
   }
 }
 ```
@@ -377,7 +409,7 @@ Translation files live in an `i18n` folder somewhere under the app — commonly 
 find . -type d -name i18n
 ```
 
-For each generated feature, add the new keys to **all** locale files found. Use English as the placeholder for any locale you can't translate confidently and flag those as TODO in the conversion summary.
+For each generated feature, values come from the Soluling project file (`PolylangSoluling.ntp`) located during the analyze phase — see SKILL.md Step 2.5 of the generate phase. For each Soluling match, write the key into **every** locale file the .ntp covers. For strings with **no** Soluling match, leave the key absent from **all** locale files — no English placeholder, no German source — so the next Transifex sync flags it for the human translator. List those absent keys in the conversion summary.
 
 ### Key naming
 
@@ -592,7 +624,7 @@ background: var(--mat-sys-surface-container);
 color: #717479;
 ```
 
-Each palette emits an unsuffixed base token (`--pp-primary`) plus discrete shade keys: `50, 100, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 920, 940, 950, 960, 980, 990` — `50` darkest, `990` lightest. There is **no** `1000`. The unsuffixed base is the brand color (not shade `500`). For SCSS use `$pp-primary` / `$pp-primary-990` etc.; for CSS use `var(--pp-primary)` / `var(--pp-primary-990)`. There is no `--color-pp-*` prefix.
+Each palette emits an unsuffixed base token (`--pp-primary`) plus discrete shade keys: `50, 100, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 920, 940, 950, 960, 980, 990` — `50` darkest, `990` lightest. There is **no** `1000`. The unsuffixed base is the brand color; shade `500` is defined as an alias of it (`--pp-primary-500: var(--pp-primary)`). For SCSS use `$pp-primary` / `$pp-primary-990` etc.; for CSS use `var(--pp-primary)` / `var(--pp-primary-990)`. The raw color tokens use the `--pp-` prefix; the Tailwind theme layer additionally maps each one to a `--color-pp-` alias (e.g. `--color-pp-primary: var(--pp-primary)`), which is what the `text-pp-*` / `bg-pp-*` utilities resolve to.
 
 ## Route Pattern
 
@@ -666,6 +698,9 @@ Scan generated code for these anti-patterns and rewrite them:
 - **No dead injections** — every `inject()` is actually used. If something is parked for later wiring, comment as `// TODO: …` instead.
 - **Comments explain WHY**, not WHAT. Strip narrating comments; keep Delphi-cross-reference comments and workaround justifications.
 - **Smart-vs-dumb component check** — no child component has both `inject(FeatureStore)` and an `input()` for the same data shape. If it does, lift store access to the parent and pass a slice via `input()`.
+- **No `(dblclick)` bindings.** Every Delphi `OnDblClick` action must appear as an explicit affordance (row action button, kebab-menu entry, or selection + toolbar action).
+- **Validators gated on `submitted`.** Edit/create forms show no errors before the first save attempt (see § Signal Forms Pattern).
+- **Mandatory fields carry `[required]`.** The asterisk comes from the control's `required` input, never from a `*` in the label string.
 
 ## Validation
 
