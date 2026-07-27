@@ -9,7 +9,7 @@ description: >-
   companion pep-driver toolchain.
 compatibility: Designed for Claude Code on macOS. Requires the companion `pep-driver` toolchain (the `pep` CLI + agent), `sshpass` (SSH boxes) or `pywinrm` (WinRM boxes), access to the ansible inventory for tenant creds, and an open RDP session on the box while driving.
 metadata:
-  version: '1.1.0'
+  version: '1.1.1'
 ---
 
 # PEP verify / drive
@@ -56,16 +56,17 @@ P="python3 ~/dev/polypoint/pep-driver/cli/pep --tenant <tenant>"
 
 git clone git@ssh.dev.azure.com:v3/polypoint/cloud/pep-driver ~/dev/polypoint/pep-driver   # missing toolchain
 ~/dev/polypoint/pep-driver/packaging/build-bundle.sh    # missing bundle (few minutes, needs internet)
-$P deploy                                               # first time on this box
-$P deploy --code-only                                   # ALWAYS after a full deploy — see below
+$P deploy                                               # first time on this box (ships current code)
+$P deploy --code-only                                   # faster re-deploy: skips the ~200 MB python
 $P status                                               # want: agent: UP … interactive=True
 ```
 
 Three bootstrap facts that cost live sessions to learn:
 
-- **⚠ The dist bundle ships a stale `pep_agent.py`** missing newer RPC methods (`dialogs`, `menu_path`, `click_xy`,
-  `click_in`, `exec`) — and the version string stays `0.1.0` either way. Always follow a full `deploy` with
-  `deploy --code-only`, and clear `C:\pep-driver\pepdriver\__pycache__` if it still behaves old.
+- **Trust `status` on staleness, not the version string.** `deploy` stamps a source digest on the box and `status`
+  compares it against your checkout, warning `agent is running STALE code` when they differ (`__version__` stays
+  `0.1.0` regardless, so it never told you). On a pre-2026-07-27 pep-driver this is unguarded — there, a full `deploy`
+  ships a stale agent and must be chased with `deploy --code-only`.
 - **⚠ Which launcher matters.** `$P agent-start` (schtasks InteractiveToken, no human needed) is fine for **read-only**
   work. For **driving PEP**, a human double-clicking `C:\pep-driver\start-agent.cmd` in the live RDP window is the
   reliable path — a schtasks-launched agent has been observed to screenshot fine while its synthetic input silently

@@ -53,16 +53,25 @@ $P deploy --code-only                                  # ALWAYS right after (see
 $P status                                              # want: agent: UP … interactive=True
 ```
 
-**⚠ The dist bundle's `pep_agent.py` is a stale snapshot.** It ships an old agent missing newer RPC
-methods (`dialogs`, `menu_path`, `click_xy`, `click_in`, `exec`). The version string stays `0.1.0`
-in both, so _check the method list, not the version_. After every full `deploy`:
+**Agent staleness is handled by the tool now (fixed 2026-07-27).** `deploy` mirrors `agent/` into
+`dist/` before archiving, so a full deploy always ships current code; it also clears the box's stale
+`__pycache__` and stamps `C:\pep-driver\.srcver` with a digest of `pep_agent.py` + `pepdriver/`.
+The agent reports that digest as `ping.src`, and `pep status` compares it against your checkout:
 
-```bash
-$P deploy --code-only
-$P rpc <any-new-method>   # or just: $P dialogs — fails loudly if the agent is stale
-# if it still behaves old, clear bytecode:
-$P rpc exec ...  ->  or over the shell: rmdir /s /q C:\pep-driver\pepdriver\__pycache__
 ```
+agent: UP  version=0.1.0 src=a4eb25de2837 backend=uia
+  WARNING: agent is running STALE code (agent deadbeef0000 != local a4eb25de2837).
+           Run: deploy --code-only, then restart the agent
+```
+
+`deploy --code-only` is now a **speed optimisation** (skips the ~200 MB python), not a mandatory
+sequel to every full deploy. `flows/` is excluded from the digest deliberately — flows are re-read
+per run, so `push-flow` never shows up as drift.
+
+> On an older checkout the stale-snapshot trap is still live: a full `deploy` ships whatever agent
+> `build-bundle.sh` last copied, `__version__` stays `0.1.0` either way, and the symptom is an RPC
+> method (`dialogs`, `menu_path`, `click_xy`, `click_in`, `exec`) behaving as if it does not exist.
+> Chase every full deploy with `deploy --code-only`, or just pull.
 
 Iteration loop after changing toolchain code:
 

@@ -155,3 +155,7 @@ above so the next run doesn't rediscover it.
   schtasks-launched agent found unable to inject input into PEP → human `start-agent.cmd` recipe.
 - 2026-07-24 — `pep windows` crashes the agent on the UIA-opaque `preview-feature` box; stale dist
   `pep_agent.py` and port-8765 thrash traps recorded.
+- 2026-07-27 — Stale-agent trap fixed at the source: `deploy` now mirrors `agent/` into `dist/`, clears the box's
+  `__pycache__`, and stamps a source digest that `pep status` checks. `deploy --code-only` is a speed option again,
+  not a required follow-up. Skill hardened for general use (preflight, OPERATIONS/GOTCHAS); pep-driver `main` gained
+  the WinRM and key-auth transports.

@@ -141,7 +141,7 @@ elif echo "$STATUS" | grep -q "interactive=False"; then
 else
   fail "agent DOWN"
   hint "pep --tenant $TENANT deploy            # first time on this box"
-  hint "pep --tenant $TENANT deploy --code-only # ALWAYS after a full deploy (dist agent is stale)"
+  hint "pep --tenant $TENANT deploy --code-only # faster re-deploy (skips the bundled python)"
   hint "pep --tenant $TENANT agent-start        # read-only work; for DRIVING PEP prefer start-agent.cmd (see references/OPERATIONS.md)"
   echo; echo "VERDICT: NOT READY — agent not running."
   exit 1
