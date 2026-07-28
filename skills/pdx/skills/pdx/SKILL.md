@@ -2,7 +2,7 @@
 name: pdx
 description: This skill should be used when applying the PDX (POLYPOINT Design Experience) design system to Angular code — installing or using `@pdx/*` libraries, replacing Angular Material components with PDX equivalents, applying PDX design tokens or typography, building forms with `pp-form`, or auditing existing UI for PDX consistency. Triggers on phrases like "apply PDX styles", "use PDX libs", "use POLYPOINT components", "make it POLYPOINT-styled", "replace mat-button with pp-button", or "audit Material usage".
 metadata:
-  version: '1.12.0'
+  version: '1.13.0'
 ---
 
 # PDX — POLYPOINT Design Experience

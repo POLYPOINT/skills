@@ -328,27 +328,62 @@ For consumer-managed content (no `ppTabContent` directive), use `[(selectedIndex
 
 ### Tabs inside dialogs — stabilize the height
 
-A Delphi `TPageControl` has a fixed pixel height, so its dialog never resizes on tab switches. `pp-tab-group` renders **only the active panel** into one shared `.pp-tab-group__body`, so a converted dialog sized by its content shrinks when the user switches to a shorter tab — a jarring jump the Delphi original never had. Fix it with a **grow-only `min-height` pin** on the tab body (there is no built-in input for this — a library gap; mention it in the conversion summary per § Report PDX library gaps):
+A Delphi `TPageControl` has a fixed pixel height, so its dialog never resizes on tab switches. `pp-tab-group` renders **only the active panel**, so a converted dialog sized by its content shrinks when the user switches to a shorter tab — a jarring jump the Delphi original never had. Fix it with a **grow-only `min-height` pin** (there is no built-in input for this — a library gap; mention it in the conversion summary per § Report PDX library gaps).
+
+**Pin the dialog surface, not `.pp-tab-group__body`.** Pinning the body is the obvious move, but it pins _content_ height rather than _dialog_ height. Where the tallest panel overflows the viewport — common in converted Delphi dialogs, whose time-grid style panels are tall — the body gets pinned to that panel's full height and every shorter tab inherits a scroll region far taller than its content. Measured on one converted five-tab dialog: a body pin left **1471px** of empty scrollable space under the shortest tab, a surface pin **32px**. Both hold the dialog equally steady.
 
 ```typescript
-private readonly host = inject(ElementRef<HTMLElement>);
-private maxTabBodyHeight = 0;
+@Directive({ selector: 'pp-tab-group[appStableTabHeight]' })
+export class StableTabHeightDirective {
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly tabGroup = inject(PPTabGroupComponent);
+  private maxSurfaceHeight = 0;
 
-/**
- * Pin the shared tab body's min-height to the tallest panel seen so the
- * dialog doesn't shrink when switching to a shorter tab. Grow-only: it
- * settles on the max height and never collapses on tab switches.
- */
-private stabilizeTabHeight(): void {
-  const body = this.host.nativeElement.querySelector<HTMLElement>('.pp-tab-group__body');
-  if (body && body.offsetHeight > this.maxTabBodyHeight) {
-    this.maxTabBodyHeight = body.offsetHeight;
-    body.style.minHeight = `${this.maxTabBodyHeight}px`;
+  constructor() {
+    afterRenderEffect({
+      // Reading `selectedIndex` re-runs this after each switch, once the newly
+      // selected panel has rendered. Ceil, not round — measured heights are
+      // fractional, and rounding 100.4 down lets the surface shrink by the rest.
+      earlyRead: () => {
+        this.tabGroup.selectedIndex();
+        const surface = this.surface();
+        return surface === null ? null : Math.ceil(surface.getBoundingClientRect().height);
+      },
+      write: (measured) => {
+        const height = measured();
+        if (height === null || height <= this.maxSurfaceHeight) {
+          return;
+        }
+        this.maxSurfaceHeight = height;
+        const surface = this.surface();
+        if (surface !== null) {
+          // Clamped in CSS, not by a resize listener: `min-height` outranks
+          // `max-height`, so a pin learned at a tall viewport would hold the
+          // dialog open past a shorter one. `min()` lets the browser
+          // re-resolve that on every viewport change, and 90dvh is
+          // pp-dialog's own cap.
+          surface.style.minHeight = `min(${height}px, 90dvh)`;
+        }
+      },
+    });
+  }
+
+  private surface(): HTMLElement | null {
+    return this.host.nativeElement.closest<HTMLElement>('.mat-mdc-dialog-container');
   }
 }
 ```
 
-Call it after the initial render (`afterNextRender(() => this.stabilizeTabHeight())`) and after every tab switch once the new panel has rendered — e.g. `(selectedIndexChange)` → `requestAnimationFrame(() => this.stabilizeTabHeight())`. Only needed when the container's height derives from the tab content (dialogs); routed full-page tab groups don't need it. Don't replace this with a hardcoded height — the Delphi pixel height doesn't translate, and grow-only keeps taller tabs unclipped.
+- **`afterRenderEffect`, not `(selectedIndexChange)` + `requestAnimationFrame`.** The `earlyRead` phase already runs after render, so no manual frame scheduling and no read/write layout thrash.
+- **Don't reach for a `ResizeObserver`.** Writing `min-height` from its callback mutates layout in the frame the observation arrived, which the browser reports as _"ResizeObserver loop completed with undelivered notifications"_; Angular's `ErrorHandler` turns that into a console error, and e2e suites failing on `pageerror` will fail the run. A tab switch is the only thing that resizes a dialog whose content arrives with it.
+- **Nested tab groups need the directive too** — the outer group only re-measures on its own switches. Both pin the same surface, grow-only, so they converge.
+- **`afterRenderEffect` re-runs only when a tracked signal is dirty**, not once per render, so the cost is one `getBoundingClientRect()` per tab switch. `earlyRead` → `write` is the documented shape for reading before writing; the phases exist so Angular can batch reads ahead of writes and avoid layout thrash.
+- **Know when `selectedIndex` alone is not enough.** The pin can go stale for a dialog that both sits _below_ the `90dvh` cap **and** has a panel whose height changes without a tab switch. A dialog resting at the cap is immune — in-panel growth only adds internal scroll, so the surface never moves. If a consumer has both, track its content height too rather than reaching for a `ResizeObserver`.
+- **Clamp in CSS, not with a resize listener.** `min-height` outranks `max-height`, so a pin learned at a tall viewport would hold the dialog open past a shorter one. Writing `min(${height}px, 90dvh)` lets the browser re-resolve that on every viewport change — no listener, no teardown, and the learned maximum survives instead of being reset. `90dvh` is `pp-dialog`'s own cap.
+- **No-ops outside a dialog**, so routed full-page tab groups are unaffected; they don't need it, and a pin there would only strand whitespace under a short panel.
+- **Don't substitute a hardcoded height** — the Delphi pixel height doesn't translate, and grow-only keeps taller tabs unclipped.
+
+Angular Material agrees on where the height belongs: `mat-tab-group`'s `dynamicHeight` defaults to `false` and then never sets a height, and `true` merely _animates_ old→new instead of preventing the change. The container's height is the consumer's to own.
 
 ## pp-tree
 
