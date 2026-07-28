@@ -53,6 +53,9 @@
       "name": "pp-pr-review",
       "source": "./skills/pp-pr-review",
       "description": "Gated, sub-agent-driven PR review for Azure DevOps. Verifies the repo, redacts PII, fans out parallel analyses (core logic, tests, security, SQL/JPA, memory, performance, and POLYPOINT Coding Guidelines), triages findings with the developer into a curated set, then drafts and posts PR comments only on explicit confirmation.",
+      "category": "development"
+    },
+    {
       "name": "improve",
       "source": "./skills/improve",
       "description": "Reflect on how the skills used in the current session performed and upload concrete HTML improvement plans to Whetstone for asynchronous human review — run /improve after any skill-driven task instead of baking a self-improvement section into every skill.",
