@@ -195,6 +195,51 @@ No `[formField]` on bound controls, no `(input)` → patch-store; instead, contr
 | `TSingleDmFactory` / runtime DM     | B       |
 | Controls bind via method calls only | B       |
 
+## Runtime-generated UI — fields that exist in no DFM
+
+Some forms render controls that appear **nowhere** in any `.dfm` or `.pas` — they are built at runtime from database definitions. Reading every DFM/PAS/frame/base class still misses them. This has caused real conversion gaps: entire groups of license-gated, DB-defined fields were silently dropped because they only materialize at runtime.
+
+### The canonical mechanism: `TFeldItemsFrame` ("weitere Angaben")
+
+User-defined fields are a two-table EAV in the database:
+
+- **`DISDBA.FELDITEMTYP`** — field _definitions_: `BEZEICHNUNG` (label), `DATENTYP` (`fdtString`, `fdtList`, `fdtNumber`, `fdtBoolean`, `fdtDate`), `AUSWAHLWERTE` (`;`-separated picklist values), `ANBINDUNG` (what entity the field attaches to, e.g. `KNOTEN`, `PERSONAL`), `REIHENFOLGE` (order), `AKTIV`, and `REQUIRED_KEY` (license gating — see below).
+- **`DISDBA.FELDITEMS`** — field _values_, keyed by (`FELDITEMTYPID`, `ANBINDUNG`, `IDANBINDUNG`), value in `WERTSTRING` / `WERTNUMBER` / `WERTBOOLEAN` / `WERTDATE`.
+
+`TFeldItemsFrame` (`rap/frFeldItems.pas`, query builder in `rap/uFelder.pas`) reads the definitions for one `Anbindung` and renders a control per active row. The host form just embeds the frame into an otherwise **empty tab**:
+
+```pascal
+FeldItemsFrame := TFeldItemsFrame.Create(self);
+FeldItemsFrame.Parent := tsWeitereAngaben;   // tab is EMPTY in the DFM
+FeldItemsFrame.Anbindung := at_Knoten;
+```
+
+### Detection signals — check every form for these
+
+| Signal                                                                                         | Where     |
+| ---------------------------------------------------------------------------------------------- | --------- |
+| `frFeldItems` in the `uses` clause                                                             | PAS       |
+| `TFeldItemsFrame` field or `.Anbindung :=` assignment                                          | PAS       |
+| A `TTabSheet` with **no child controls** in the DFM (e.g. `tsWeitereAngaben`)                  | DFM       |
+| SQL touching `FELDITEMTYP` / `FELDITEMS`, or calls to `GetDfId` / `GetPersonalKnotenFeldItems` | PAS / SQL |
+| `TDfEd` controls (single user-defined-field editors)                                           | DFM       |
+
+An empty tab in a DFM is never decorative — something populates it at runtime. Find what.
+
+### Enumerating the concrete fields
+
+The field definitions are seed data, not code. In the saas repo they live in Liquibase:
+
+```
+pp-services/liquibase/pp-initial-data/src/main/resources/db/{oracle,postgres}/DISDBA/csv/09-data/DATA_FELDITEMTYP.csv
+```
+
+Filter rows by the form's `ANBINDUNG` (e.g. `KNOTEN`). **Each active row is a real form field the conversion must account for**: `BEZEICHNUNG` is the German label, `DATENTYP` picks the control (`fdtList` → select, `fdtString` → text input, `fdtBoolean` → toggle, `fdtDate` → datepicker), `AUSWAHLWERTE` supplies the options, `REIHENFOLGE` the order. List them in the conversion plan's **Runtime-generated / license-gated fields** section — with a per-field decision (convert as first-class field vs. generic user-defined-fields UI vs. explicitly out of scope, confirmed with the user).
+
+### License gating lives in data too
+
+`FELDITEMTYP.REQUIRED_KEY` holds a comma-separated list of license key ids matched against the installed `SCHLUESSEL` table (`uFelder.pas`); the field renders only when one of the keys is licensed. Elsewhere, PAS code gates UI via `Lizenz.*Active` checks (`ecLiz.pas`, `TestLizenz(<key id>)`). Either way, **a licensed-off feature is invisible at runtime and near-invisible in the DFM** — grep the PAS for `Lizenz.` and check `REQUIRED_KEY` on every FELDITEMTYP row so licensed fields make it into the plan with their gating condition documented, not silently dropped because the demo system didn't show them.
+
 ## Data Flow Pattern
 
 ```

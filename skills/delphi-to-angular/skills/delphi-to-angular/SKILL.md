@@ -5,7 +5,7 @@ argument-hint: '[analyze|generate] [path/to/file.dfm] [screenshot-path] [path/to
 disable-model-invocation: true
 compatibility: Designed for Claude Code. Uses argument-hint and disable-model-invocation Claude Code extensions.
 metadata:
-  version: '1.13.0'
+  version: '1.14.0'
 ---
 
 # Delphi-to-Angular Conversion
@@ -73,6 +73,17 @@ The P2 Delphi apps all share a single Soluling translation project: `<p2-repo>/d
 2. **Read the file.** `PolylangSoluling.ntp` is a Soluling project file (XML-like text). Each translatable string appears with a stable key/ID, a source value (typically German), and translated values per locale. Skim once to learn the key shape and the set of locales present — this is the shape you will look up against in the Generate phase.
 3. **Note the file path** so the Generate phase can re-read it without re-asking.
 
+### Step 2.7: Detect runtime-generated UI (fields that exist in no DFM)
+
+Some forms render fields that appear in **no** `.dfm`/`.pas` at all — they are built at runtime from database definitions and are often license-gated; skipping this check has dropped entire field groups from past conversions. Check every form for the signals listed in [references/delphi-patterns.md](references/delphi-patterns.md) § Runtime-generated UI:
+
+- `frFeldItems` in the `uses` clause, a `TFeldItemsFrame` field, or `.Anbindung :=` assignments
+- a `TTabSheet` with no child controls in the DFM (something populates it at runtime)
+- SQL touching `FELDITEMTYP` / `FELDITEMS`, `GetDfId` calls, or `TDfEd` controls
+- `Lizenz.*Active` checks in the PAS (license-gated UI that a demo system may not show)
+
+When detected, enumerate the concrete fields from the Liquibase seed `DATA_FELDITEMTYP.csv` (filter by the form's `ANBINDUNG`, note `BEZEICHNUNG`, `DATENTYP`, `AUSWAHLWERTE`, `REQUIRED_KEY`) and carry them into the **Runtime-generated / license-gated fields** section of the conversion plan. Do not proceed to Step 3 with an empty tab left unexplained.
+
 ### Step 3: Parse DFM structure
 
 Extract from the DFM file:
@@ -130,6 +141,13 @@ For each `ShowModal` / `CreateForm` target traced from the PAS, list the resulti
 For each `OnDblClick` handler found in the PAS, state the explicit affordance that replaces it (never a `(dblclick)` binding):
 
 1. <Delphi control>.OnDblClick (<action>) -> <row kebab menu entry | inline action icon-button | selection + toolbar button>
+2. ...
+
+### Runtime-generated / license-gated fields
+
+For each field discovered in Step 2.7 (user-defined FELDITEMTYP fields, license-gated controls), list: label, control type derived from `DATENTYP`, picklist values, license keys from `REQUIRED_KEY` / `Lizenz.*` checks, and the conversion decision (first-class form field | generic user-defined-fields UI | out of scope — confirm with the user). If Step 2.7 found nothing, state "none detected" so the reviewer knows the check ran:
+
+1. <label> (<control type>, license key <id|none>) -> <decision>
 2. ...
 
 ### Reused utilities
@@ -297,7 +315,7 @@ List all generated files with a one-line description of each. Highlight:
 ### Reference Files
 
 - **[references/component-mapping.md](references/component-mapping.md)** — Delphi VCL → Angular component mapping tables and German-English domain glossary. Load during analyze phase.
-- **[references/delphi-patterns.md](references/delphi-patterns.md)** — P2 Delphi codebase structure, file naming, DFM/PAS anatomy, `inherited` keyword, base-class reading, ShowModal tracing. Load during analyze phase.
+- **[references/delphi-patterns.md](references/delphi-patterns.md)** — P2 Delphi codebase structure, file naming, DFM/PAS anatomy, `inherited` keyword, base-class reading, ShowModal tracing, runtime-generated UI (FeldItems / license gating). Load during analyze phase.
 - **[references/angular-conventions.md](references/angular-conventions.md)** — Angular patterns (component, store, signal forms incl. validation-after-first-submit and required-asterisk rules, i18n, testing, a11y, smart-vs-dumb components, optimistic UI, locking, mat-tree, post-generate lint passes). Load during generate phase.
 - **[references/pdx-recipes.md](references/pdx-recipes.md)** — PDX component recipes, icon naming, layout pitfalls, width-control rule, two-column layout, right-rail aside, row-actions (double-click replacement), snackbar. Load during generate phase.
 
