@@ -10,7 +10,7 @@
     {
       "name": "delphi-to-angular",
       "source": "./skills/delphi-to-angular",
-      "description": "Guide the conversion of Polypoint P2 Delphi VCL forms (.dfm/.pas) and frames into Angular standalone components — analyzing DFM/PAS sources, mapping VCL components to Angular + @pdx/* equivalents, and emitting PDX-styled features with NgRx Signal Store and Signal Forms.",
+      "description": "Guide the conversion of Polypoint P2 Delphi VCL forms (.dfm/.pas) and frames into Angular standalone components — analyzing DFM/PAS sources, mapping VCL components to Angular + @pdx/* equivalents, extracting business rules into rule cards enforced in the MSW handlers handed to the backend team, and emitting PDX-styled features with NgRx Signal Store and Signal Forms.",
       "category": "development"
     },
     {

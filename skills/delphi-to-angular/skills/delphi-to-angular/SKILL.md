@@ -1,11 +1,11 @@
 ---
 name: delphi-to-angular
-description: Use when converting Delphi VCL views (.dfm/.pas) from the P2 codebase to Angular components. Handles forms, frames, data modules, grids, trees, tabs, and dialogs. Produces Angular components plus any needed store, service, mocks, routes, and tests matching the POLYPOINT saas repo stack.
+description: Use when converting Delphi VCL views (.dfm/.pas) from the P2 codebase to Angular components. Handles forms, frames, data modules, grids, trees, tabs, and dialogs. Produces Angular components plus any needed store, service, mocks, routes, and tests matching the POLYPOINT saas repo stack. Extracts business rules from Delphi code, Oracle procedures, and DB constraints into rule cards that are enforced in the MSW handlers handed off to the backend team.
 argument-hint: '[analyze|generate] [path/to/file.dfm] [screenshot-path] [path/to/PolylangSoluling.ntp]'
 disable-model-invocation: true
 compatibility: Designed for Claude Code. Uses argument-hint and disable-model-invocation Claude Code extensions.
 metadata:
-  version: '1.14.0'
+  version: '1.15.0'
 ---
 
 # Delphi-to-Angular Conversion
@@ -51,7 +51,8 @@ From the PAS `uses` clause, resolve referenced files from the same directory as 
 - Read any data modules (`dm*.pas` + `.dfm`) for SQL queries
 - **Read the base class.** If the form derives from a domain-specific base (`TfKnotenGen`, `TfMitarbBase`, etc. — anything beyond `TForm` / `TDBParForm` / `TFrame` / `TDataModule`), open the base PAS + DFM. Base classes typically contribute fields, tabs, and validation that the child silently inherits. See [references/delphi-patterns.md](references/delphi-patterns.md) for `inherited` DFM merging and base-class reading.
 - **Trace every `ShowModal` and `CreateForm` call** in the PAS. Each one opens a sub-dialog that needs its own Angular dialog component. List the targets up front so the conversion plan accounts for them.
-- **Read string-resource units.** Any unit in the `uses` clause that looks like a strings container (`strres`, `str*`, `*Strings`, `*Const`, etc.) holds `resourcestring` constants the form/frame references in code (snackbars, dialog titles, validation messages). Read those `.pas` files so every German string the form can produce is in scope for the Soluling lookup in Step 2.6.
+- **Read string-resource units.** Any unit in the `uses` clause that looks like a strings container (`strres`, `str*`, `*Strings`, `*Const`, etc.) holds `resourcestring` constants the form/frame references in code (snackbars, dialog titles, validation messages). Read those `.pas` files so every German string the form can produce is in scope for the Soluling file located in Step 2.6 (the lookup itself happens in generate Step 2.5).
+- **Resolve every server-side routine.** For each `StoredProcName = 'X'` in a DFM and each `BEGIN X(:…); END;` in the PAS, open `<p2-repo>/shared/db/<schema>/procs/X.sql`. For each table the form writes, open its Liquibase `TABLE_*.xml`, `INDEX_*.xml`, and `CONSTRAINT_*.xml` in the saas repo. This is where derivations, unique keys, and cascades live — none of them appear in the DFM or PAS.
 
 ### Step 2.5: Reuse pass
 
@@ -101,12 +102,34 @@ Extract from the PAS file:
 
 - Event handlers and their logic (OnClick, OnChange, OnCreate, etc.)
 - **`OnDblClick` handlers** — list each one separately. Double-click does not exist in the web app (undiscoverable, no touch support, invisible to screen readers); each handler's action must be re-homed to an explicit affordance (row action button, kebab/context menu entry, or selection + toolbar action). See component-mapping.md § Events.
-- **Validation logic** — empty-checks before save, `raise` / message-box guards on missing values. These identify the mandatory fields (→ `[required]` asterisk) and the `validate()` rules; validation fires only after the first save attempt (see angular-conventions.md § Signal Forms).
+- **Validation logic** — empty-checks before save, `raise` / `ECMessage` guards, `iChecker.DoCheck` chains. These identify the mandatory fields (→ `[required]` asterisk) and the `validate()` rules; validation fires only after the first save attempt (see angular-conventions.md § Signal Forms). **Message-bearing checks are a minority of the rules** — Step 4.5 covers the silent ones (derived columns, unique keys, triggers, WHERE-clause eligibility). Do not treat this bullet as the rule inventory.
 - Private fields (`F` prefix = state, `i` prefix = interface)
 - `Sync*` methods — these become `computed()` signals
 - Filter methods (`Apply*Filter`) — these become signal-based filtering
 - Public API: properties, setup methods
 - Interface dependencies for the data contract
+
+### Step 4.5: Business-rule extraction
+
+The DFM/PAS sweep in Steps 3–4 finds rules that **produce a message**. It is structurally blind to rules enforced by an Oracle procedure, a unique index, a trigger, a derived column, or a WHERE clause — which in P2 is most of them. Skipping this step is how a rule reaches neither the Angular app (it is not UI) nor the backend team (the MSW handler stays plain CRUD). Full method, greps, worked example, and tooling caveats: [references/business-logic-extraction.md](references/business-logic-extraction.md).
+
+**Set `export LC_ALL=C` first.** P2 sources are ISO-8859-1; under a UTF-8 locale grep silently skips most of the tree (measured: 592 vs 1,708 matching files).
+
+Run sweep 0 first (exclude rules already externalized to the cloud API — `ls rest/*.pas`, `grep -rn 'PPAPI'`; don't re-port those), then all seven sweeps below. Record the result of each — including "none found", so the reviewer knows the sweep ran:
+
+1. **Reported rules** — grep `Strres.pas` (or the form's strings unit) for rule verbs (`darf`, `muss`, `kann nicht`, `nicht erlaubt`, `bereits`, `ueberschneid`, `ungueltig`), then grep each `rs_*` id back to its enforcement site. Note the `ECMessage` button set: `[mbOK]` is a hard stop, `[mbYes,mbNo]` is user-overridable — that distinction is part of the rule.
+2. **Server-side logic** — `grep -rn "StoredProcName" --include='*.dfm' --include='*.pas'`, `grep -rnE "BEGIN +[A-Z0-9_]+\(:"`, and inline Oracle functions in DFM SQL. **For every routine found, open `<p2-repo>/shared/db/<schema>/procs/<NAME>.sql` and read it.** These have no Delphi source; a form-only sweep sees nothing at all.
+3. **DB constraints** — for every table the feature writes, open the Liquibase `INDEX_*.xml` (`unique="true"`) and `CONSTRAINT_*.xml` change-sets. A unique key on a _start_ date with an unconstrained end date means the end date is derived — find the procedure that derives it.
+4. **Triggers** — `grep -rn -i '\btrigger\b' --include='*.pas'` (German comments naming the trigger). **431 of 602 ECBERN triggers short-circuit for `JDBC Thin Client`** — they do not fire for the Java backend, so every rule they carry must be re-homed explicitly.
+5. **Embedded + dynamic SQL** — DFM `SQL.Strings` and `SQL.Text :=` / `MacroByName`. Classify each predicate: validity resolution, status-code filter, eligibility, derivation, ordering. Re-join DFM `' +` line continuations before matching.
+6. **Sentinels, config, and permissions** — `cInfiniteDate` (= 2999-12-31, **not** NULL), `-1` = "rule disabled", `PEPOptions.` / `objSpital.` / `IPEPConflictSettings.ReadFor(nodeId)` (which rules are active is per-tenant DB data), `RightManager.HasRight*`, `LizenzChecker`, `SPERRUNG` locking, `DbIncreaseVersionId`.
+7. **Existing spec** — `ls tests/PolyTest.Tests.*.pas` for DUnit units covering this domain; port their cases before the implementation.
+
+Then, for each rule found, **classify** it with the decision tree in the reference doc and write a **rule card** in the format defined there (`@backend-rule` … `@confidence`). Assign ids `<FEATURE>-001`, `-002`, … in discovery order; ids are permanent.
+
+**Representability gate.** Before finishing, check each backend-invariant card against the data model about to be designed: can the wire model and the mock store express the rule's `@scope` tuple? If the model collapses a dimension the rule ranges over (a singular field where the rule needs a list, a store keyed on a subset of the scope tuple), that is a **model defect, not a documentation problem** — raise it as a `-000` card and fix the model. A rule whose scope the model cannot represent cannot be documented, mocked, or tested; it can only be lost.
+
+Do not proceed to Step 5 with an unresolved `model-blocked` card that has no `-000` counterpart.
 
 ### Step 5: Build conversion plan
 
@@ -167,6 +190,50 @@ List anything found in the reuse-pass that the generated code will import (test-
 - <ServiceName>
   - <method>(params) -> mocked via MSW / test-data builder, TODO: <HTTP method> <endpoint path>
   - ...
+
+### Backend contract / business rules
+
+Rules extracted in Step 4.5. This section is the handoff to the Java backend team — the MSW handler generated in Generate Step 2.6 carries these annotations verbatim, and the backend team transcribes them into OpenAPI + Java weeks later.
+
+**Model representability**
+
+- Scope tuples the wire model must support: <e.g. `(paCode, nodeId, validFrom)` — a LIST of validity windows per shift per node, not a single `validity` field>
+- Model changes required before any rule can be stated: <or "none">
+
+**Rules to enforce in the mock handler** (`@mock implemented`)
+
+| Id     | Statement (one line) | Kind      | Error      | Delphi evidence  |
+| ------ | -------------------- | --------- | ---------- | ---------------- |
+| XX-001 | ...                  | invariant | 409 `CODE` | `<file>:<lines>` |
+
+**Rules carried but not enforceable in the mock** (`@mock documented-only` / `model-blocked`)
+
+| Id     | Statement | Why not enforceable | Delphi evidence  |
+| ------ | --------- | ------------------- | ---------------- |
+| XX-004 | ...       | ...                 | `<file>:<lines>` |
+
+**Rules the frontend also checks** (immediate feedback only — never authoritative)
+
+| Id  | Field(s) | Validator | Backend remains the gate |
+| --- | -------- | --------- | ------------------------ |
+
+**Error contract**
+
+| Rule id | Status | `code` | `field` | i18n key |
+| ------- | ------ | ------ | ------- | -------- |
+
+Never let the store infer meaning from the status alone. A 409 on save can mean duplicate, over-length, a stale lock, or a referential failure — the frontend must branch on `code`.
+
+**Sentinels and conventions crossing the wire**
+
+- Open-ended date: <`cInfiniteDate` 2999-12-31 vs `null` — state the decision and where it is normalised>
+- Disabled-rule sentinel, status codes, persisted enum ordinals that must not be reordered.
+
+**Rules needing user confirmation** (`@confidence inferred | assumed`)
+
+- XX-00N: <question>
+
+**Server-side artefacts with no Angular counterpart** — Oracle procedures, JDBC-bypassed triggers, cache-version bumps, locks. List each with its Delphi path so the backend team can see them.
 
 ### Form model (if applicable)
 
@@ -251,12 +318,26 @@ For every user-visible string the new components introduce, add a translation ke
 
 Do not hardcode any user-visible string in templates or TypeScript — `TranslatePipe` for templates, `TranslateService.instant(...)` for snackbars / dynamic labels. The component templates still reference keys (`'hierarchy.title' | translate`) whether or not the locale file has a value yet — `ngx-translate` falls back to the key itself when a value is missing, which is exactly the signal the human translator needs.
 
-### Step 2.6: Generate mock API / fixtures
+### Step 2.6: Generate mock API, fixtures, and rule enforcement
+
+The MSW handler is not a stub — **it is the specification the Java backend team reads.** The OpenAPI spec and the Java service are hand-written from the mock and its fixtures weeks later, by someone who did not write the mock. Anything absent from the handler is absent from the backend.
 
 If the generated feature has service-backed data, search the workspace for an existing MSW setup (`mock-api`, `msw/handlers`, `setupWorker`).
 
 - **If MSW exists**, mirror the existing handler pattern: handler file per feature, in-memory store seeded with realistic fixtures, registered in the existing index file. Realistic data: 10+ tree nodes, 4+ list items, real-looking domain names.
 - **If MSW is not present**, generate a builder in the workspace's shared test-data lib (`libs/shared/test-data/` or similar — discover the location), exported and shared by the service mock and every spec. No inline duplication.
+
+Then apply the five rule-carrying requirements below. First find the workspace's best rule-carrying handlers and mirror them: grep the handlers directory for conflict responses (`grep -rln "status: 409\|code:" <handlers-dir>`) and pick the ones that enforce a domain rule and return a coded body — not the plain-CRUD ones. Rule kinds to look for in an exemplar: a temporal "at most one per period" rule **with its cascade**, system-row immutability with `409 {code:'IN_USE'}`, lock and child-reference conflicts (see the reference doc for the exemplars found at the time of writing). Full annotation format and rationale: [references/business-logic-extraction.md](references/business-logic-extraction.md).
+
+1. **File-level JSDoc.** Every handler opens with which Delphi form and which DB table it stands in for — it is the first thing the backend team reads.
+
+2. **One `@backend-rule` block per rule from the conversion plan**, immediately above the code that implements it (or above the store/type it concerns, when `documented-only`). Use all rule-card fields from the reference doc's format (`@backend-rule <id> <title>`, `@statement`, `@scope`, `@kind`, `@layer`, `@delphi`, `@p2-behaviour`, `@error`, `@i18n`, `@mock`, `@openapi`, `@test`, `@confidence`, and `@question` on inferred/assumed cards). Rules the mock cannot execute still get a block, with `@mock documented-only: <reason>` or `@mock model-blocked: <reason + blocking id>`. **Never omit a rule because the mock cannot enforce it** — an unwritten rule and a nonexistent rule are indistinguishable in a handler file, and that indistinguishability is the entire failure mode this step exists to prevent.
+
+3. **Implement every rule marked `@mock implemented`**, returning the typed `RuleViolation` conflict body defined in the reference doc (`{ code, ruleId, field?, message }` — `code` is a stable enum like `'DUPLICATE_VALID_FROM'`, `ruleId` joins handler ↔ spec ↔ i18n ↔ the eventual Java guard, `message` is English for logs and never rendered). The Angular store must branch on `code`, never on the bare status, and the resulting error path must be wired into the UI now: the app needs it anyway the moment the real backend enforces the rule, and inferring meaning from a bare 409 is a live bug (an over-length title rejected by the DB rendered to the user as "title already in use").
+
+4. **Generate `<feature>.handlers.spec.ts` with exactly one test per rule id.** `@mock implemented` rules get a real `it('<ID> <statement>', ...)` derived from `@test`. `documented-only` and `model-blocked` rules get `it.todo('<ID> <statement>')` so the rule occupies a permanent, named, visible slot.
+
+5. **Generate `<feature>.RULES.md` next to the handler — from the annotations, never by hand.** It is the backend-readable handout: id, statement, kind, layer, error contract, Delphi evidence, mock status. Add or extend a `rules:sync` script that regenerates it and a `rules:check` script that fails when (a) the generated doc differs from the annotations, or (b) the set of `@backend-rule` ids in the handler differs from the set of ids in the spec file. Wire `rules:check` into the project's validation script (Step 6). This is what makes the document incapable of going stale: it is generated, and regeneration is a gate.
 
 ### Step 3: Add route
 
@@ -307,6 +388,7 @@ List all generated files with a one-line description of each. Highlight:
 - TODO items that need backend work (HTTP endpoints, real auth).
 - **PDX library gaps:** every workaround applied around a `pp-*` component's behavior (CSS fighting internals, DOM queries into component markup, re-implemented inputs/outputs, sizing/focus patches) — name the component, the missing behavior, the workaround, and whether the behavior should be implemented in the library instead, so the user can decide to file a PDX improvement. See pdx-recipes.md § Report PDX library gaps.
 - **Soluling outcome:** translation keys populated from `PolylangSoluling.ntp` (by locale) vs. keys intentionally left absent across all locale files so the human translator authors them in Transifex. List each absent key with its German source so the developer can sanity-check before the next Transifex push.
+- **Business rules carried to the backend:** count of rules enforced in the mock, count carried as `documented-only` / `model-blocked` (with reasons), and every rule whose `@confidence` is `inferred` or `assumed` — list these as explicit questions for the user, since a wrong rule in an executable mock propagates faster than a wrong comment.
 
 ---
 
@@ -316,6 +398,7 @@ List all generated files with a one-line description of each. Highlight:
 
 - **[references/component-mapping.md](references/component-mapping.md)** — Delphi VCL → Angular component mapping tables and German-English domain glossary. Load during analyze phase.
 - **[references/delphi-patterns.md](references/delphi-patterns.md)** — P2 Delphi codebase structure, file naming, DFM/PAS anatomy, `inherited` keyword, base-class reading, ShowModal tracing, runtime-generated UI (FeldItems / license gating). Load during analyze phase.
+- **[references/business-logic-extraction.md](references/business-logic-extraction.md)** — where P2 hides business logic (18 location classes), the seven-sweep extraction pass, tooling caveats (encoding, DFM line continuation), the frontend/backend classification tree, the rule-card format, and the MSW `@backend-rule` annotation + error contract. Load during analyze Step 4.5 and generate Step 2.6.
 - **[references/angular-conventions.md](references/angular-conventions.md)** — Angular patterns (component, store, signal forms incl. validation-after-first-submit and required-asterisk rules, i18n, testing, a11y, smart-vs-dumb components, optimistic UI, locking, mat-tree, post-generate lint passes). Load during generate phase.
 - **[references/pdx-recipes.md](references/pdx-recipes.md)** — PDX component recipes, icon naming, layout pitfalls, width-control rule, two-column layout, right-rail aside, row-actions (double-click replacement), snackbar. Load during generate phase.
 
