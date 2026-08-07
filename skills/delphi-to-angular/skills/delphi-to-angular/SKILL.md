@@ -5,7 +5,7 @@ argument-hint: '[analyze|generate] [path/to/file.dfm] [screenshot-path] [path/to
 disable-model-invocation: true
 compatibility: Designed for Claude Code. Uses argument-hint and disable-model-invocation Claude Code extensions.
 metadata:
-  version: '1.15.0'
+  version: '1.16.0'
 ---
 
 # Delphi-to-Angular Conversion
@@ -327,7 +327,7 @@ If the generated feature has service-backed data, search the workspace for an ex
 - **If MSW exists**, mirror the existing handler pattern: handler file per feature, in-memory store seeded with realistic fixtures, registered in the existing index file. Realistic data: 10+ tree nodes, 4+ list items, real-looking domain names.
 - **If MSW is not present**, generate a builder in the workspace's shared test-data lib (`libs/shared/test-data/` or similar — discover the location), exported and shared by the service mock and every spec. No inline duplication.
 
-Then apply the five rule-carrying requirements below. First find the workspace's best rule-carrying handlers and mirror them: grep the handlers directory for conflict responses (`grep -rln "status: 409\|code:" <handlers-dir>`) and pick the ones that enforce a domain rule and return a coded body — not the plain-CRUD ones. Rule kinds to look for in an exemplar: a temporal "at most one per period" rule **with its cascade**, system-row immutability with `409 {code:'IN_USE'}`, lock and child-reference conflicts (see the reference doc for the exemplars found at the time of writing). Full annotation format and rationale: [references/business-logic-extraction.md](references/business-logic-extraction.md).
+Then apply the four rule-carrying requirements below. First find the workspace's best rule-carrying handlers and mirror them: grep the handlers directory for conflict responses (`grep -rln "status: 409\|code:" <handlers-dir>`) and pick the ones that enforce a domain rule and return a coded body — not the plain-CRUD ones. Rule kinds to look for in an exemplar: a temporal "at most one per period" rule **with its cascade**, system-row immutability with `409 {code:'IN_USE'}`, lock and child-reference conflicts (see the reference doc for the exemplars found at the time of writing). Full annotation format and rationale: [references/business-logic-extraction.md](references/business-logic-extraction.md).
 
 1. **File-level JSDoc.** Every handler opens with which Delphi form and which DB table it stands in for — it is the first thing the backend team reads.
 
@@ -335,9 +335,7 @@ Then apply the five rule-carrying requirements below. First find the workspace's
 
 3. **Implement every rule marked `@mock implemented`**, returning the typed `RuleViolation` conflict body defined in the reference doc (`{ code, ruleId, field?, message }` — `code` is a stable enum like `'DUPLICATE_VALID_FROM'`, `ruleId` joins handler ↔ spec ↔ i18n ↔ the eventual Java guard, `message` is English for logs and never rendered). The Angular store must branch on `code`, never on the bare status, and the resulting error path must be wired into the UI now: the app needs it anyway the moment the real backend enforces the rule, and inferring meaning from a bare 409 is a live bug (an over-length title rejected by the DB rendered to the user as "title already in use").
 
-4. **Generate `<feature>.handlers.spec.ts` with exactly one test per rule id.** `@mock implemented` rules get a real `it('<ID> <statement>', ...)` derived from `@test`. `documented-only` and `model-blocked` rules get `it.todo('<ID> <statement>')` so the rule occupies a permanent, named, visible slot.
-
-5. **Generate `<feature>.RULES.md` next to the handler — from the annotations, never by hand.** It is the backend-readable handout: id, statement, kind, layer, error contract, Delphi evidence, mock status. Add or extend a `rules:sync` script that regenerates it and a `rules:check` script that fails when (a) the generated doc differs from the annotations, or (b) the set of `@backend-rule` ids in the handler differs from the set of ids in the spec file. Wire `rules:check` into the project's validation script (Step 6). This is what makes the document incapable of going stale: it is generated, and regeneration is a gate.
+4. **Generate `<feature>.handlers.spec.ts` with one test slot per rule id.** `@mock implemented` rules get a real `it('<ID> <statement>', ...)` derived from `@test` — plain vitest, no custom tooling. `documented-only` and `model-blocked` rules get `it.todo('<ID> <statement>')` so the rule occupies a named, visible slot in every test run. Keep the handler and the spec in step when adding or removing a rule — PR review is the gate, deliberately: the handler plus its spec IS the handoff artifact, and a bespoke sync script was tried and retired because the ceremony cost more than the drift it prevented. Do not generate a separate rules document — everything the backend team needs lives in the handler they already read.
 
 ### Step 3: Add route
 

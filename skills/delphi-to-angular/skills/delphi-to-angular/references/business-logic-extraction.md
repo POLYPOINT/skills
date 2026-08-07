@@ -211,15 +211,15 @@ Note it decomposes into **five** cards plus a model-defect card — and the _pri
 
 Evaluated against the actual handoff (the backend team transcribes the handler eight weeks later):
 
-| Option                           | Discoverability                       | Staleness risk                                                                    | Enforceability                                              |
-| -------------------------------- | ------------------------------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| JSDoc comments alone             | high (right file)                     | high — nothing verifies them; the repo already has dangling `_aux/…` doc pointers | none                                                        |
-| **Handler implements the rules** | **highest — executable, unambiguous** | **low — a wrong rule breaks the app in dev**                                      | high                                                        |
-| Handler spec tests per rule id   | medium                                | lowest — CI fails                                                                 | highest                                                     |
-| Hand-written BUSINESS-RULES.md   | medium                                | high                                                                              | none                                                        |
-| OpenAPI annotations              | high (Java side)                      | medium                                                                            | high, **but field-level only and written _after_ the mock** |
+| Option                           | Discoverability                       | Staleness risk                                                                           | Enforceability                                              |
+| -------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| JSDoc comments alone             | high (right file)                     | medium — sits above the enforcing code, unlike the repo's dangling `_aux/…` doc pointers | none                                                        |
+| **Handler implements the rules** | **highest — executable, unambiguous** | **low — a wrong rule breaks the app in dev**                                             | high                                                        |
+| Handler spec tests per rule id   | medium                                | lowest — CI fails                                                                        | highest                                                     |
+| Separate rules document          | medium                                | high — even a generated one adds tooling humans must maintain and understand             | none                                                        |
+| OpenAPI annotations              | high (Java side)                      | medium                                                                                   | high, **but field-level only and written _after_ the mock** |
 
-Hence the layered mechanism: the `@backend-rule` block is the single authored source; the handler implements what the in-memory model can express; the spec file enforces id parity; the RULES.md handout is **generated**, never hand-written. A rule the mock enforces is also the error-path UX the app needs anyway — the store handles a coded conflict _before_ the real backend exists.
+Hence the mechanism: the `@backend-rule` block is the single authored source, sitting directly above the code that enforces it; the handler implements what the in-memory model can express; the spec file holds one test slot per rule id. **No separate rules document** — the handler plus its spec is the whole handoff artifact, in the one file the backend team already reads. A rule the mock enforces is also the error-path UX the app needs anyway — the store handles a coded conflict _before_ the real backend exists.
 
 ### Handlers that already set the bar
 
@@ -245,11 +245,11 @@ type RuleViolation = {
 
 The frontend maps `code` → translation key and **never branches on the bare status**. A 409 on save can mean duplicate, over-length, a stale lock, or a referential failure. The cautionary case is live in the repo: shift-group `title` is capped at 80 in Angular but is `VARCHAR(30)` in the DB; the backend catches the DB failure and re-throws 409; the store maps any 409 to `shiftGroup.error.duplicate` — so a user typing 31–80 characters is told the title is already in use.
 
-### Keeping it honest: `rules:sync` and `rules:check`
+### Keeping it honest: one test slot per rule id
 
-- `<feature>.handlers.spec.ts` contains exactly one `it('<ID> …')` per `@mock implemented` rule and one `it.todo('<ID> <statement>')` per `documented-only` / `model-blocked` rule. A rule the mock deliberately cannot enforce still occupies a permanent, named, visible slot.
-- `rules:sync` regenerates `<feature>.RULES.md` from the `@backend-rule` blocks — the backend-readable handout (id, statement, kind, layer, error contract, Delphi evidence, mock status). Never edit it by hand.
-- `rules:check` (a ~20-line script) fails CI when (a) the generated doc differs from the annotations, or (b) the set of `@backend-rule` ids in the handler differs from the set of ids in the spec file. Adding a rule without a test fails; deleting a test without deleting the rule fails. The handout cannot go stale because it is generated, and regeneration is a gate.
+`<feature>.handlers.spec.ts` contains one `it('<ID> …')` per `@mock implemented` rule (derived from the card's `@test` line — plain vitest, no custom tooling) and one `it.todo('<ID> <statement>')` per `documented-only` / `model-blocked` rule. A rule the mock deliberately cannot enforce still occupies a named, visible slot in every test run. Keep the handler and the spec in step when adding or removing a rule; PR review is the gate.
+
+That choice is deliberate. A `rules:sync`/`rules:check` mechanism (generated `RULES.md` handout + a CI script diffing rule ids between handler and spec) was built and retired in the SAAS-736 retrofit: it worked, but the ~200-line bespoke parser, the generated markdown noise, and a prettier/byte-comparison conflict cost more than the deletion-drift it prevented — the original failure mode was extraction-time loss, not deletion, and deletions are visible in diffs. If deletion-drift is ever observed in practice, reintroduce a gate then, with evidence.
 
 ## What to hand the backend beyond the mock
 
