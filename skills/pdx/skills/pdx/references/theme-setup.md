@@ -147,6 +147,10 @@ Instead of SCSS imports, styles can be added to the `angular.json` styles array:
 .success-badge {
   background: $pp-success;
 }
+
+.disabled-hint {
+  color: $pp-disabled-500; // dedicated disabled-text token — not opacity, not a Secondary shade
+}
 ```
 
 ### In CSS (Custom Properties)
@@ -159,7 +163,7 @@ Instead of SCSS imports, styles can be added to the `angular.json` styles array:
 }
 ```
 
-The raw CSS custom-property prefix is **`--pp-`**; the Tailwind theme layer additionally exposes a `--color-pp-` alias for each token (e.g. `--color-pp-primary: var(--pp-primary)`), which is what the `text-pp-*` / `bg-pp-*` utilities resolve to. Each palette emits an unsuffixed base (e.g. `--pp-primary`) plus discrete shade keys: `50, 100, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 920, 940, 950, 960, 980, 990` (`50` darkest → `990` lightest). There is no `1000`.
+The raw CSS custom-property prefix is **`--pp-`**; the Tailwind theme layer additionally exposes a `--color-pp-` alias for each token (e.g. `--color-pp-primary: var(--pp-primary)`), which is what the `text-pp-*` / `bg-pp-*` utilities resolve to. Each palette emits an unsuffixed base (e.g. `--pp-primary`) plus discrete shade keys: `50, 100, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 920, 940, 950, 960, 980, 990` (`50` darkest → `990` lightest). There is no `1000`. The Disabled palette (v1.2.0+) is single-shade: `--pp-disabled` / `--pp-disabled-500` only.
 
 ### With TailwindCSS
 
@@ -185,7 +189,7 @@ Or use the utility class:
 <body class="font-akkurat"></body>
 ```
 
-Typography scale is provided through the theme. Use semantic HTML elements (`h1`-`h6`, `p`, `label`) which are styled automatically.
+Typography scale is provided through the theme. Use semantic HTML elements (`h1`-`h6`, `p`, `label`) which are styled automatically — including default text colors (v1.2.0+): Headline/Title/Body in `$pp-secondary-150`, Label in `$pp-secondary-100`. Do not re-declare text colors on these elements.
 
 ---
 

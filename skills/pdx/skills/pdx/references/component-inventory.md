@@ -6,7 +6,7 @@ Most component libraries declare `@pdx/pp-theme` as a peer dependency; a few (e.
 
 ---
 
-## @pdx/pp-theme (v1.1.1)
+## @pdx/pp-theme (v1.2.0)
 
 Foundational design system theme. Provides colors, typography, spacing, and design tokens. Integrates AkkuratStd font, TailwindCSS, and Angular Material into a unified system.
 
@@ -54,11 +54,15 @@ import { ... } from '@pdx/pp-theme';
 
 **Extended palettes:** orange, purple, dark-blue, blue, light-blue, linth-green, green, yellow.
 
-**Shade scale (per palette):** discrete keys `50, 100, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 920, 940, 950, 960, 980, 990` plus an unsuffixed base. `50` is darkest, `990` is lightest. There is **no** `1000` shade. Source of truth: `libs/pp-theme/css/color/colors.css` and `libs/pp-theme/scss/color/colors.scss` in the PDX repo.
+**Disabled token (v1.2.0+):** a single-shade palette for disabled text and icons — SCSS `$pp-disabled` / `$pp-disabled-500`, CSS `--pp-disabled` / `--pp-disabled-500`, Tailwind `text-pp-disabled-500` etc. Value `#717479` (4.69:1 on white — WCAG AA). All PDX components use this token for disabled text/icons; use it instead of Secondary shades or `opacity` when styling custom disabled states.
+
+**Shade scale (per palette, except Disabled — single-shade):** discrete keys `50, 100, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 920, 940, 950, 960, 980, 990` plus an unsuffixed base. `50` is darkest, `990` is lightest. There is **no** `1000` shade. Source of truth: `libs/pp-theme/css/color/colors.css` and `libs/pp-theme/scss/color/colors.scss` in the PDX repo.
 
 ### Typography
 
 AkkuratStd family: Light (300), Regular (400), Bold (700). CSS class: `.font-akkurat`.
+
+The type scale applies default text colors (v1.2.0+): Headline, Title, and Body styles use `$pp-secondary-150`; Label styles use `$pp-secondary-100`. (Hex values: see design-guidelines.md, Typography.)
 
 ### Angular Material Integration
 
@@ -137,7 +141,7 @@ Never import it from a per-component SCSS file. The compiled CSS contains every 
 
 ---
 
-## @pdx/pp-button (v1.3.2)
+## @pdx/pp-button (v1.3.3)
 
 Buttons for all user interaction needs: standard buttons, icon buttons, and floating action buttons (FAB).
 
@@ -218,7 +222,7 @@ Prominent FAB for primary screen actions. Selector is the full **`pp-floating-ac
 
 ---
 
-## @pdx/pp-input (v2.4.2)
+## @pdx/pp-input (v2.5.2)
 
 Text inputs and textareas with validation, helper text, tooltips, and forms integration.
 
@@ -264,6 +268,7 @@ import { PPInputComponent } from '@pdx/pp-input';
 | `readonly`                | `boolean`                                           | `false`                                      | Read-only state                                                                                                                                                                                                                                     |
 | `fullWidth`               | `boolean`                                           | `false`                                      | Full-width field                                                                                                                                                                                                                                    |
 | `value`                   | `string`                                            | `''`                                         | Current value                                                                                                                                                                                                                                       |
+| `maxLength`               | `number \| undefined`                               | `undefined`                                  | Max characters the user can type (native `maxlength`). Programmatic values (forms API, `value` input) are not truncated. Typed `number \| undefined` to satisfy Signal Forms' `FormUiControl` contract                                              |
 | `id`                      | `string \| undefined`                               | `undefined`                                  | Unique identifier for the element                                                                                                                                                                                                                   |
 | `ariaLabel`               | `string \| undefined`                               | `undefined`                                  | Accessibility label                                                                                                                                                                                                                                 |
 | `ariaLabelTrailingButton` | `string \| undefined`                               | `'Trailing button for resetting the input.'` | Accessible name for trailing reset                                                                                                                                                                                                                  |
@@ -307,6 +312,7 @@ import { PPTextareaComponent } from '@pdx/pp-input';
 | `readonly`   | `boolean`                       | `false`     | Read-only state                                                                                                                                                                  |
 | `fullWidth`  | `boolean`                       | `false`     | Full-width field                                                                                                                                                                 |
 | `value`      | `string`                        | `''`        | Current value                                                                                                                                                                    |
+| `maxLength`  | `number \| undefined`           | `undefined` | Max characters the user can type (native `maxlength`). Same semantics and `FormUiControl` type constraint as on `pp-input`                                                       |
 | `id`         | `string \| undefined`           | `undefined` | Unique identifier for element                                                                                                                                                    |
 | `ariaLabel`  | `string \| undefined`           | `undefined` | Accessibility label                                                                                                                                                              |
 | `labelSpace` | `'auto' \| 'always' \| 'never'` | `'auto'`    | Same tri-state semantics as on `pp-input` — but the textarea reserves `0.75rem` (12px), not 8px. Use `'always'` to align a label-less textarea with neighbouring labeled fields. |
@@ -491,7 +497,7 @@ The PDX form primitives have a few hard-coded sizing constraints that can clip o
 
 ---
 
-## @pdx/pp-checkbox (v2.0.0)
+## @pdx/pp-checkbox (v2.0.1)
 
 Checkbox with label, error, disabled and indeterminate states, and forms integration.
 
@@ -556,7 +562,7 @@ interface PPCheckboxChangeEvent {
 
 ---
 
-## @pdx/pp-radio (v1.4.1)
+## @pdx/pp-radio (v1.4.2)
 
 Radio buttons for single-choice selections. Standalone or grouped.
 
@@ -627,7 +633,7 @@ interface PPRadioOption {
 
 ---
 
-## @pdx/pp-chip (v1.2.1)
+## @pdx/pp-chip (v1.2.2)
 
 Compact chips for filters, tags, and selections.
 
@@ -760,7 +766,7 @@ Provides overlay and backdrop styling. The `as pp-dialog` alias is **required** 
 
 ---
 
-## @pdx/pp-tree (v3.1.0)
+## @pdx/pp-tree (v3.1.1)
 
 Flexible tree component for hierarchical data. Supports selection, expansion, drag-and-drop reordering, and context menus via `PPMenuComponent`.
 
@@ -856,7 +862,7 @@ protected onMove(event: NodeMoveEvent): void {
 
 ---
 
-## @pdx/pp-select (v1.3.0)
+## @pdx/pp-select (v1.3.2)
 
 Accessible dropdown fields for single and multiple selection. Floating label animation, optional leading icons, error/disabled states, supporting text, and full Angular forms integration via `ControlValueAccessor`.
 
@@ -970,7 +976,7 @@ type PPSelectLabelSpace = 'auto' | 'always' | 'never';
 
 ---
 
-## @pdx/pp-menu (v1.4.0)
+## @pdx/pp-menu (v1.4.1)
 
 Standalone dropdown menu components for single and multiple selection. Used internally by `@pdx/pp-select` and as the context menu for `@pdx/pp-tree`. Can also be used directly for custom dropdown implementations.
 
@@ -1066,7 +1072,7 @@ interface PPMenuMultiselectChangeEvent {
 
 ---
 
-## @pdx/pp-list (v2.2.0)
+## @pdx/pp-list (v2.2.1)
 
 Accessible listbox with four selection variants, keyboard navigation, leading/trailing icons, overline + supporting text per item. Use when you need an in-page list (not a dropdown — use `pp-select`/`pp-menu` for those).
 
@@ -1159,7 +1165,7 @@ enum ListSize {
 
 ---
 
-## @pdx/pp-tab (v1.2.2)
+## @pdx/pp-tab (v1.2.3)
 
 Secondary tab navigation component with icons, notification badges, two sizes, disabled states, content panels, keyboard navigation, and full accessibility.
 
@@ -1315,8 +1321,9 @@ Known trade-off: `pp-dialog`'s action bar follows the content rather than being 
 - **Hover (unselected tab):** text keeps its color; background `$pp-primary-990`
 - **Focus:** text/icon `$pp-primary-300`, background `$pp-primary-960`, `0.125rem` outline `$pp-primary-300` (offset `-0.125rem`)
 - **Pressed:** background `$pp-primary-920`
-- **Text (disabled):** `$pp-secondary`
+- **Text (disabled):** `$pp-disabled` (#717479)
 - **Indicator (selected):** `$pp-primary`
+- **Indicator (selected disabled):** `$pp-disabled` (#717479)
 - **Divider:** `$pp-secondary-800`
 
 ### Peer Dependencies
@@ -1325,7 +1332,7 @@ Known trade-off: `pp-dialog`'s action bar follows the content rather than being 
 
 ---
 
-## @pdx/pp-expansion-panel (v1.0.4)
+## @pdx/pp-expansion-panel (v1.0.5)
 
 Collapsible content sections with desktop/mobile layout variants and optional accordion mode (only one item open at a time).
 
@@ -1386,7 +1393,7 @@ A single collapsible section with clickable header.
 
 ---
 
-## @pdx/pp-sidenav (v1.1.1)
+## @pdx/pp-sidenav (v1.1.2)
 
 Two-panel side navigation: a Level 1 icon rail plus an expandable Level 2+ subnavigation panel. **App-shell level** in the default `'app-shell'` variant — owned by the root layout that holds the router outlet, not by feature components routed into that outlet.
 
@@ -1484,7 +1491,7 @@ Overrides Angular Material tooltip defaults for the design system (pp-sidenav us
 
 ---
 
-## @pdx/pp-top-navigation (v2.0.0)
+## @pdx/pp-top-navigation (v2.0.1)
 
 Global navigation bar with optional dropdown submenus (rendered via `pp-menu`). **App-shell level** — same scope note as `pp-sidenav` above.
 
@@ -1698,7 +1705,7 @@ When composing screens around `pp-toolbar-mobile`, follow the Figma design guida
 
 ---
 
-## @pdx/pp-button-toggle (v1.0.1)
+## @pdx/pp-button-toggle (v1.0.2)
 
 Segmented control for mutually-exclusive choices rendered as connected toggle buttons (e.g. view-mode picker, density toggle, on-screen filter). Use `pp-radio-group` instead for traditional form radios.
 
@@ -1765,7 +1772,7 @@ interface PPButtonToggleSelectEvent {
 
 ---
 
-## @pdx/pp-slide-toggle (v1.2.0)
+## @pdx/pp-slide-toggle (v1.2.1)
 
 On/off switch for binary settings (e.g. notifications enabled, dark mode, auto-save). Replaces `mat-slide-toggle`. Use `pp-checkbox` instead for opt-in checkboxes (terms acceptance, multi-select filters).
 
@@ -1812,7 +1819,7 @@ interface PPSlideToggleChangeEvent {
 
 ---
 
-## @pdx/pp-slider (v2.0.0)
+## @pdx/pp-slider (v2.0.1)
 
 Sliders for selecting a numeric value (`pp-slider`) or an interval (`pp-range-slider`) within a predefined range. The current value renders **permanently** above each handle (there is no hover tooltip), with an optional unit line below it; optional synced `pp-select` dropdowns at the track ends allow precise entry. Both components are signal-based, standalone, and implement `ControlValueAccessor`. Use sliders only for small predefined ranges — when precise input matters, enable the synced select.
 
@@ -1920,7 +1927,7 @@ interface PPRangeSliderChangeEvent {
 
 ---
 
-## @pdx/pp-paginator (v1.0.1)
+## @pdx/pp-paginator (v1.0.2)
 
 Page navigation with previous/next buttons, numeric page list (with overflow ellipses), and a page-size dropdown. Pair with `mat-table` for paged tables. Replaces `mat-paginator`.
 
@@ -1957,7 +1964,7 @@ import { PPPaginatorComponent, PPPaginatorPageEvent } from '@pdx/pp-paginator';
 
 **Output:** `page` emits `PPPaginatorPageEvent` whenever the user changes page or page-size.
 
-**Page-size options:** Hard-coded internally to `[10, 25, 50, 100]`. Not configurable in v1.0.1.
+**Page-size options:** Hard-coded internally to `[10, 25, 50, 100]`. Not configurable as of the pinned version.
 
 **Visible page labels are 1-based** — the dropdown / numeric buttons show `Page 1, Page 2, …` even though the public `pageIndex` is zero-based, matching Angular Material's convention.
 
@@ -1982,7 +1989,7 @@ interface PPPaginatorPageEvent {
 
 ---
 
-## @pdx/pp-datepicker (v2.1.0)
+## @pdx/pp-datepicker (v2.1.1)
 
 Signal-based, zoneless-safe date picker with three selection modes — `single` (one calendar day), `range` (a start/end pair), and `month-year` (a month + year combo with **no day selection** — the panel skips the day grid and walks the user through month → year). The calendar overlay is rendered via `@angular/cdk/overlay` with focus trapping, scroll repositioning, and click-outside / `Escape` to close. Weekday/month labels come from `Intl.DateTimeFormat` — no third-party date library required.
 
@@ -2126,7 +2133,7 @@ interface AutocompleteItem {
 
 ---
 
-## @pdx/pp-timepicker (v1.2.0)
+## @pdx/pp-timepicker (v1.2.1)
 
 24h `HH:mm` time picker with a responsive surface. The trigger is a masked native input with a floating label; on desktop (`>= 768px`) it opens a CDK overlay with hour/minute columns, and on mobile it opens an Angular Material `MatBottomSheet` with OK/Cancel actions. Signal-based `model()` two-way binding + `ControlValueAccessor`.
 
@@ -2189,7 +2196,7 @@ Required in the app's root `styles.scss` for the mobile bottom-sheet's rounded c
 
 ---
 
-## @pdx/pp-tooltip (v1.0.1)
+## @pdx/pp-tooltip (v1.0.2)
 
 Contextual tooltip in three variants: `minimal` (text only, hover), `basic` (title + text, hover), and `extended` (title, text, close button, multistep walkthrough, click-triggered).
 
@@ -2445,7 +2452,7 @@ type PPTableLayout = 'auto' | 'fixed';
 
 ---
 
-## @pdx/pp-link (v1.0.0)
+## @pdx/pp-link (v1.0.1)
 
 Styled text link rendering a native `<a>`, with optional leading icon and trailing arrow.
 

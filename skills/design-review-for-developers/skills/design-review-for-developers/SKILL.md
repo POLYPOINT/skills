@@ -2,7 +2,7 @@
 name: design-review-for-developers
 description: Performs a short, structured design review of design system components from a developer's perspective. Use whenever a developer wants a single component or small component group (button, input, card, dialog, etc.) checked against its Figma source — covering visual fidelity, states, accessibility, and implementation consistency. Not for full page or layout reviews.
 metadata:
-  version: '1.0.0'
+  version: '1.1.0'
 ---
 
 # Design Review for Developers
@@ -106,6 +106,10 @@ The `pdx` skill ships the authoritative references; consult them rather than res
   also exposes a `--color-pp-` alias for each, which is what `text-pp-*` / `bg-pp-*` resolve to);
   Tailwind utilities `text-pp-*`, `bg-pp-*`, `border-pp-*`. The shade scale is discrete
   (`50` darkest → `990` lightest); there is **no** `1000` shade.
+- **Disabled states:** disabled text and icons must use the dedicated Disabled token —
+  `$pp-disabled-500` / `--pp-disabled-500`. Flag disabled styling built with `opacity` or
+  Secondary shades — a legacy (pre-PDX-107) pattern; PDX requires AA contrast even for
+  disabled text, which those approaches miss.
 - **Units:** `rem` everywhere; a `1px` border is the only accepted `px` exception.
 - **Icons:** `@pdx/pp-icons` only, rendered as `<span class="pp-icon pp-icon-<name>">`. Icon names
   use **underscores**, not hyphens (e.g. `pp-icon-delete_trash`, `pp-icon-angle_right`). A guessed

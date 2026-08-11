@@ -59,6 +59,8 @@ The typeface is **AkkuratStd**. The type scale follows Material 3 naming and map
 
 Do not introduce custom font sizes outside the scale unless explicitly approved. Always use the Figma variable name or Material 3 style token when referencing a type style.
 
+The scale also defines default text colors (pp-theme v1.2.0+): Headline, Title, and Body styles render in `$pp-secondary-150` (#222324); Label styles render in `$pp-secondary-100` (#171718). Semantic HTML elements pick these up automatically — do not re-declare text colors on headings, paragraphs, or labels.
+
 ---
 
 ## Color System
@@ -68,6 +70,8 @@ PDX defines a structured color system. Always use design tokens — never raw he
 **Main colors:** Primary, Secondary, Tertiary (+ SystemcolorUI). Each palette emits an unsuffixed base token plus discrete shade keys: `50, 100, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 920, 940, 950, 960, 980, 990` (`50` darkest → `990` lightest). There is **no** `1000` shade — `990` is the lightest. SCSS variables: `$pp-<palette>` (base) + `$pp-<palette>-<shade>`. CSS custom properties: `--pp-<palette>` + `--pp-<palette>-<shade>` for the raw tokens; the Tailwind theme layer additionally exposes a `--color-pp-<palette>` alias for each (what `text-pp-*` / `bg-pp-*` resolve to).
 
 **Status colors:** Error, Success, Info, Warning, Disabled.
+
+**Disabled states:** Use the dedicated single-shade Disabled token — `$pp-disabled-500` / `--pp-disabled-500` (#717479, alias `$pp-disabled`) — for disabled text and icons. It meets WCAG AA (4.69:1 on white). Never build disabled states with `opacity` or ad-hoc Secondary shades; all PDX components use this token for disabled text and icons.
 
 **Accent colors:** Orange, Purple, DarkBlue, Blue, LightBlue, Linth green, Green, Yellow.
 
@@ -174,7 +178,7 @@ Use `PPTabGroupComponent` + `PPTabComponent` (`@pdx/pp-tab`) for all tabbed navi
 - Text size: `1rem`
 - Selected tab text color: `$pp-primary` (mint/teal)
 - Unselected tab text color: `$pp-secondary-300`
-- Disabled tab text color: `$pp-secondary`
+- Disabled tab text color: `$pp-disabled` (#717479)
 - Active indicator: 2px bar in `$pp-primary` that slides beneath the active tab with a smooth transition
 - Tabs support optional leading icons (e.g. `pp-icon-dashboard`)
 - Use `fullWidth` when tabs should stretch to fill the container equally
