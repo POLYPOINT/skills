@@ -100,6 +100,16 @@ def poll(opts, state):
     if pr_status != state['pr_status']:
         events.append(f"PR status {state['pr_status']}->{pr_status}")
         state['pr_status'] = pr_status
+    # ADO emits no thread/comment when the target branch advances into a conflict —
+    # mergeStatus polling is the only way to notice (values: succeeded, conflicts, ...).
+    merge_status = pr.get('mergeStatus')
+    if merge_status != state.get('merge_status') and state.get('merge_status') is not None:
+        events.append(f"MERGE STATUS {state.get('merge_status')}->{merge_status}")
+    state['merge_status'] = merge_status
+    is_draft = pr.get('isDraft')
+    if is_draft != state.get('is_draft') and state.get('is_draft') is not None:
+        events.append(f"DRAFT {state.get('is_draft')}->{is_draft}")
+    state['is_draft'] = is_draft
     commit = (pr.get('lastMergeSourceCommit') or {}).get('commitId', '')
     if commit != state['commit']:
         events.append(f"NEW COMMIT on source branch: {commit[:12]}")
@@ -109,7 +119,9 @@ def poll(opts, state):
         name = r.get('displayName', '?')
         vote = r.get('vote', 0)
         new_votes[name] = vote
-        if state['votes'].get(name) != vote and vote != 0:
+        # First observation of a reviewer is not an event, but a reset back to 0
+        # ("waiting for author" cleared, vote withdrawn) is — don't swallow it.
+        if name in state['votes'] and state['votes'][name] != vote:
             events.append(f"VOTE {name} -> {VOTE_LABELS.get(vote, vote)}")
     state['votes'] = new_votes
 
@@ -136,14 +148,18 @@ def main():
         if not isinstance(state, dict) or 'threads' not in state:
             raise ValueError('not a watcher state file')
     except (OSError, ValueError):
-        state = {'threads': {}, 'policies': {}, 'statuses': {}, 'votes': {}, 'pr_status': 'active', 'commit': ''}
+        state = {'threads': {}, 'policies': {}, 'statuses': {}, 'votes': {}, 'pr_status': 'active', 'commit': '',
+                 'merge_status': None, 'is_draft': None}
         try:
             baseline = poll(opts, state)
             print(f"WATCH-BASELINE recorded: {len(state['threads'])} threads, "
                   f"policies {state['policies']}, PR {state['pr_status']} ({len(baseline)} initial events suppressed)",
                   flush=True)
         except Exception as exc:  # noqa: BLE001
-            print(f'WATCH-ERROR: baseline poll failed: {exc}', flush=True)
+            # A failed baseline leaves `state` half-mutated; continuing would replay every
+            # pre-existing thread/policy as a fresh event on the first successful poll.
+            print(f'WATCH-ERROR: baseline poll failed, watcher exiting — fix auth and re-arm: {exc}', flush=True)
+            return
 
     failures = 0
     while time.time() < deadline:
@@ -151,6 +167,8 @@ def main():
             events = poll(opts, state)
             with open(opts.state_file, 'w') as f:
                 json.dump(state, f, indent=2)
+            if failures >= 3:
+                print('WATCH-RECOVERED: polling works again', flush=True)
             failures = 0
             for e in events:
                 print(e, flush=True)
@@ -159,8 +177,8 @@ def main():
                 return
         except Exception as exc:  # noqa: BLE001 - keep the watch alive on transient az failures
             failures += 1
-            if failures == 3:
-                print(f'WATCH-ERROR: 3 consecutive poll failures, last: {exc}', flush=True)
+            if failures % 3 == 0:
+                print(f'WATCH-ERROR: {failures} consecutive poll failures, last: {exc}', flush=True)
         time.sleep(opts.interval)
     print(f'WATCH-DONE: {opts.minutes:g}-minute watch window elapsed', flush=True)
 

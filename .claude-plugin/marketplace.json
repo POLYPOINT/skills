@@ -64,7 +64,7 @@
     {
       "name": "babysit-pr",
       "source": "./skills/babysit-pr",
-      "description": "Babysit an Azure DevOps pull request for a time window — watch for new review comments (CodeRabbit and human) and CI state changes via the az CLI, verify each finding against current code, fix still-valid issues minimally, reply to and resolve threads, and diagnose failing builds.",
+      "description": "Babysit an Azure DevOps pull request for a time window — watch for new review comments (CodeRabbit and human) and CI state changes via the az CLI, verify each finding against current code, fix still-valid issues minimally, resolve bot threads, draft replies to human threads for approval, and diagnose failing builds. On draft PRs asks right away whether to kick-start CodeRabbit and the build policies, marks every posted comment as AI-generated, and can run in a linked worktree so the main checkout stays free.",
       "category": "development"
     },
     {
