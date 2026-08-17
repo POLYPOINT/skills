@@ -1,0 +1,5 @@
+{
+  "name": "dev-ticket",
+  "version": "1.0.0",
+  "description": "End-to-end Jira ticket development workflow — fetch the ticket, deep analysis with an approved summary, reproduce the bug, implement in an isolated git worktree, verify live with the user, logically-grouped commits + push, PR creation, then babysit the PR to merge. Project-agnostic: derives project context from the repo, asks for the rest, and remembers it per project."
+}
