@@ -68,6 +68,12 @@
       "category": "development"
     },
     {
+      "name": "dev-ticket",
+      "source": "./skills/dev-ticket",
+      "description": "End-to-end Jira ticket development workflow — fetch the ticket from Jira, deep analysis with an approved summary, reproduce the bug first, implement in an isolated git worktree, verify live together with the user (headed browser, shared test environment, hand-over test), logically-grouped commits + push, PR creation marked as Claude-generated, then babysit the PR to merge. Project-agnostic: derives project context from the repo, asks for the rest, and remembers it in memory per project (/dev-ticket setup for a guided first run).",
+      "category": "development"
+    },
+    {
       "name": "pep-verify",
       "source": "./skills/pep-verify",
       "description": "Drive and verify things directly in PEP (POLYPOINT's Delphi/VCL personnel-planning Windows client) on a tenant box over RDP/SSH/WinRM — element-level automation (pywinauto over a loopback agent), not pixel clicking. Runs a preflight check, bootstraps the companion pep-driver toolchain, then runs selector-based UI commands and flows.",
