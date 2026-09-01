@@ -74,6 +74,12 @@
       "category": "development"
     },
     {
+      "name": "feature-analysis",
+      "source": "./skills/feature-analysis",
+      "description": "Deep pre-development analysis of a feature or epic — token-capped ultracode workflows (parallel Opus research agents + adversarial critique: fact-check, design-skeptic, completeness) produce a code-verified implementation plan and two review artifacts: a technical deep-dive with numbered decision points for dev review and a plain-language Epic Owner briefing separating open product decisions from dev-answered working assumptions.",
+      "category": "development"
+    },
+    {
       "name": "pep-verify",
       "source": "./skills/pep-verify",
       "description": "Drive and verify things directly in PEP (POLYPOINT's Delphi/VCL personnel-planning Windows client) on a tenant box over RDP/SSH/WinRM — element-level automation (pywinauto over a loopback agent), not pixel clicking. Runs a preflight check, bootstraps the companion pep-driver toolchain, then runs selector-based UI commands and flows.",
