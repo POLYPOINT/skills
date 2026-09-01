@@ -31,6 +31,7 @@ Skills can:
 | **improve**                      | Reflects on how the skills used in the current session performed and uploads concrete HTML improvement plans to Whetstone for asynchronous human review. Run it after any skill-driven task; also covers third-party skills.                                                                                     | `/improve` or `/improve <skill-name>`         |
 | **pep-verify**                   | Drives and verifies PEP (the Delphi/VCL planning client) on a tenant box at the element level over SSH/WinRM — preflight + bootstrap of the companion `pep-driver` toolchain, then selector-based UI commands and flows.                                                                                         | `/pep-verify on ct-zinc-master`               |
 | **dev-ticket**                   | End-to-end Jira ticket workflow — fetches the ticket, deep analysis with approval checkpoint, reproduces the bug, implements in an isolated git worktree, verifies live with the user, grouped commits + push, PR creation, then hands off to `babysit-pr`. Learns each project's context once and remembers it. | `/dev-ticket ABC-1234` or `/dev-ticket setup` |
+| **feature-analysis**             | Deep pre-development analysis of a feature or epic — token-capped ultracode workflows (parallel Opus research + adversarial critique) produce a code-verified implementation plan and two review artifacts: a technical deep-dive with numbered decision points and a plain-language Epic Owner briefing.        | `/feature-analysis <feature or epic>`         |
 
 ## Repository Structure
 
@@ -74,6 +75,7 @@ Works the same in the terminal CLI, VS Code extension, and JetBrains plugin.
 /plugin install improve
 /plugin install pep-verify
 /plugin install dev-ticket
+/plugin install feature-analysis
 ```
 
 **Update to latest version:**
