@@ -1,9 +1,10 @@
 # Artifact templates
 
 Both artifacts are views of `plan-final.md` for a specific audience. Load the
-`artifact-design` skill before writing either. Publish each as its own artifact (own file
-path, own favicon); on later rounds republish to the same URL with a bumped version `label`
-(`v2`, `v3`, …) — reviewers bookmark these links.
+`artifact-design` skill before writing either — it is built into Claude Code, not part of
+this repo; if it isn't available in the session, the structures below stand on their own.
+Publish each as its own artifact (own file path, own favicon); on later rounds republish to
+the same URL with a bumped version `label` (`v2`, `v3`, …) — reviewers bookmark these links.
 
 ## 1. Technical deep-dive artifact
 

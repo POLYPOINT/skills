@@ -84,8 +84,17 @@ const SUMMARY = {
 };
 
 phase('Research');
+const briefs = args.briefs.slice(0, 6); // enforce the skill's cap: at most 6 research agents
+if (args.briefs.length > briefs.length) {
+  log(
+    `capped to 6 research agents — dropped: ${args.briefs
+      .slice(6)
+      .map((b) => b.dimension)
+      .join(', ')}`,
+  );
+}
 const results = await parallel(
-  args.briefs.map(
+  briefs.map(
     (b) => () =>
       agent(b.prompt, {
         label: `research:${b.dimension}`,
@@ -96,8 +105,8 @@ const results = await parallel(
   ),
 );
 const ok = results.filter(Boolean);
-log(`${ok.length}/${args.briefs.length} research dimensions completed`);
-return { ok, failed: args.briefs.filter((_, i) => !results[i]).map((b) => b.dimension) };
+log(`${ok.length}/${briefs.length} research dimensions completed`);
+return { ok, failed: briefs.filter((_, i) => !results[i]).map((b) => b.dimension) };
 ```
 
 Pass the briefs via `args` as a real JSON array: `args: { briefs: [{dimension, prompt}, …] }`.
@@ -196,8 +205,9 @@ const VERDICT = {
 };
 
 phase('Critique');
+const critics = args.critics.slice(0, 3); // enforce the skill's cap: exactly the 3 critics
 const verdicts = await parallel(
-  args.critics.map(
+  critics.map(
     (c) => () =>
       agent(c.prompt, {
         label: `critique:${c.name}`,

@@ -27,7 +27,9 @@ published** (concurrency races, version skew, scale, multi-year retention).
 
 - **All subagent fan-outs run through the Workflow tool** (ultracode) — never ad-hoc Agent
   calls. Invoking this skill is the user's explicit opt-in to the Workflow tool for these
-  fan-outs. Load the `workflow-authoring` skill before writing each script.
+  fan-outs. Load the `workflow-authoring` skill — a Claude Code built-in, not part of this
+  repo — before writing each script; if it isn't available in the session, base the scripts
+  on the worked examples in [references/agent-briefs.md](references/agent-briefs.md).
 - **Every `agent()` call sets `model: 'opus'` explicitly.** The analysis gets its breadth
   from parallelism and adversarial structure, not from model tier — and the main session may
   run a pricier model that the agents must not inherit. This is what keeps a nine-agent
@@ -153,9 +155,10 @@ Read all three critiques and fold them into `plan-final.md`:
 
 ## Phase 6 — Publish the two artifacts
 
-Load the `artifact-design` skill before writing each artifact. Structures, tone rules, and
-the numbered-decision-point mechanism are specified in
-[references/artifact-templates.md](references/artifact-templates.md).
+Load the `artifact-design` skill (a Claude Code built-in, not part of this repo) before
+writing each artifact; when it isn't available, the structures in
+[references/artifact-templates.md](references/artifact-templates.md) stand on their own.
+That reference also specifies the tone rules and the numbered-decision-point mechanism.
 
 1. **Technical deep-dive** — the full plan for dev/tech-lead review. Its defining feature:
    every open decision is a **numbered decision point (#01, #02, …)** carrying the question,
