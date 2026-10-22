@@ -78,6 +78,12 @@
       "source": "./skills/pep-verify",
       "description": "Drive and verify things directly in PEP (POLYPOINT's Delphi/VCL personnel-planning Windows client) on a tenant box over RDP/SSH/WinRM — element-level automation (pywinauto over a loopback agent), not pixel clicking. Runs a preflight check, bootstraps the companion pep-driver toolchain, then runs selector-based UI commands and flows.",
       "category": "development"
+    },
+    {
+      "name": "cloud-release",
+      "source": "./skills/cloud-release",
+      "description": "Plan, orchestrate and review POLYPOINT cloud production release nights with the release board of the pcr-companion repo — scope from the Confluence release page plus the release-branch diff, catalogue and new board steps, window order and downtime estimate, next-step guidance and failure diagnosis on the night (the operator runs every step), retro with tested fixes and archived evidence.",
+      "category": "development"
     }
   ]
 }
