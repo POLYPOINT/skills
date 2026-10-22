@@ -1,0 +1,5 @@
+{
+  "name": "utr-e2e",
+  "version": "0.5.0",
+  "description": "Orchestrated end-to-end regression run of myPOLYPOINT time recording (Unified, Classic/Legacy, mobile) against one on-prem bundle on a DeployMate CT environment, with an optional --compare overlay — provisioning and seeding, environment gates, scenario catalogue, Sonnet agent fan-out with pace control, live dashboard artifact, and consolidated findings for the report artifact."
+}

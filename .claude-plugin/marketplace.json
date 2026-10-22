@@ -78,6 +78,18 @@
       "source": "./skills/pep-verify",
       "description": "Drive and verify things directly in PEP (POLYPOINT's Delphi/VCL personnel-planning Windows client) on a tenant box over RDP/SSH/WinRM — element-level automation (pywinauto over a loopback agent), not pixel clicking. Runs a preflight check, bootstraps the companion pep-driver toolchain, then runs selector-based UI commands and flows.",
       "category": "development"
+    },
+    {
+      "name": "deploymate",
+      "source": "./skills/deploymate",
+      "description": "Provision, inspect and operate POLYPOINT on-prem test environments through the DeployMate REST API: master/PR-pinned/release/dump envs wired to a CT, REVIEW or PREVIEW cloud tenant, credential reveals, SSH/Oracle/RDP access, time-recording mode switch, lifecycle and troubleshooting.",
+      "category": "testing"
+    },
+    {
+      "name": "utr-e2e",
+      "source": "./skills/utr-e2e",
+      "description": "Orchestrated end-to-end regression run of myPOLYPOINT time recording (Unified, Classic/Legacy, mobile) against one on-prem bundle on a DeployMate CT environment, with an optional --compare overlay — provisioning and seeding, environment gates, scenario catalogue, Sonnet agent fan-out with pace control, live dashboard artifact, and consolidated findings.",
+      "category": "testing"
     }
   ]
 }
