@@ -31,19 +31,26 @@ Skills can:
 | **improve**                      | Reflects on how the skills used in the current session performed and uploads concrete HTML improvement plans to Whetstone for asynchronous human review. Run it after any skill-driven task; also covers third-party skills.                                                                                     | `/improve` or `/improve <skill-name>`         |
 | **pep-verify**                   | Drives and verifies PEP (the Delphi/VCL planning client) on a tenant box at the element level over SSH/WinRM — preflight + bootstrap of the companion `pep-driver` toolchain, then selector-based UI commands and flows.                                                                                         | `/pep-verify on ct-zinc-master`               |
 | **dev-ticket**                   | End-to-end Jira ticket workflow — fetches the ticket, deep analysis with approval checkpoint, reproduces the bug, implements in an isolated git worktree, verifies live with the user, grouped commits + push, PR creation, then hands off to `babysit-pr`. Learns each project's context once and remembers it. | `/dev-ticket ABC-1234` or `/dev-ticket setup` |
+| **cloud-release**                | Plans, runs and reviews cloud production release nights (PCRs) with the `pcr-companion` release board — scope from the Confluence release page and the release-branch diff, step order and downtime estimate, next-step guidance and failure diagnosis on the night (the operator runs every step), retro.       | `/cloud-release plan PCR-2643`                |
 
 ## Repository Structure
 
+The repository is a Claude Code **plugin marketplace**. Every directory under `skills/` is a plugin, and the skill itself lives one level deeper (the double nesting is required by plugin auto-discovery). See [AGENTS.md](./AGENTS.md) for the full conventions and the pre-PR checklist.
+
 ```
+.claude-plugin/
+  marketplace.json          # Marketplace manifest — lists every plugin
 skills/
-  skill-name/
-    SKILL.md              # Main instructions (required)
-    .claude-plugin/       # Claude Code plugin manifest (required for /command)
-      plugin.json
-    references/           # Detailed documentation (optional)
-    examples/             # Example outputs (optional)
-    scripts/              # Utility scripts (optional)
-    assets/               # Templates, images, static resources (optional)
+  plugin-name/
+    .claude-plugin/
+      plugin.json           # Plugin manifest (name, version, description)
+    skills/
+      skill-name/
+        SKILL.md            # Main instructions (required)
+        references/         # Detailed documentation (optional)
+        examples/           # Example outputs (optional)
+        scripts/            # Utility scripts (optional)
+        assets/             # Templates, images, static resources (optional)
 ```
 
 ## Installation
@@ -71,9 +78,11 @@ Works the same in the terminal CLI, VS Code extension, and JetBrains plugin.
 /plugin install playwright-e2e
 /plugin install playwright-api
 /plugin install babysit-pr
+/plugin install pp-pr-review
 /plugin install improve
 /plugin install pep-verify
 /plugin install dev-ticket
+/plugin install cloud-release
 ```
 
 **Update to latest version:**
@@ -93,15 +102,18 @@ Once installed, invoke with `/skill-name`:
 /playwright-e2e path/to/recording.spec.ts
 /playwright-api tests/e2e/login.spec.ts
 /babysit-pr https://dev.azure.com/polypoint/SaaS/_git/SaaS/pullrequest/12345 for 1 hour
+/pp-pr-review https://dev.azure.com/polypoint/SaaS/_git/SaaS/pullrequest/12345
 /improve playwright-e2e
 /pep-verify on ct-zinc-master
+/dev-ticket ABC-1234
+/cloud-release plan PCR-2643
 ```
 
 <details>
 <summary>Alternative: Symlink as a personal skill</summary>
 
 ```bash
-ln -s /path/to/this/repo/skills/skill-name ~/.claude/skills/skill-name
+ln -s /path/to/this/repo/skills/plugin-name/skills/skill-name ~/.claude/skills/skill-name
 ```
 
 </details>
@@ -110,7 +122,7 @@ ln -s /path/to/this/repo/skills/skill-name ~/.claude/skills/skill-name
 <summary>Alternative: Copy as a project skill</summary>
 
 ```bash
-cp -r /path/to/this/repo/skills/skill-name .claude/skills/
+cp -r /path/to/this/repo/skills/plugin-name/skills/skill-name .claude/skills/
 ```
 
 </details>
@@ -167,7 +179,7 @@ Copy or symlink the skill directory into the tool's skills location:
 Example:
 
 ```bash
-cp -r skills/pdx .cursor/skills/
+cp -r skills/pdx/skills/pdx .cursor/skills/
 ```
 
 </details>
@@ -229,13 +241,14 @@ What goes wrong and how to fix it.
 
 ### Adding a New Skill
 
-1. Create `skills/your-skill-name/SKILL.md`
-2. Add YAML frontmatter with at least `name` and `description`
-3. Create `.claude-plugin/plugin.json` for Claude Code slash command support (see existing skills for the format)
+1. Create the plugin manifest `skills/your-plugin-name/.claude-plugin/plugin.json` with `name`, `version` and `description` (see existing plugins for the format)
+2. Create the skill at `skills/your-plugin-name/skills/your-skill-name/SKILL.md` with YAML frontmatter (at least `name` and `description`; keep `metadata.version` equal to the plugin version)
+3. Register the plugin in `.claude-plugin/marketplace.json` under `plugins[]` — the name must match the plugin directory, `plugin.json` and the skill
 4. Description must start with "Use when..." — describe triggering conditions, not workflow
 5. Keep `SKILL.md` under 500 lines; move heavy reference to supporting files
-6. Test the skill: invoke it directly with `/skill-name` and verify Claude follows instructions
-7. Open a PR for review
+6. Add the plugin to this README: the **Available Skills** table, the `/plugin install` list and the invocation examples
+7. Test the skill: invoke it directly with `/skill-name` and verify Claude follows instructions
+8. Walk through the pre-PR checklist in [AGENTS.md](./AGENTS.md#verifying-a-skill), then open a PR for review
 
 ### Naming Conventions
 
