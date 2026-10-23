@@ -1,6 +1,6 @@
 # Measured baseline — PCR-2643 (Wed 2026-10-21, prod)
 
-Real durations from the board's timeline (`runs/pcr-2643/evidence/` once archived). Use them to estimate a window;
+Real durations from the board's timeline (the release's archived `evidence/` once frozen). Use them to estimate a window;
 say which numbers you reuse and what differs this time (more replicas, new migrations, first-pod-then-all).
 
 **Window:** first window step 22:13 → all-synced 23:56 = **1 h 43 min**, including a MySQL→PostgreSQL switch of three
