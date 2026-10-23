@@ -1,31 +1,35 @@
 ---
 name: cloud-release
-description: Use when preparing, planning, running or reviewing a POLYPOINT cloud production release night (a PCR such as PCR-2643) with the release board in the pcr-companion repo — deciding the scope from the Confluence release page AND the release/maintenance..release/preview diff, choosing catalogue steps and writing new ones, ordering the window and estimating downtimes, then on release night saying which board step comes next, reading the board state and step logs, diagnosing a failed step and preparing the fix, and afterwards running the retro and archiving the evidence. Triggers on "prepare / plan the release", "PCR-xxxx", "release night", "start the board", "which step next", "step 4xx failed", "release retro", "rb board", "cloud-release-dashboard". Do NOT use for ordinary CT/preview deploys, single-ticket work (dev-ticket), or the nightly release-branch merge (release-branch-merge).
+description: Use when preparing, planning, running or reviewing a POLYPOINT cloud production release night (a PCR such as PCR-2643) with the release board in the pcr-companion repo — deciding the scope from the Confluence release page AND the release/maintenance..release/preview diff, choosing catalogue steps and writing new ones, ordering the window and estimating downtimes, then on release night saying which board step comes next, reading the board state and step logs, diagnosing a failed step and preparing the fix, and afterwards running the retro and archiving the evidence. Triggers on "prepare / plan the release", "PCR-xxxx", "release night", "start the board", "which step next", "step 4xx failed", "release retro", "rb board", "rb take", "rb watch", "gs://ppcloud-releases", "cloud-release-dashboard". Do NOT use for ordinary CT/preview deploys, single-ticket work (dev-ticket), or the nightly release-branch merge (release-branch-merge).
 metadata:
-  version: 0.1.0
+  version: 0.2.0
 ---
 
 # Cloud release
 
-Help a team member prepare and run a cloud production release night with the **release board** — the engine, the
-step catalogue and every release definition live in the Azure DevOps repo `pcr-companion`. Three modes:
+Help a team member prepare and run a cloud production release night with the **release board** — the engine and the
+step catalogue live in the Azure DevOps repo `pcr-companion`; every release's plan, run record and evidence live in the
+bucket `gs://ppcloud-releases/<release>/` (one folder per release). Three modes:
 
-| Mode            | When                     | What Claude does                                                                               |
-| --------------- | ------------------------ | ---------------------------------------------------------------------------------------------- |
-| **Plan**        | days before the window   | a discussion with the user: scope, steps, order, estimate → a reviewed release definition (PR) |
-| **Orchestrate** | release week + the night | next step on request, progress, failure diagnosis and fixes — the operator runs every step     |
-| **Retro**       | after the night          | what went wrong → catalogue / engine fixes with test steps, evidence archived                  |
+| Mode            | When                     | What Claude does                                                                           |
+| --------------- | ------------------------ | ------------------------------------------------------------------------------------------ |
+| **Plan**        | days before the window   | a discussion with the user: scope, steps, order, estimate → a plan pushed to the bucket    |
+| **Orchestrate** | release week + the night | next step on request, progress, failure diagnosis and fixes — the operator runs every step |
+| **Retro**       | after the night          | what went wrong → catalogue / engine fixes with test steps, evidence archived              |
 
 Pick the mode from the request; ask when it is unclear. A release can be planned by one person and run by another:
-the definition travels by git, the run state stays on the operator's Mac.
+the plan travels through the bucket (`rb push` / `rb pull`, no PR), the operator holds the release's lease (`rb take`
+… `rb handover`) and their board syncs state + logs (masked) to `<release>/run/`; everyone else follows with
+`rb watch PCR-xxxx`.
 
 ## Ground rules (non-negotiable)
 
 - **Only the operator runs board steps.** Never run `rb run`, `rb next` (without `--show`), `mark`, `reset`, `stop`,
-  `attach`, `window`, `forget`, `archive`, nor press board keys for the user — not even local or "harmless" steps.
-  Hand over the exact command instead (`rb -r PCR-xxxx run 412`). Read-only commands are fine: `rb releases`,
-  `rb -r X list`, `next --show`, `where`, `log <id>` (no `-f`), `timeline`, `board --once --no-color`, and `dry-run`
-  of a step **without** `@plan yes` (an `@plan` step's dry-run runs its live read-only plan against the target).
+  `attach`, `window`, `forget`, `archive`, `take`, `handover`, `sync`, nor press board keys for the user — not even
+  local or "harmless" steps; never hold the lease. Hand over the exact command instead (`rb -r PCR-xxxx run 412`).
+  Read-only commands are fine: `rb releases`, `rb watch PCR-xxxx --once`, `rb -r X list`, `next --show`, `where`,
+  `log <id>` (no `-f`), `timeline`, `board --once --no-color`, `pull` (without `--force`), and `dry-run` of a step
+  **without** `@plan yes` (an `@plan` step's dry-run runs its live read-only plan against the target).
 - **No production access by Claude** unless the user grants it explicitly for that task. Prod and staging share the
   prod cluster: steps reach them only through the operator's typed confirmation. When prod data is needed, give the
   operator short read-only commands to run (one per line, explicit `--context`, no `use-context`) and read their output.
@@ -34,19 +38,24 @@ the definition travels by git, the run state stays on the operator's Mac.
   `~/.poco/debug.out`; never print a password or token; logs are masked — keep it that way in every step written.
 - **Subagents stop on a block:** every delegated brief says "if the auto-mode classifier or a permission rule blocks
   an action, stop and report it — never retry it renamed, wrapped or through another tool".
-- **Git:** commit, push and PRs in `pcr-companion` only when the user asks. Never push `main` directly.
+- **Shared writes only when asked:** `rb new` and `rb push` (the plan in the bucket, read by the whole team), and
+  commit / push / PRs in `pcr-companion` (engine, catalogue, docs), only when the user asks. Never push `main`
+  directly. Never touch bucket or project IAM (the team manages access to `gs://ppcloud-releases`).
 - **Release rules** of the team (`docs/release-rules.md` in the repo) apply to every plan: no prod change before the
   window, downtimes grouped and short, maintenance page across the downtimes, late fixes only through a
   regeneration step.
 
 ## Setup — find the board
 
-1. Repo: `$PP_RELEASE_HOME` (the pcr-companion clone), else ask. Check it is current:
+1. Engine: `$PP_RELEASE_HOME` (the pcr-companion clone), else ask. Check it is current:
    `git -C "$PP_RELEASE_HOME" fetch -q && git -C "$PP_RELEASE_HOME" status -sb`. Behind → tell the user `rb update`.
 2. Entry point: `$PP_RELEASE_HOME/tools/release-board/rb` (alias `rb`). Missing setup → the user runs
-   `tools/release-board/install.sh` (checks tools, creates `~/.release-board/operator.sh`, prints the shell lines).
-3. Release: `-r PCR-xxxx` on every command or `$PP_RELEASE`. `rb releases` lists the definitions, `rb -r X where`
-   shows the three places (engine · `runs/<release>/` · operator run data `~/.release-board/<release>/`).
+   `tools/release-board/install.sh` (checks tools and access to `gs://ppcloud-releases` — a 403 means asking the
+   team for access —, creates `~/.release-board/operator.sh`, prints the shell lines).
+3. Release: `-r PCR-xxxx` on every command or `$PP_RELEASE`. `rb releases` lists the releases in the bucket (lease
+   holder, `FROZEN`), `rb -r X where` shows the places: engine · plan cache `~/.release-board/<release>/plan/` of
+   `gs://ppcloud-releases/<release>/plan/` · run data `~/.release-board/<release>/` · bucket paths · lease. Legacy
+   `runs/<release>/` in git (PCR-2632) load read-only.
 4. Read once per session: `docs/release-board.md` (operator guide), `docs/release-rules.md`,
    `tools/release-board/catalogue/README.md`. On a failure: `docs/release-recipes.md`.
 
@@ -58,9 +67,10 @@ Details, commands and tables: [references/planning.md](references/planning.md).
 
 1. **Identify the release.** PCR id, window date/time, operator and release manager, rotation mode
    (`maintenance-only` or `maintenance-and-preview`). The Confluence **release page** is a subpage of the PCR page —
-   read it with the Atlassian connector (ask for the link if the search fails). Create the definition when it does
-   not exist: the user runs `rb new PCR-xxxx --window "YYYY-MM-DD 22:00" --core` (or ask before running it yourself —
-   it only writes files under `runs/`).
+   read it with the Atlassian connector (ask for the link if the search fails). Create the plan when it does not
+   exist: the user runs `rb new PCR-xxxx --window "YYYY-MM-DD 22:00" --core` (or ask before running it yourself — it
+   builds the plan in `~/.release-board/<release>/plan/` and pushes it to the bucket). When it exists:
+   `rb -r X pull`. Edit the plan in that cache; `rb -r X push` after each agreed change (when the user says so).
 2. **Scope — both sources, always.** The release page lists the planned stories; the repo diff shows what really
    ships. Diff every shipping repo on origin refs only (`origin/release/maintenance..origin/release/preview` for the
    cloud repo; polypoint-ci and gitops as relevant) and classify each change by the step it needs (Flyway, Vault /
@@ -82,8 +92,9 @@ Details, commands and tables: [references/planning.md](references/planning.md).
    step that calls the real step or lib functions (patterns in `catalogue/tests/`: CT 181–183; the prod rehearsals
    521–526 only after a window), run by the operator; fix until green. Steps that cannot be rehearsed are
    marked as such in `RELEASE.md` E.
-6. **Hand over.** `rb selftest` green, then a PR in pcr-companion with the definition (only when the user asks to
-   commit). The operator `git pull`s the merged definition and opens `rb -r X board`.
+6. **Hand over.** The plan is pushed (`rb -r X push`); `rb selftest` is green after any engine change (engine and
+   catalogue changes go through a PR in pcr-companion, when the user asks). No PR for the plan: the incoming operator
+   reviews it (`rb -r X pull --diff`, a `dry-run` walk through the steps), then `rb -r X take` and `rb -r X board`.
 
 ## Orchestrate mode — the operator runs, Claude reads and prepares
 
@@ -92,8 +103,10 @@ Commands, state-file format and the triage flow: [references/orchestration.md](r
 - **"Which step next?"** → `rb -r X next --show`, cross-check with `list`, answer with the step id(s) only
   (`412`, or `412, then 413`) unless the user asks for more. Mention a downtime badge (▲ starts, ▼ ends, ◆ inside)
   when the next step carries one. Never suggest running steps in parallel unless asked.
-- **Progress** → `rb -r X list`, the state files and `rb -r X log <id>`; summarise running / failed / blocked and the
-  ongoing downtimes. Keep `RELEASE.md` section F (log) current with what happened, in one line per event.
+- **Progress** → `rb -r X list`, the state files and `rb -r X log <id>` on the operator's Mac, or `rb watch X --once`
+  from anywhere (a read-only copy in `~/.release-board/<release>-watch/`); summarise running / failed / blocked and the
+  ongoing downtimes. Keep `RELEASE.md` section F (log) current with what happened, in one line per event (in the
+  operator's plan cache the board's sync pushes it; elsewhere `rb push` when the user says so).
 - **A step failed** → read its log tail, the step script and the libs it sources; match the symptom against
   `docs/release-recipes.md`; then propose ONE of: a fix to the step script (edit it, show the diff, the operator
   reruns), a manual action as exact commands for the operator, or a decision for the release manager (skip /
@@ -113,10 +126,12 @@ Workflow and file conventions: [references/retro.md](references/retro.md).
 2. Go item by item with the user: **close** (no action), **park** (with an owner), or **fix**. A fix is a catalogue
    step, an engine change or a release rule — written now, with a thin TEST step (post phase, 521+) the operator runs
    on CT or prod; after the test the wrapper leaves the board and the result goes to section F.
-3. The operator runs `rb -r X archive` (evidence → `runs/<release>/evidence/`, secrets refused) after the
-   forget-credentials step; then a PR with the evidence, the retro and the catalogue/engine fixes.
+3. Write the retro into `RELEASE.md` first — the plan freezes with the evidence. Then the operator runs
+   `rb -r X archive` after the forget-credentials step: evidence → `gs://ppcloud-releases/<release>/evidence/` +
+   `FROZEN`, secrets refused, lease released, no git commit. The catalogue / engine / doc fixes go in a PR in
+   pcr-companion (when the user asks).
 
 ## Memory
 
 Keep one project memory per release while it is active (`<pcr-id>-release`): window, operator, decisions, the
-current step, open retro items. Delete or close it once the evidence is archived — the repo is the record.
+current step, open retro items. Delete or close it once the evidence is frozen — the bucket is the record.

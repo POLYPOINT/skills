@@ -30,7 +30,7 @@ classification table and the ordering rules the phases rely on.
     stores as the app-release process says). Tick the boxes on the page after the night.
 
 - Keys starting with `PPTX` need the user's permission before they are opened (organisation rule).
-- Put the page link into `runs/<release>/config.sh` (`CONFLUENCE_RELEASE_PAGE`) and into the `RELEASE.md` facts.
+- Put the page link into the plan's `config.sh` (`CONFLUENCE_RELEASE_PAGE`) and into the `RELEASE.md` facts.
 
 ## 2. The repo diff — what really ships
 
@@ -65,7 +65,7 @@ range and the table below; each returns findings with `sha file:line` and the st
 | `polypoint-ci/**` release definitions                                | which artifacts and tags a release picks                                                                                 | release creation step: `NEED_*` commits, `PICK_PIN_*` build pins in config.sh                                                    |
 | feature toggles / config keys                                        | Config and Secrets release first                                                                                         | sync order: config first                                                                                                         |
 | on-prem contracts (api-gw, PEP error names)                          | on-prem must ship first or be compatible                                                                                 | a manual go/no-go line with the on-prem team                                                                                     |
-| DB engine / instance changes                                         | data migration, credentials, rollback                                                                                    | release-specific steps + `lib/` in `runs/<release>/`; a rollback phase (9xx)                                                     |
+| DB engine / instance changes                                         | data migration, credentials, rollback                                                                                    | release-specific steps + `lib/` in the release's plan; a rollback phase (9xx)                                                    |
 
 ### Reconcile
 
@@ -77,8 +77,12 @@ Ask about every mismatch:
 
 ## 3. Steps
 
-- `rb new PCR-xxxx --window "YYYY-MM-DD 22:00" --core` copies `catalogue/CORE`. Add the rest with
-  `rb -r PCR-xxxx add <group/file> [id]`.
+- `rb new PCR-xxxx --window "YYYY-MM-DD 22:00" --core` builds the plan in `~/.release-board/<release>/plan/` with
+  `catalogue/CORE` and pushes it to `gs://ppcloud-releases/<release>/plan/`. Add the rest with
+  `rb -r PCR-xxxx add <group/file> [id]`, then `rb -r PCR-xxxx push` (when the user agrees — the bucket is shared).
+- Several people can edit the plan: `rb pull` (`--diff` shows the changes) before editing, `rb push` after. A push
+  that names a conflicting file means someone pushed it meanwhile: `rb pull --force`, redo the change, push again.
+  Never `--force` over the user's unpushed edits without asking.
 - Ids encode the phase: 1xx pre · 2xx staging · 3xx prep · 4xx window · 5xx post · 9xx rollback (on demand). Keep gaps
   so a forgotten step fits in on release day.
 - New steps start from `tools/release-board/templates/step.sh`. A step:
@@ -88,7 +92,7 @@ Ask about every mismatch:
   - says how it is verified and how it is rolled back, in the header comment;
   - carries `@downtime` / `@downstart` / `@downend` when users notice anything, and calls `dt_mark start|end` at the
     exact action;
-  - reads release-specific values from `runs/<release>/config.sh`, never hard-coded.
+  - reads release-specific values from the plan's `config.sh`, never hard-coded.
 - Check every new step:
   - `bash -n` it;
   - `rb -r X list` shows it in the right phase with the right dependencies;
@@ -129,7 +133,7 @@ Ask about every mismatch:
   pod restart times. State the assumptions. First-pod-then-all lengthens a multi-replica sync by roughly one pod's
   start time compared with PCR-2643's numbers.
 
-## 5. Questions to settle with the user before the PR
+## 5. Questions to settle with the user before the plan goes to the operator
 
 - Who is the operator, who is the release manager, and who communicates? When does the maintenance banner go up?
 - Which rotation mode applies after the release?
