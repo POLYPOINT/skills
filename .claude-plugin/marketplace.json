@@ -80,21 +80,27 @@
       "category": "development"
     },
     {
+      "name": "cloud-release",
+      "source": "./skills/cloud-release",
+      "description": "Plan, orchestrate and review POLYPOINT cloud production release nights with the release board of the pcr-companion repo — scope from the Confluence release page plus the release-branch diff, catalogue and new board steps, window order and downtime estimate, next-step guidance and failure diagnosis on the night (the operator runs every step), retro with tested fixes and archived evidence.",
+      "category": "development"
+    },
+    {
       "name": "deploymate",
       "source": "./skills/deploymate",
       "description": "Provision, inspect and operate POLYPOINT on-prem test environments through the DeployMate REST API: master/PR-pinned/release/dump envs wired to a CT, REVIEW or PREVIEW cloud tenant, credential reveals, SSH/Oracle/RDP access, time-recording mode switch, lifecycle and troubleshooting.",
       "category": "testing"
     },
     {
-      "name": "utr-e2e",
-      "source": "./skills/utr-e2e",
-      "description": "Solo alias of cloud-e2e group utr: orchestrated end-to-end regression run of myPOLYPOINT time recording (Unified, Classic/Legacy, mobile) against one on-prem bundle on a DeployMate CT environment, with an optional --compare overlay — same arguments as before; install cloud-e2e too.",
-      "category": "testing"
-    },
-    {
       "name": "cloud-e2e",
       "source": "./skills/cloud-e2e",
       "description": "Multi-group, multi-person end-to-end regression of the POLYPOINT cloud (myPOLYPOINT, POMA planner, PolyPortal, PolyID, partner API) against DeployMate on-prem environments on CT — env steward provisions and seeds, group runners claim a group and fan out Sonnet workers, the run dashboard's database coordinates claims, PEP locks and tenant-config windows, one consolidated report. Includes the UTR time-recording group.",
+      "category": "testing"
+    },
+    {
+      "name": "utr-e2e",
+      "source": "./skills/utr-e2e",
+      "description": "Solo alias of cloud-e2e group utr: orchestrated end-to-end regression run of myPOLYPOINT time recording (Unified, Classic/Legacy, mobile) against one on-prem bundle on a DeployMate CT environment, with an optional --compare overlay — same arguments as before; install cloud-e2e too.",
       "category": "testing"
     }
   ]
