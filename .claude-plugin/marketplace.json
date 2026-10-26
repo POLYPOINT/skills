@@ -80,6 +80,12 @@
       "category": "development"
     },
     {
+      "name": "cloud-release",
+      "source": "./skills/cloud-release",
+      "description": "Plan, orchestrate and review POLYPOINT cloud production release nights with the release board of the pcr-companion repo — scope from the Confluence release page plus the release-branch diff, catalogue and new board steps, window order and downtime estimate, next-step guidance and failure diagnosis on the night (the operator runs every step), retro with tested fixes and archived evidence.",
+      "category": "development"
+    },
+    {
       "name": "deploymate",
       "source": "./skills/deploymate",
       "description": "Provision, inspect and operate POLYPOINT on-prem test environments through the DeployMate REST API: master/PR-pinned/release/dump envs wired to a CT, REVIEW or PREVIEW cloud tenant, credential reveals, SSH/Oracle/RDP access, time-recording mode switch, lifecycle and troubleshooting.",
