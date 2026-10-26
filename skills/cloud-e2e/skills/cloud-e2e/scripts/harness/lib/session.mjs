@@ -67,7 +67,7 @@ export async function runHarness(o) {
   const log = makeLogger(out, 'harness.log');
 
   const { chromium, devices } = loadPlaywright();
-  const ctxOpts = { headless: !o.headed, viewport: mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 }, locale: 'de-CH', timezoneId: 'Europe/Zurich', ignoreHTTPSErrors: true };
+  const ctxOpts = { headless: !o.headed, viewport: mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 }, locale: 'de-CH', timezoneId: 'Europe/Zurich' };
   if (mobile) Object.assign(ctxOpts, { userAgent: devices['Pixel 7'].userAgent, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
   if (o.downloads) ctxOpts.acceptDownloads = true;
   const ctx = await chromium.launchPersistentContext(profileDir, ctxOpts);

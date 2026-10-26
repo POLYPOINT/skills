@@ -193,9 +193,9 @@ const legacyDir = join(sandbox, 'legacy'); mkdirSync(legacyDir);
 let legacyOk = true;
 try {
   for (const f of ['mypp.mjs', 'mypp-inapp.mjs', 'portal-flag.mjs', 'polyid-unlock.mjs']) {
-    writeFileSync(join(legacyDir, f), execFileSync('git', ['-C', SKILL, 'show', `HEAD:skills/utr-e2e/skills/utr-e2e/scripts/harness/${f}`], { encoding: 'utf8' }));
+    writeFileSync(join(legacyDir, f), execFileSync('git', ['-C', SKILL, 'show', `7e1711a19c5c4b197ad816cd4114b546d10caef7:skills/utr-e2e/skills/utr-e2e/scripts/harness/${f}`], { encoding: 'utf8' }));
   }
-} catch (e) { legacyOk = false; failures.push(`wrapper compat: cannot read the UTR originals from git HEAD (${e.message.split('\n')[0]})`); }
+} catch (e) { legacyOk = false; failures.push(`wrapper compat: cannot read the UTR originals from git (utr-e2e v0.5.0, 7e1711a) (${e.message.split('\n')[0]})`); }
 const realDm = process.env.DM_CONFIG_DIR || join(process.env.HOME, '.config/deploymate');
 const hasPw = existsSync(join(realDm, 'node_modules', 'playwright'));
 if (legacyOk) {
@@ -270,10 +270,17 @@ t('kit role-kit.sql: X and Y kits + G4b', () => { const s = readFileSync(join(SE
 t('kit kit-member.sql: enqueue after COMMIT, seed logins only', () => { const s = readFileSync(join(SEED, 'kit-member.sql'), 'utf8'); assert.ok(s.indexOf('PERMISSION_GROUP_MAPPING\', REGEXP') > s.indexOf('  COMMIT;')); assert.match(s, /DMSEED-%/); });
 t('moved files unchanged', () => {
   for (const [a, b] of [['pep/pe-ready.sh', 'scripts/pep/pe-ready.sh'], ['pep/pe-paint.sh', 'scripts/pep/pe-paint.sh'], ['seed/audit.sql', 'scripts/seed/common/audit.sql'], ['seed/rights.sql', 'scripts/seed/common/rights.sql'], ['seed/r0-root-rows.sql', 'scripts/seed/common/r0-root-rows.sql'], ['seed/psc-batch.sql', 'scripts/seed/common/psc-batch.sql']]) {
-    const orig = execFileSync('git', ['-C', SKILL, 'show', `HEAD:skills/utr-e2e/skills/utr-e2e/scripts/${a}`], { encoding: 'utf8' });
+    const orig = execFileSync('git', ['-C', SKILL, 'show', `7e1711a19c5c4b197ad816cd4114b546d10caef7:skills/utr-e2e/skills/utr-e2e/scripts/${a}`  /* utr-e2e v0.5.0, before the move */], { encoding: 'utf8' });
     assert.equal(readFileSync(join(SKILL, b), 'utf8'), orig, b);
   }
 });
+
+t('api-pp.sh guard_host: strict authority parsing', () => {
+  const run = (url) => { try { execFileSync('bash', ['-c', 'die(){ exit 5; }; eval "$(sed -n \'/^guard_host() {/,/^}/p\' "$1")"; guard_host "$2"', '_', join(SCRIPTS, 'api-pp.sh'), url], { stdio: 'ignore' }); return 0; } catch (e) { return e.status; } };
+  for (const bad of ['https://evil.example?.deploymate.polypoint.dev', 'https://evil.example#.deploymate.polypoint.dev', 'https://x.deploymate.polypoint.dev@evil.example/', 'https://evil.example@x.deploymate.polypoint.dev/', 'ftp://x.deploymate.polypoint.dev', 'https://x%2Eevil.example/.deploymate.polypoint.dev', 'https://foo.polypointservices.ch/api']) assert.equal(run(bad), 5, bad);
+  for (const good of ['https://ct-a-host.deploymate.polypoint.dev:9090/api', 'http://localhost:9090/pp-api/api', 'http://127.0.0.1:8383/auth']) assert.equal(run(good), 0, good);
+});
+t('no ignoreHTTPSErrors in the harness', () => { for (const f of ['polyid-flow.mjs', 'pwa-embed.mjs', 'lib/session.mjs', 'app.mjs']) { const p = join(HARNESS, f); if (existsSync(p)) assert.ok(!readFileSync(p, 'utf8').includes('ignoreHTTPSErrors'), f); } });
 
 // ---- 8. credential / forbidden-call scan of every owned file ----------------------------------------------------------------
 const owned = [];

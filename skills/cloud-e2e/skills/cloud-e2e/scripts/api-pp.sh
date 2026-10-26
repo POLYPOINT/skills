@@ -38,8 +38,13 @@ else
 fi
 APIPP=${APIPP_BASE:-$base_default}; KC=${KC_BASE:-$kc_default}
 
-guard_host() { # url
-  local h; h=$(printf '%s' "$1" | sed -E 's#^[a-z]+://([^/:]+).*#\1#' | tr 'A-Z' 'a-z')
+guard_host() { # url — parse the authority strictly: scheme, no userinfo, host cut at / ? # and the port
+  local u="$1" a h
+  case "$u" in http://*|https://*) ;; *) die "GUARD: refusing URL $u: http(s) only" 5;; esac
+  a=${u#*://}; a=${a%%[/?#]*}
+  case "$a" in *@*) die "GUARD: refusing URL $u: userinfo (@) in the authority" 5;; esac
+  h=$(printf '%s' "${a%%:*}" | tr 'A-Z' 'a-z')
+  case "$h" in ''|*[!a-z0-9.-]*) die "GUARD: refusing host '$h': invalid characters" 5;; esac
   case "$h" in *polypointservices.ch|*prod*|*staging*) die "GUARD: refusing host $h (production cluster)" 5;; esac
   case "$h" in localhost|127.0.0.1|*.deploymate.polypoint.dev) ;; *) die "GUARD: refusing host $h: only localhost (tunnel) or <id>-host.deploymate.polypoint.dev" 5;; esac
 }

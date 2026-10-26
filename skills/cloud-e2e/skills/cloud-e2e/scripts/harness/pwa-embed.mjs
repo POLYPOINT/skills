@@ -35,7 +35,7 @@ mkdirSync(join(out, 'api'), { recursive: true });
 const log = makeLogger(out, 'harness.log');
 const { chromium } = loadPlaywright();
 let browser = null; let ctx;
-const opts = { viewport: { width: 1280, height: 900 }, locale: 'de-CH', timezoneId: 'Europe/Zurich', ignoreHTTPSErrors: true };
+const opts = { viewport: { width: 1280, height: 900 }, locale: 'de-CH', timezoneId: 'Europe/Zurich' };
 if (flags['--profile']) ctx = await chromium.launchPersistentContext(resolve(flags['--profile']), { headless: !flags['--headed'], ...opts });
 else { browser = await chromium.launch({ headless: !flags['--headed'] }); ctx = await browser.newContext(opts); }
 await ctx.route((u) => !!blockedRequestReason(u.href), (r) => { log('BLOCKED request', r.request().url().slice(0, 120)); return r.abort(); });

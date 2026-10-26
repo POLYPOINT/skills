@@ -64,7 +64,7 @@ mkdirSync(join(out, 'api'), { recursive: true });
 const log = makeLogger(out, 'harness.log');
 const { chromium, devices } = loadPlaywright();
 const mobile = app === 'inapp';
-const ctxOpts = { viewport: mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 }, locale: 'de-CH', timezoneId: 'Europe/Zurich', ignoreHTTPSErrors: true };
+const ctxOpts = { viewport: mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 }, locale: 'de-CH', timezoneId: 'Europe/Zurich' };
 if (mobile) Object.assign(ctxOpts, { userAgent: devices['Pixel 7'].userAgent, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
 let browser = null; let ctx;
 if (flags['--profile'] && !flags['--fresh']) { mkdirSync(flags['--profile'], { recursive: true }); ctx = await chromium.launchPersistentContext(resolve(flags['--profile']), { headless: !flags['--headed'], ...ctxOpts }); }
