@@ -1,0 +1,29 @@
+{
+  "ROLES": {},
+  "DAY_TOKENS": {},
+  "WRITES": {},
+  "PARTS": {},
+  "NEEDS": {
+    "SWP-32": ["MAN-G2", "Teams client"],
+    "BKG-29": ["MAN-G2", "Teams client", "poma.msTeams.notifications ON on ct-zinc-master (owners)"],
+    "HPN-25": ["MAN-G2", "Teams client"],
+    "AUT-15": ["MAN-G2", "HPN-25 login"],
+    "SWP-34": ["phone with the Testing app"],
+    "BKG-30": ["phone"],
+    "HPN-27": ["Android phone, an older store build for step 4"],
+    "BKG-32": ["MAN-G3 (DM-X)"],
+    "PTN-22": ["MAN-G3 (DM-X)", "booking-partner records (OQ-29)"],
+    "PSP-24": ["MAN-G3 (DM-Y)"],
+    "AUT-19": ["MAN-G3 (DM-Y)", "W-Y-MSG ON phase", "owned team mailbox"],
+    "BKG-31": ["owned mailbox", "owners' consent (sendEmailConfirmation ON on ct-zinc-master)"],
+    "HPN-22": ["MAN-G4"],
+    "HPN-23": ["MAN-G4"],
+    "PSP-23": ["preview-smartpep access"],
+    "PTN-23": ["GCP access to the partner subscription (OQ-7)"],
+    "PTN-24": ["provider consent"]
+  },
+  "BY_DESIGN": [],
+  "SCEN_ID": "\\b(?:SWP|BKG|PSP|HPN|PTN|AUT)-\\d{2}\\b",
+  "DAY_RULES": {},
+  "PLACEHOLDERS": {}
+}

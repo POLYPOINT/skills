@@ -1,0 +1,86 @@
+{
+  "key": "ts",
+  "title": "Timesheet (Zeitausweis, not UTR)",
+  "env": {
+    "kind": "deploymate",
+    "preferred": "X",
+    "track": "master",
+    "pep_desktop_min": 20,
+    "ssh": true,
+    "service_token": false,
+    "stage_objects": []
+  },
+  "requires": ["DM", "OP", "SSH", "PEP", "PO", "VLT-optional"],
+  "families": [
+    {
+      "id": "TS",
+      "name": "Timesheet (flag window)",
+      "brief": "assets/family-briefs/TS.md",
+      "scenarios": ["HPN-17", "HPN-18", "HPN-19", "HPN-20"],
+      "window": "W-X-TIMESHEET"
+    }
+  ],
+  "roles": [
+    { "token": "N4", "count": 1, "kit_group": null, "partition": "P1", "mode": "one-employment" },
+    { "token": "N4X", "count": 1, "kit_group": null, "partition": "P1", "mode": "foreign-employment-id-only" },
+    { "token": "N4B", "count": 1, "kit_group": null, "partition": "P1", "mode": "optional" }
+  ],
+  "partition": [
+    {
+      "id": "P1",
+      "people": 3,
+      "one_gruppe": true,
+      "same_category": false,
+      "exclusive_nodes": false,
+      "preferred": "Pflege Geriatrie"
+    }
+  ],
+  "baseline_flags": {
+    "poma.flows.timesheet": false,
+    "poma.mobileApp.debugPage": true
+  },
+  "windows": [
+    {
+      "id": "W-X-TIMESHEET",
+      "class": "FLAG",
+      "scenarios": ["HPN-17", "HPN-18", "HPN-19", "HPN-20"],
+      "changes": [{ "flag": "poma.flows.timesheet", "value": true }],
+      "est_min": 90,
+      "pauses": ["hp:HP"]
+    }
+  ],
+  "gates": [
+    {
+      "id": "TS-G1",
+      "check": "capabilities contain TIMESHEET; version probe: as N4 with mock=false the reports envelope carries N4's own employment id (not the api-gw example 4711) → HPN-19 runnable, else KNOWN-FAIL HPN-K1 / BLOCKED version gate"
+    },
+    { "id": "TS-G2", "check": "Sollplan saved for M+1 on N4's Gruppe node, not saved for M+2 (seed T2)" },
+    {
+      "id": "TS-G3",
+      "check": "N4 has plannings in the current month (seed window) and one employment; debugPage ON (the API-GW toggle)"
+    }
+  ],
+  "seed": [
+    { "id": "T1", "who": "runner", "pep": false, "doc": "seed/T-seed.md" },
+    { "id": "T2", "who": "runner", "pep": true, "doc": "seed/T-seed.md" },
+    { "id": "T3", "who": "runner", "pep": true, "doc": "seed/T-seed.md" }
+  ],
+  "schedule": {
+    "workers": 1,
+    "lanes": [["HPN-17", "HPN-18", "HPN-19", "HPN-20"]],
+    "after_fanout": [],
+    "exclusive_order": ["HPN-17", "HPN-18", "HPN-19", "HPN-20"]
+  },
+  "version_gate": {
+    "scenario": "HPN-19",
+    "requires": "pp-services build with the api-gw mock switch (APIGW-575 follow-up: api-gw reads `mock`) and api-pp APIPP-1808 (416 TIMESHEET_TARGET_PLAN_MISSING / _BEYOND_LOOK_AHEAD)",
+    "probe": "TS-G1",
+    "else": "HPN-19 KNOWN-FAIL HPN-K1 when it runs and shows the drift, BLOCKED 'version gate' otherwise; HPN-17 / HPN-18 still run"
+  },
+  "known_deviations": "references/known-deviations.md",
+  "cleanup": [
+    "poma.flows.timesheet back to false (restore proof in the window doc)",
+    "Sollplan M+1 save stays (harmless on DM-X: the option 'Sollplan gesichert' is off there); log it",
+    "N4B second employment restored only if the env is reused"
+  ]
+}

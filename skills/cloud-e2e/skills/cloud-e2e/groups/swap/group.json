@@ -1,0 +1,248 @@
+{
+  "key": "swap",
+  "title": "Shift swap (direct, flexible, half-shift, PEP-driven cancellation, channels)",
+  "env": {
+    "kind": "deploymate",
+    "preferred": "X",
+    "track": "master",
+    "pep_desktop_min": 150,
+    "ssh": true,
+    "service_token": true,
+    "stage_objects": ["run-partner"]
+  },
+  "requires": ["DM", "OP", "SSH", "PEP", "VLT", "PO-ADMIN"],
+  "families": [
+    {
+      "id": "A",
+      "name": "Gates and entry rules",
+      "brief": "assets/family-briefs/A.md",
+      "scenarios": ["SWP-01", "SWP-02", "SWP-04", "SWP-05"],
+      "lane": "L2"
+    },
+    {
+      "id": "B",
+      "name": "Direct swap lifecycle (core regression)",
+      "brief": "assets/family-briefs/B.md",
+      "scenarios": ["SWP-06", "SWP-08", "SWP-11", "SWP-09", "SWP-10", "SWP-12", "SWP-13", "SWP-15", "SWP-16"],
+      "lane": "L1"
+    },
+    {
+      "id": "C",
+      "name": "Flexible swap (presence and absence with compensation)",
+      "brief": "assets/family-briefs/C.md",
+      "scenarios": ["SWP-17", "SWP-18", "SWP-19"],
+      "lane": "L2"
+    },
+    {
+      "id": "D",
+      "name": "PEP-driven cancellation",
+      "brief": "assets/family-briefs/D.md",
+      "scenarios": ["SWP-21", "SWP-22", "SWP-23", "SWP-24", "SWP-25"],
+      "lane": "L1"
+    },
+    {
+      "id": "E",
+      "name": "Half-shift swap matrix and effects",
+      "brief": "assets/family-briefs/E.md",
+      "scenarios": ["SWP-26", "SWP-27", "SWP-28", "SWP-29"],
+      "lane": "L3"
+    },
+    {
+      "id": "F",
+      "name": "Channels, mobile, legacy routes, expiry",
+      "brief": "assets/family-briefs/F.md",
+      "scenarios": ["SWP-33", "SWP-35", "SWP-36", "SWP-30", "SWP-31"],
+      "lane": "after_fanout"
+    },
+    {
+      "id": "X03",
+      "name": "Flag and right negatives (window)",
+      "brief": "assets/family-briefs/X03.md",
+      "scenarios": ["SWP-03"],
+      "window": "W-X-TRADES-OFF"
+    },
+    {
+      "id": "X07",
+      "name": "Category filter off (window)",
+      "brief": "assets/family-briefs/X07.md",
+      "scenarios": ["SWP-07"],
+      "window": "W-X-CATEGORIES-OFF"
+    },
+    {
+      "id": "X14",
+      "name": "SP approval in pull mode (window)",
+      "brief": "assets/family-briefs/X14.md",
+      "scenarios": ["SWP-14"],
+      "window": "W-X-WRITE-OFF"
+    }
+  ],
+  "roles": [
+    { "token": "T1", "count": 1, "kit_group": null, "partition": "P1", "mode": "same-category" },
+    { "token": "T2", "count": 1, "kit_group": null, "partition": "P1", "mode": "same-category" },
+    { "token": "T3", "count": 1, "kit_group": null, "partition": "P1", "mode": "same-category" },
+    { "token": "T4", "count": 1, "kit_group": null, "partition": "P1", "mode": "same-category" },
+    { "token": "T5", "count": 1, "kit_group": null, "partition": "P1", "mode": "same-category" },
+    { "token": "T6", "count": 1, "kit_group": null, "partition": "P1", "mode": "same-category" },
+    { "token": "T7", "count": 1, "kit_group": null, "partition": "P1", "mode": "same-category" },
+    { "token": "T8", "count": 1, "kit_group": null, "partition": "P1", "mode": "same-category" },
+    { "token": "T9", "count": 1, "kit_group": null, "partition": "P1", "mode": "other-category" },
+    { "token": "T10", "count": 1, "kit_group": "E2E:HP-NOSWAP", "partition": "P1", "mode": "any" },
+    { "token": "SP", "count": 1, "kit_group": "E2E:SP-ALL", "partition": "P1", "mode": "any" },
+    { "token": "U1", "count": 1, "kit_group": null, "partition": "P2", "mode": "same-category" },
+    { "token": "U2", "count": 1, "kit_group": null, "partition": "P2", "mode": "same-category" },
+    { "token": "U3", "count": 1, "kit_group": null, "partition": "P2", "mode": "same-category" },
+    { "token": "U4", "count": 1, "kit_group": null, "partition": "P2", "mode": "same-category" }
+  ],
+  "partition": [
+    {
+      "id": "P1",
+      "people": 13,
+      "one_gruppe": true,
+      "same_category": true,
+      "exclusive_nodes": true,
+      "preferred": "Pflege Chirurgie"
+    },
+    {
+      "id": "P2",
+      "people": 4,
+      "one_gruppe": true,
+      "same_category": true,
+      "exclusive_nodes": false,
+      "preferred": "Pflege Geriatrie"
+    }
+  ],
+  "baseline_flags": {
+    "poma.flows.shiftTrades": true,
+    "poma.flows.shiftTradesWithCategories": true,
+    "poma.onPrem.writeShiftsOnPrem": true,
+    "poma.onPrem.nodeBasedApprovers": true,
+    "poma.webApp.simulatePEP": false,
+    "poma.msTeams.notifications": false,
+    "poma.internalPool.sendEmailConfirmation": false
+  },
+  "windows": [
+    {
+      "id": "W-X-TRADES-OFF",
+      "class": "FLAG",
+      "scenarios": ["SWP-03"],
+      "changes": [{ "flag": "poma.flows.shiftTrades", "value": false }],
+      "est_min": 45,
+      "pauses": [
+        "swap:A",
+        "swap:B",
+        "swap:C",
+        "swap:D",
+        "swap:E",
+        "swap:F",
+        "partner:PAPI",
+        "partner:PE",
+        "hp:HP",
+        "hp:PV"
+      ]
+    },
+    {
+      "id": "W-X-CATEGORIES-OFF",
+      "class": "FLAG",
+      "scenarios": ["SWP-07"],
+      "changes": [{ "flag": "poma.flows.shiftTradesWithCategories", "value": false }],
+      "est_min": 35,
+      "pauses": ["swap:A", "swap:B", "swap:C", "swap:D", "swap:E", "swap:F", "partner:PAPI"]
+    },
+    {
+      "id": "W-X-WRITE-OFF",
+      "class": "FLAG",
+      "shared_with": ["booking"],
+      "scenarios": ["SWP-14"],
+      "changes": [{ "flag": "poma.onPrem.writeShiftsOnPrem", "value": false }],
+      "est_min": 90,
+      "pauses": [
+        "swap:B",
+        "swap:C",
+        "swap:D",
+        "swap:E",
+        "booking:FH",
+        "booking:BD",
+        "booking:RR",
+        "booking:IP",
+        "partner:PAPI"
+      ]
+    }
+  ],
+  "gates": [
+    {
+      "id": "G-SWP-DEF",
+      "check": "definitions kit on DM-X: planned-shift-detail of a 111 / 112 / 113 planning and of the kit's swappable absence answers available_for_shift_trade true; 141 answers false"
+    },
+    {
+      "id": "G-SWP-ROLES",
+      "check": "T1 permissions shift_trade.submit_shift_trade true, T10 false (block present); SP lands on /shift-planner/ and GET /api/private/shift-trades/past-and-current answers 200"
+    },
+    {
+      "id": "G-SWP-EVT",
+      "check": "a PEP / api-pp change of a swap owner's planning cancels the owner's open swap within 5 min (inbound planned-shift events); else family D BLOCKED"
+    },
+    {
+      "id": "G-SWP-HALF",
+      "check": "plan-day.sh shows the HA..HD half cells with DIENSTPOSITION LINKS / RECHTS as planned in the paint plan"
+    }
+  ],
+  "seed": [
+    { "id": "S1", "who": "runner", "pep": false, "doc": "seed/S1-pick.md" },
+    {
+      "id": "S3",
+      "who": "runner",
+      "pep": false,
+      "doc": "seed/S3-membership.md",
+      "script": "../../scripts/seed/common/kit-member.sql"
+    },
+    {
+      "id": "S5",
+      "who": "runner",
+      "pep": "fallback",
+      "doc": "seed/S5-S6-paints.md",
+      "script": "../../scripts/pp-plan.sh"
+    },
+    {
+      "id": "S6",
+      "who": "runner",
+      "pep": "fallback",
+      "doc": "seed/S5-S6-paints.md",
+      "script": "../../scripts/pp-plan.sh"
+    },
+    { "id": "S7", "who": "runner", "pep": "fallback", "doc": "seed/S7-conflict.md" },
+    { "id": "S8", "who": "runner", "pep": false, "doc": "seed/S8-verify-gates.md" }
+  ],
+  "schedule": {
+    "workers": 3,
+    "lanes": [
+      [
+        "SWP-06",
+        "SWP-08",
+        "SWP-11",
+        "SWP-09",
+        "SWP-10",
+        "SWP-12",
+        "SWP-13",
+        "SWP-15",
+        "SWP-16",
+        "SWP-21",
+        "SWP-22",
+        "SWP-23",
+        "SWP-24",
+        "SWP-25"
+      ],
+      ["SWP-01", "SWP-02", "SWP-04", "SWP-05", "SWP-17", "SWP-18", "SWP-19"],
+      ["SWP-26", "SWP-27", "SWP-28", "SWP-29"]
+    ],
+    "after_fanout": ["SWP-33", "SWP-35", "SWP-36", "SWP-30", "SWP-31"],
+    "exclusive_order": ["SWP-03", "SWP-07", "SWP-14"]
+  },
+  "version_gate": null,
+  "known_deviations": "references/known-deviations.md",
+  "cleanup": [
+    "no OPEN / SUBMITTED swap of a T / U person left (owner 'Tausch löschen' or SP reject)",
+    "flags back to baseline after each window (restore proof in the window doc)",
+    "T10 membership back to DMSEED:Planner only if the env is reused",
+    "repainted cells restored only if the env is reused (paint plan)"
+  ]
+}

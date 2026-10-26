@@ -1,0 +1,104 @@
+{
+  "run": "<run>",
+  "run_dir": "/ABSOLUTE/PATH/results/<run>",
+  "group": "swap",
+  "mode": "multi",
+  "tenant": "<DeployMate env id>",
+  "env_role": "X",
+  "runner": "<runner name>",
+  "dashboard_url": "https://claude.ai/artifact/<dashboard id>",
+  "coordination": "artifact-db",
+  "bundle": "0.0.1829",
+  "bundle_class": "1801",
+  "run_date": "2026-11-03",
+  "roster_end": "2026-11-12",
+  "painted_days": ["2026-11-14", "2026-11-15", "2026-11-16", "2026-11-17", "2026-11-18", "2026-11-19"],
+  "employees": {
+    "T1": {
+      "login": "dmseed-t1",
+      "id": 400
+    },
+    "T2": {
+      "login": "dmseed-t2",
+      "id": 401
+    },
+    "T3": {
+      "login": "dmseed-t3",
+      "id": 402
+    },
+    "T4": {
+      "login": "dmseed-t4",
+      "id": 403
+    },
+    "T5": {
+      "login": "dmseed-t5",
+      "id": 404
+    },
+    "T6": {
+      "login": "dmseed-t6",
+      "id": 405
+    },
+    "T7": {
+      "login": "dmseed-t7",
+      "id": 406
+    },
+    "T8": {
+      "login": "dmseed-t8",
+      "id": 407
+    },
+    "T9": {
+      "login": "dmseed-t9",
+      "id": 408
+    },
+    "T10": {
+      "login": "dmseed-t10",
+      "id": 409
+    },
+    "U1": {
+      "login": "dmseed-u1",
+      "id": 410
+    },
+    "U2": {
+      "login": "dmseed-u2",
+      "id": 411
+    },
+    "U3": {
+      "login": "dmseed-u3",
+      "id": 412
+    },
+    "U4": {
+      "login": "dmseed-u4",
+      "id": 413
+    },
+    "SP": {
+      "login": "dmseed-sp",
+      "id": 414
+    }
+  },
+  "days": {
+    "D1": "2026-11-04",
+    "D2": "2026-11-05",
+    "D3": "2026-11-06",
+    "D4": "2026-11-09",
+    "D5": "2026-11-10",
+    "W1": "2026-11-14",
+    "W2": "2026-11-15",
+    "HA": "2026-11-16",
+    "HB": "2026-11-17",
+    "HC": "2026-11-18",
+    "HD": "2026-11-19",
+    "PM1": "2026-11-02"
+  },
+  "config": {
+    "T_NODE": "<t_node>",
+    "U_NODE": "<u_node>",
+    "ABS_DEF": "<abs_def>",
+    "PIKETT_DEF": "<pikett_def>",
+    "DEF_D": "<def_d>",
+    "CONFLICT_RECIPE": "<conflict_recipe>",
+    "PORTAL_PROFILE": "<portal_profile>",
+    "PARTNER_ID": "<partner_id>",
+    "PARTNER_NAME": "<partner_name>"
+  },
+  "_comment": "Sample run config for gen-prompts.py --group swap (offline test fixture of agent I3a, 2026-10-23). Every <...> and every config value is a placeholder: fill employees from R1 claims / employees.md, days from the seed allocation, config from rules.json PLACEHOLDERS. Test: gen-prompts.py <this file> --group swap --out <scratch dir> with run_dir and tenant set to real values; no leftover {{ expected."
+}

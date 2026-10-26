@@ -1,0 +1,149 @@
+{
+  "key": "hp",
+  "title": "myPOLYPOINT HP app, notification center, logging, banners, privacy",
+  "env": {
+    "kind": "deploymate",
+    "preferred": "X",
+    "track": "master",
+    "pep_desktop_min": 0,
+    "ssh": false,
+    "service_token": false,
+    "stage_objects": []
+  },
+  "requires": ["DM-VIEWER", "PO"],
+  "families": [
+    {
+      "id": "HP",
+      "name": "HP app navigation",
+      "brief": "assets/family-briefs/HP.md",
+      "scenarios": ["HPN-01", "HPN-02", "HPN-03", "HPN-04", "HPN-06", "HPN-07", "HPN-05"],
+      "lane": "L1"
+    },
+    {
+      "id": "NC",
+      "name": "Notification center mechanics",
+      "brief": "assets/family-briefs/NC.md",
+      "scenarios": ["HPN-08", "HPN-09", "HPN-10", "HPN-11", "HPN-12"],
+      "lane": "L2"
+    },
+    {
+      "id": "LG",
+      "name": "Logging and debug",
+      "brief": "assets/family-briefs/LG.md",
+      "scenarios": ["HPN-13", "HPN-14"],
+      "lane": "L1"
+    },
+    {
+      "id": "SY",
+      "name": "System banners and client resilience",
+      "brief": "assets/family-briefs/SY.md",
+      "scenarios": ["HPN-16", "HPN-15"],
+      "lane": "L1"
+    },
+    {
+      "id": "PV",
+      "name": "Privacy (masking audit)",
+      "brief": "assets/family-briefs/PV.md",
+      "scenarios": ["HPN-21"],
+      "lane": "L2"
+    }
+  ],
+  "roles": [
+    { "token": "N1", "count": 1, "kit_group": null, "partition": "P1", "mode": "any" },
+    { "token": "N2", "count": 1, "kit_group": null, "partition": "P1", "mode": "any" },
+    { "token": "N3", "count": 1, "kit_group": null, "partition": "P1", "mode": "planned-this-week" },
+    { "token": "N3C", "count": 1, "kit_group": null, "partition": "P1", "mode": "untouched-colleague" },
+    { "token": "N5", "count": 1, "kit_group": null, "partition": "P2", "mode": "swap-owner" },
+    { "token": "N5C", "count": 1, "kit_group": null, "partition": "P2", "mode": "swap-candidate" }
+  ],
+  "partition": [
+    {
+      "id": "P1",
+      "people": 4,
+      "one_gruppe": true,
+      "same_category": false,
+      "exclusive_nodes": true,
+      "preferred": "Geburtshilfe"
+    },
+    {
+      "id": "P2",
+      "people": 2,
+      "one_gruppe": true,
+      "same_category": true,
+      "exclusive_nodes": false,
+      "preferred": "Paediatrie"
+    }
+  ],
+  "baseline_flags": {
+    "poma.mobileApp.showMyTeam": true,
+    "poma.mobileApp.teamPlan": true,
+    "poma.mobileApp.debugPage": true,
+    "poma.flows.timeAccounts": true,
+    "poma.flows.shiftCredit": true,
+    "poma.mobileApp.teamPlanAutoConsent": false,
+    "poma.flows.availabilities": true,
+    "poma.flows.internalPools": true,
+    "poma.flows.opportunities": true,
+    "poma.flows.shiftTrades": true,
+    "poma.flows.schedulingRequestV1": true,
+    "poma.flows.schedulingRequestV2": false,
+    "poma.onPrem.rosterSnapshotEvent": false,
+    "poma.mobileApp.newCalendarMonthlyView": true,
+    "poma.msTeams.notifications": false,
+    "poma.webApp.mouseflow": false,
+    "poma.webApp.development": false,
+    "poma.mobileApp.beekeeperFullPwa": false,
+    "poma.flows.timesheet": false
+  },
+  "windows": [
+    {
+      "id": "W-X-SYSMSG",
+      "class": "SOFT",
+      "scenarios": ["HPN-15"],
+      "changes": [
+        { "flag": "general.incidents.incidentmsg.de", "value": "HPN-<run> Wartung heute 18:00" },
+        { "flag": "general.incidents.incidentmsg.fr", "value": "HPN-<run> maintenance ce soir" }
+      ],
+      "est_min": 40,
+      "pauses": ["hp:HP", "hp:NC", "hp:LG", "hp:PV", "ts:TS"]
+    }
+  ],
+  "gates": [
+    {
+      "id": "HPN-G1",
+      "check": "every actor logged in once (result loggedIn true); N1 current-user/sync 2xx; capabilities contain GET_ANNUAL_PLAN and GET_TEAM_ROSTER_FOR_WEEK; N1's tenant_subject claim recorded (claim value only)"
+    },
+    {
+      "id": "HPN-G2",
+      "check": "conflict checker active for the tenant: as N3 GET …/team-roster/assignments 200 with ≥ 1 group (else HPN-07 BLOCKED; the steward may enable it in POMA ops, never disable)"
+    },
+    {
+      "id": "HPN-G3",
+      "check": "own swap N5 → N5c OPEN on N5_DAY (N5's open-shift-trades contains it; N5c has the invitation)"
+    },
+    { "id": "HPN-G4", "check": "all five general.incidents.incidentmsg.<lang> texts empty before W-X-SYSMSG" }
+  ],
+  "seed": [
+    { "id": "H1", "who": "runner", "pep": false, "doc": "seed/H-seed.md" },
+    { "id": "H2", "who": "runner", "pep": false, "doc": "seed/H-seed.md", "script": "scripts/hp-lib.mjs" },
+    { "id": "H3", "who": "runner", "pep": false, "doc": "seed/H-seed.md" }
+  ],
+  "schedule": {
+    "workers": 2,
+    "lanes": [
+      ["HPN-01", "HPN-02", "HPN-03", "HPN-04", "HPN-06", "HPN-13", "HPN-14", "HPN-16", "HPN-07", "HPN-05"],
+      ["HPN-08", "HPN-09", "HPN-10", "HPN-11", "HPN-12", "HPN-21"]
+    ],
+    "after_fanout": [],
+    "exclusive_order": ["HPN-15"]
+  },
+  "version_gate": null,
+  "known_deviations": "references/known-deviations.md",
+  "cleanup": [
+    "system message texts deleted (restore proof in the window doc)",
+    "N3 team-plan consent restored",
+    "N1 notification preference 'Diensttausch' back on",
+    "own swap N5 → N5c cancelled",
+    "N3 language back to Deutsch"
+  ]
+}

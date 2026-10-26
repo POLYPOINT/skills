@@ -1,0 +1,45 @@
+{
+  "run": "<run>",
+  "run_dir": "/ABSOLUTE/PATH/results/<run>",
+  "group": "ts",
+  "mode": "multi",
+  "tenant": "<DeployMate env id>",
+  "env_role": "X",
+  "runner": "<runner name>",
+  "dashboard_url": "https://claude.ai/artifact/<dashboard id>",
+  "coordination": "artifact-db",
+  "bundle": "0.0.1829",
+  "bundle_class": "1801",
+  "run_date": "2026-11-03",
+  "roster_end": "2026-11-12",
+  "painted_days": ["2026-11-14", "2026-11-15", "2026-11-16", "2026-11-17", "2026-11-18", "2026-11-19"],
+  "employees": {
+    "N4": {
+      "login": "dmseed-n4",
+      "id": 400
+    },
+    "N4X": {
+      "login": "dmseed-n4x",
+      "id": 401
+    },
+    "N4B": {
+      "login": "dmseed-n4b",
+      "id": 402
+    }
+  },
+  "days": {
+    "GD1": "2026-11-02",
+    "GD2": "2026-10-30",
+    "GD3": "2026-10-29"
+  },
+  "config": {
+    "N4_NODE": "<n4_node>",
+    "MM1": "<mm1>",
+    "MP1": "<mp1>",
+    "MP2": "<mp2>",
+    "MP13": "<mp13>",
+    "VERSION_GATE": "<version_gate>",
+    "PORTAL_PROFILE": "<portal_profile>"
+  },
+  "_comment": "Sample run config for gen-prompts.py --group ts (offline test fixture of agent I3a, 2026-10-23). Every <...> and every config value is a placeholder: fill employees from R1 claims / employees.md, days from the seed allocation, config from rules.json PLACEHOLDERS. Test: gen-prompts.py <this file> --group ts --out <scratch dir> with run_dir and tenant set to real values; no leftover {{ expected."
+}

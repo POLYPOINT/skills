@@ -1,0 +1,107 @@
+{
+  "_doc": "SYNTHETIC reconstruction of run a1801's run-config.json (the original was lost with the scratchpad purge). Built from the documented fields: utr-e2e v0.5.0 gen-prompts.py docstring and SKILL.md Phase 2, seed README § Dates (run a1801: seeded and run 10-16, P0 10-07, P1 10-08 painted, P2 10-09, P3 10-12, WD1/WD2 10-14/10-15) and agent-brief examples (W: E3_WD2 = 10-13 while WD2 = 10-15). Ids, logins and paths are examples; no credentials. Used by a1801-diff.sh only.",
+  "run": "a1801",
+  "run_dir": "/Users/example/e2e/results/a1801",
+  "tenant": "utr-a1801",
+  "runner": "example-runner",
+  "dashboard_url": "https://claude.ai/code/artifact/00000000-0000-0000-0000-000000000000",
+  "coordination": "artifact-db",
+  "compare_tenant": "none",
+  "bundle": "0.0.1829",
+  "bundle_class": "1801",
+  "worker_model": "sonnet",
+  "run_date": "2026-10-16",
+  "prepared_days": ["2026-10-07", "2026-10-08", "2026-10-09", "2026-10-12"],
+  "roster_start": "2026-10-09",
+  "painted_days": ["2026-10-07", "2026-10-08"],
+  "employees": {
+    "E1": {
+      "login": "dmseed-lhug",
+      "id": 480,
+      "row_y": 259
+    },
+    "E2": {
+      "login": "dmseed-cmue",
+      "id": 484,
+      "row_y": 359
+    },
+    "E3": {
+      "login": "dmseed-awut",
+      "id": 481,
+      "row_y": 284
+    },
+    "E4": {
+      "login": "dmseed-ksta",
+      "id": 482,
+      "row_y": 309
+    },
+    "E5": {
+      "login": "dmseed-rsta",
+      "id": 486,
+      "row_y": 409
+    },
+    "E6": {
+      "login": "dmseed-osch",
+      "id": 488,
+      "row_y": 459
+    },
+    "ES": {
+      "login": "dmseed-jeug",
+      "id": 487,
+      "row_y": 434
+    },
+    "ER": {
+      "login": "dmseed-mhof",
+      "id": 510,
+      "row_y": 259
+    }
+  },
+  "config": {
+    "TEAM_NODE": "\"Pflege Chirurgie\" 457",
+    "PLANNER_ROLE_ID": "1081",
+    "E1_NODE": "458",
+    "ER_NODE": "472",
+    "PORTAL_PROFILE": "/Users/example/scratchpad/portal-profile",
+    "PORTAL_ORG": "deploymate-00000000-0000-0000-0000-000000000000",
+    "KOMBI_EMP": "E2",
+    "KOMBI_DAY": "2026-10-07",
+    "CARVE_EMP": "E2",
+    "CARVE_DAY": "2026-10-09",
+    "E6_WD": "2026-10-13"
+  },
+  "families": {
+    "W": {
+      "days": {
+        "E3": {
+          "WD1": "2026-10-14",
+          "WD2": "2026-10-13"
+        }
+      }
+    }
+  },
+  "generate": ["R", "M", "O", "W", "L", "MO", "P", "C"],
+  "files": {
+    "pep-oracle.md": "/Users/example/e2e/results/a1801/pep-oracle.md",
+    "write-days.md": "/Users/example/e2e/results/a1801/write-days.md",
+    "verify-seed.md": "/Users/example/e2e/results/a1801/verify-seed.md"
+  },
+  "night_days": {
+    "E1": ["2026-10-08"],
+    "E2": ["2026-10-12"]
+  },
+  "planless_days": {
+    "E1": ["2026-10-10", "2026-10-11"],
+    "E2": ["2026-10-10"]
+  },
+  "carry_days": {
+    "E1": ["2026-10-10"]
+  },
+  "fixture_days": {
+    "E1": [],
+    "E2": []
+  },
+  "common_notes": "## Run notes (a1801, synthetic)\n- Seed date = run date (10-16): P0/P1 painted before the roster start 10-09 (seed README § Dates).",
+  "family_notes": {
+    "W": "## W day facts (synthetic)\n- E3 writes on 10-13 (W-03, W-07, W-09, W-11) and 10-14 (W-02, then W-06a)."
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "key": "manual",
+  "title": "Human-only sessions (Teams, phone, PEP RDP, mail, Staging, smartPEP, externals)",
+  "env": {
+    "kind": "manual",
+    "preferred": null,
+    "track": null,
+    "pep_desktop_min": 120,
+    "ssh": false,
+    "service_token": false,
+    "stage_objects": [],
+    "where": {
+      "teams": "ct-zinc-master + Teams client (Azure dev tenant wr7g0)",
+      "phone": "DM-X + physical phone (myPOLYPOINT Testing app)",
+      "pep-rdp": "DM-X / DM-Y PEP desktop over RDP, under the env's PEP lock",
+      "mail": "ct-zinc-master + owned mailbox",
+      "staging": "Staging preview-hive-test (production cluster: humans only)",
+      "smartpep": "preview-smartpep",
+      "externals": "GCP Pub/Sub access; CT tenant1 + Careanesth test system"
+    },
+    "note": "no worker prompts: the runner prints the session checklist (manual <run> --session <name>) and writes the testers' results as rows"
+  },
+  "requires": ["TESTERS", "RDP+OP", "PHONE", "TEAMS-CLIENT", "MAILBOX", "STAGING-ACCESS", "GCP", "CONS"],
+  "families": [
+    {
+      "id": "TEAMS",
+      "name": "MS Teams session",
+      "brief": null,
+      "session": "teams",
+      "checklist": "assets/checklists/teams.md",
+      "scenarios": ["SWP-32", "BKG-29", "HPN-25", "AUT-15"],
+      "note": "after the shared group's HPN-26 GO"
+    },
+    {
+      "id": "PHONE",
+      "name": "Phone session (push, native device)",
+      "brief": null,
+      "session": "phone",
+      "checklist": "assets/checklists/phone.md",
+      "scenarios": ["SWP-34", "BKG-30", "HPN-27"]
+    },
+    {
+      "id": "PEPRDP",
+      "name": "PEP RDP session",
+      "brief": null,
+      "session": "pep-rdp",
+      "checklist": "assets/checklists/pep-rdp.md",
+      "scenarios": ["BKG-32", "PTN-22", "PSP-24", "AUT-19"],
+      "note": "every RDP block holds locks/<env>~pep (holder '<name>/manual'); AUT-19 only inside W-Y-MSG (HARD, DM-Y; listed in the auth and ops group.json, not repeated here)"
+    },
+    {
+      "id": "MAIL",
+      "name": "Mail session",
+      "brief": null,
+      "session": "mail",
+      "checklist": "assets/checklists/mail.md",
+      "scenarios": ["BKG-31"]
+    },
+    {
+      "id": "STAGING",
+      "name": "Staging Beekeeper session",
+      "brief": null,
+      "session": "staging",
+      "checklist": "assets/checklists/staging.md",
+      "scenarios": ["HPN-22", "HPN-23"],
+      "note": "Staging is on the production cluster: humans only, no agent, no harness"
+    },
+    {
+      "id": "SMARTPEP",
+      "name": "smartPEP session",
+      "brief": null,
+      "session": "smartpep",
+      "checklist": "assets/checklists/smartpep.md",
+      "scenarios": ["PSP-23"]
+    },
+    {
+      "id": "EXT",
+      "name": "Externals session (Pub/Sub, real providers)",
+      "brief": null,
+      "session": "externals",
+      "checklist": "assets/checklists/externals.md",
+      "scenarios": ["PTN-23", "PTN-24"]
+    }
+  ],
+  "roles": [],
+  "partition": [],
+  "baseline_flags": {},
+  "windows": [],
+  "gates": [
+    {
+      "id": "MAN-G1",
+      "check": "testers named per session and present; the runner session that writes the rows is running"
+    },
+    {
+      "id": "MAN-G2",
+      "check": "teams: shared HPN-26 says GO (Teams enabled, ≥ 1 HP linked or resettable, flag known); owners of ct-zinc-master informed (link resets, booking mail)"
+    },
+    {
+      "id": "MAN-G3",
+      "check": "pep-rdp: the tester has an OPERATOR share and an own RDP reveal of DM-X / DM-Y, and takes locks/<env>~pep before each RDP block"
+    },
+    {
+      "id": "MAN-G4",
+      "check": "staging: a human with Staging access and the Beekeeper test-tenant credentials from the store; no Claude session touches Staging"
+    }
+  ],
+  "seed": [
+    {
+      "id": "M1",
+      "who": "runner",
+      "pep": false,
+      "doc": "seed/README.md",
+      "note": "session preparation: testers, devices, accounts, consents, dashboard rows"
+    }
+  ],
+  "schedule": {
+    "workers": 0,
+    "lanes": [
+      ["SWP-32", "BKG-29", "HPN-25", "AUT-15"],
+      ["SWP-34", "BKG-30", "HPN-27"],
+      ["BKG-32", "PTN-22", "PSP-24"],
+      ["BKG-31"],
+      ["HPN-22", "HPN-23"],
+      ["PSP-23"],
+      ["PTN-23", "PTN-24"]
+    ],
+    "after_fanout": [],
+    "exclusive_order": ["AUT-19"],
+    "doc": "assets/schedule.md"
+  },
+  "version_gate": null,
+  "known_deviations": "references/known-deviations.md",
+  "cleanup": [
+    "Teams links of the tester users as agreed with the ct-zinc-master owners",
+    "PEP RDP: created employees / users (AUT-19) deleted; PEP locks released",
+    "booking mail flag on ct-zinc-master back to its value (owners)",
+    "no tester credential in any file or row"
+  ]
+}

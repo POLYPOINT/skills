@@ -33,6 +33,7 @@ Skills can:
 | **dev-ticket**                   | End-to-end Jira ticket workflow — fetches the ticket, deep analysis with approval checkpoint, reproduces the bug, implements in an isolated git worktree, verifies live with the user, grouped commits + push, PR creation, then hands off to `babysit-pr`. Learns each project's context once and remembers it.                       | `/dev-ticket ABC-1234` or `/dev-ticket setup` |
 | **deploymate**                   | Provisions and operates POLYPOINT on-prem test environments through the DeployMate API — master/PR-pinned/release/dump envs wired to a CT, REVIEW or PREVIEW tenant, credential reveals, SSH/Oracle/RDP access, time-recording mode switch, lifecycle and the manual DM-213 repair.                                                    | `/deploymate create --pr 12910`               |
 | **utr-e2e**                      | Orchestrated end-to-end regression of myPOLYPOINT time recording (unified, classic/legacy, mobile) against one on-prem bundle on a DeployMate env — provisioning and seeding, gates, 57-scenario catalogue, Sonnet worker fan-out with pace control, live dashboard artifact with screenshots of every failure, consolidated findings. | `/utr-e2e "post-merge master"`                |
+| **cloud-e2e**                    | Multi-group, multi-person end-to-end regression of the cloud (myPP, POMA, PolyPortal, PolyID, partner API) on shared DeployMate envs — a steward provisions and seeds, group runners claim a group and fan out Sonnet workers, the dashboard database coordinates claims, PEP locks and windows; 11 groups incl. UTR (alias utr-e2e).  | `/cloud-e2e run <run> --group swap`           |
 
 ## Repository Structure
 
@@ -78,6 +79,7 @@ Works the same in the terminal CLI, VS Code extension, and JetBrains plugin.
 /plugin install dev-ticket
 /plugin install deploymate
 /plugin install utr-e2e
+/plugin install cloud-e2e
 ```
 
 **Update to latest version:**

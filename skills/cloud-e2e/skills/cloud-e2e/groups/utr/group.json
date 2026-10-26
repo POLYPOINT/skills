@@ -1,0 +1,362 @@
+{
+  "key": "utr",
+  "title": "UTR time recording (unified, classic / legacy, mobile)",
+  "env": {
+    "kind": "deploymate",
+    "preferred": "Y",
+    "track": "master",
+    "pep_desktop_min": 210,
+    "ssh": true,
+    "service_token": true,
+    "stage_objects": []
+  },
+  "requires": ["DM", "OP", "SSH", "PEP", "VLT", "PO"],
+  "families": [
+    {
+      "id": "X",
+      "name": "Contract",
+      "brief": null,
+      "scenarios": ["X-01", "X-02", "X-03", "X-04", "X-05"],
+      "lane": "runner",
+      "note": "run by the utr runner itself, first (incl. gate G4b / X-05); X-03 mandatory, X-02 only with approval (seed r)"
+    },
+    {
+      "id": "R",
+      "name": "Reads & amounts",
+      "brief": "assets/family-briefs/R.md",
+      "scenarios": ["R-01", "R-02", "R-03", "R-04", "R-05", "R-06", "R-07", "R-08", "R-09", "R-10", "R-12"],
+      "lane": "B"
+    },
+    {
+      "id": "M",
+      "name": "Month report",
+      "brief": "assets/family-briefs/M.md",
+      "scenarios": ["M-01", "M-02", "M-03", "M-04"],
+      "lane": "A"
+    },
+    {
+      "id": "O",
+      "name": "On-call",
+      "brief": "assets/family-briefs/O.md",
+      "scenarios": ["O-01", "O-02", "O-03", "O-04", "O-05", "O-06", "W-04", "W-10"],
+      "lane": "A"
+    },
+    {
+      "id": "W",
+      "name": "Writes",
+      "brief": "assets/family-briefs/W.md",
+      "scenarios": ["W-01", "W-02", "W-03", "W-05", "W-06", "W-07", "W-09", "W-11"],
+      "lane": "A"
+    },
+    {
+      "id": "L",
+      "name": "Legacy API",
+      "brief": "assets/family-briefs/L.md",
+      "scenarios": ["L-01", "L-02"],
+      "lane": "B"
+    },
+    {
+      "id": "MO",
+      "name": "Mobile",
+      "brief": "assets/family-briefs/MO.md",
+      "scenarios": ["MO-01", "MO-02", "MO-03", "MO-04", "MO-05"],
+      "lane": "B"
+    },
+    {
+      "id": "P",
+      "name": "Permissions",
+      "brief": "assets/family-briefs/P.md",
+      "scenarios": ["P-01a", "P-01b", "P-02", "P-03", "P-04", "R-11", "W-08"],
+      "window": "UTR-P"
+    },
+    {
+      "id": "C",
+      "name": "Classic stack",
+      "brief": "assets/family-briefs/C.md",
+      "scenarios": ["C-01", "C-02", "C-03", "C-04", "C-05", "C-06", "C-07"],
+      "lane": "B",
+      "parts": ["1", "2"],
+      "window": "W-Y-TRMODE",
+      "note": "part 1 (API, tenant UNIFIED) in lane B; part 2 (LEGACY switch by the steward, UI checks, E2 on-call, restore UNIFIED) alone, last"
+    },
+    {
+      "id": "RE",
+      "name": "Re-check",
+      "brief": "assets/family-briefs/RE.md",
+      "scenarios": [],
+      "lane": "recheck",
+      "note": "prompt written by the runner from the earlier reports after an environment fix (generic template: assets/recheck-brief.md)"
+    }
+  ],
+  "roles": [
+    {
+      "token": "E1",
+      "count": 1,
+      "kit_group": null,
+      "partition": "P1",
+      "rule": "must-stamp (AUTO_ZEITSTEMPEL F, TIMESTAMPS), BG 100; Station A"
+    },
+    {
+      "token": "E2",
+      "count": 1,
+      "kit_group": null,
+      "partition": "P1",
+      "rule": "must-stamp, BG 100, on-call (Pikett plannings); Station A"
+    },
+    {
+      "token": "E3",
+      "count": 1,
+      "kit_group": null,
+      "partition": "P1",
+      "rule": "auto-stamp (T, BLOCKS), BG 100; Station A"
+    },
+    { "token": "E4", "count": 1, "kit_group": null, "partition": "P1", "rule": "must-stamp, BG < 100; Station A" },
+    {
+      "token": "E5",
+      "count": 1,
+      "kit_group": null,
+      "partition": "P1",
+      "rule": "must-stamp, BG 100 (mobile, classic); Station B"
+    },
+    {
+      "token": "E6",
+      "count": 1,
+      "kit_group": null,
+      "partition": "P1",
+      "rule": "must-stamp, BG 100 (read-only target); Station B"
+    },
+    {
+      "token": "ES",
+      "count": 1,
+      "kit_group": null,
+      "partition": "P1",
+      "rule": "spare auto-stamp (BLOCKS), MO-05 and write fallback; Station B"
+    },
+    {
+      "token": "ER",
+      "count": 1,
+      "kit_group": null,
+      "partition": "P2",
+      "rule": "read-only stand-in on an isolated category node (P family, R-11)"
+    }
+  ],
+  "partition": [
+    {
+      "id": "P1",
+      "people": 13,
+      "one_gruppe": true,
+      "same_category": false,
+      "exclusive_nodes": true,
+      "preferred": "Pflege Chirurgie",
+      "note": "the whole Gruppe: P-02 closes E1's month for every employee of its node; the other ~6 people stay reserved"
+    },
+    {
+      "id": "P2",
+      "people": 4,
+      "one_gruppe": true,
+      "same_category": false,
+      "exclusive_nodes": true,
+      "preferred": "Paediatrie",
+      "note": "ER's isolated node (R-11 closing date) + 3 reserved"
+    }
+  ],
+  "baseline_flags": { "poma.mobileApp.monthTimeReport": true, "poma.flows.timesheet": false },
+  "windows": [
+    {
+      "id": "UTR-P",
+      "class": "INTERNAL",
+      "scenarios": ["P-01a", "P-01b", "P-02", "P-03", "P-04", "R-11", "W-08"],
+      "changes": [
+        {
+          "pep_rights": "DMSEED:Planner rows of functions 1032 / 1033 removed, restored by scripts/seed/common/rights.sql"
+        },
+        { "closing_dates": "E1's and ER's category nodes (LOCK_LAST_MONAT), restored" },
+        {
+          "flag": "poma.onPrem.timeRecodingMaxAllowedPastDays",
+          "value": "P-03 override",
+          "restore": "delete the tenant override"
+        }
+      ],
+      "est_min": 90,
+      "pauses": ["utr:R", "utr:M", "utr:O", "utr:W", "utr:L", "utr:MO", "utr:C"]
+    },
+    {
+      "id": "W-Y-TRMODE",
+      "class": "INTERNAL",
+      "scenarios": ["C-01", "C-05", "C-07"],
+      "changes": [
+        {
+          "deploymate_time_recording": "LEGACY",
+          "restore": "UNIFIED",
+          "owner_only": true,
+          "note": "dm-api.sh time-recording <id> LEGACY|UNIFIED is owner-only: the steward runs it on the runner's request"
+        }
+      ],
+      "est_min": 45,
+      "pauses": ["utr:R", "utr:M", "utr:O", "utr:W", "utr:L", "utr:MO", "utr:P"]
+    }
+  ],
+  "gates": [
+    {
+      "id": "G0",
+      "check": "DeployMate state DONE, RUNNING, autoStopEnabled false (steward; re-checked in every daily pre-flight)"
+    },
+    {
+      "id": "G1",
+      "check": "bundle version + tenant capabilities UNIFIED_TIME_RECORDING, LEGACY_IN_OUT_TIME_STAMP_ID, TIME_AMOUNT_TYPE, BENEFITS, CREDITED_TIME_FOR_TIME_STAMPS, PLANNED_TIME_FOR_BLOCKS, PLANNED_TIME_FOR_ON_CALL_SHIFTS, BLOCK_COMMENTS (references/gates.md G1)"
+    },
+    {
+      "id": "G2",
+      "check": "flags: monthTimeReport ON, timesheet OFF, timeRecodingMaxAllowedPastDays default 7, time-recording UNIFIED"
+    },
+    {
+      "id": "G3",
+      "check": "PEP agent answers and TfrmPEPMain listed (pe-ready.sh), api-pp reachable, DB reveal stored, service secret available"
+    },
+    { "id": "G4", "check": "Phase 1 seed steps verified (groups/utr/scripts/seed/README.md, seed-log.md)" },
+    {
+      "id": "G4b",
+      "check": "api-pp definition cache: PSC enqueue after every definition / palette / rights / closing change; days-check.mjs EXPECT_DEF ok (X-05)"
+    },
+    { "id": "G5", "check": "baseline fixtures per employee and month + first diff run (X-01 evidence)" }
+  ],
+  "seed": [
+    {
+      "id": "a",
+      "who": "steward",
+      "pep": false,
+      "doc": "scripts/seed/README.md",
+      "script": "../../scripts/seed/common/audit.sql",
+      "note": "multi-group: done by the steward (S1) - verify; solo: run"
+    },
+    {
+      "id": "b",
+      "who": "steward",
+      "pep": false,
+      "doc": "scripts/seed/README.md",
+      "script": "../../scripts/seed/common/rights.sql",
+      "note": "multi-group: done by the steward - verify"
+    },
+    {
+      "id": "c",
+      "who": "runner",
+      "pep": true,
+      "doc": "scripts/seed/README.md",
+      "note": "palette absences 25/57/60, Pikett 150, Einsatz 770; then gate G4b"
+    },
+    {
+      "id": "j",
+      "who": "steward",
+      "pep": true,
+      "doc": "scripts/seed/README.md",
+      "script": "../../scripts/seed/common/r0-root-rows.sql",
+      "note": "multi-group: done by the steward - verify"
+    },
+    {
+      "id": "n",
+      "who": "runner",
+      "pep": true,
+      "doc": "scripts/seed/README.md",
+      "note": "windowed Pikett 151 + Pikett-Einsatz 770"
+    },
+    { "id": "o", "who": "runner", "pep": true, "doc": "scripts/seed/README.md", "note": "Kombi 9102/9103" },
+    {
+      "id": "p",
+      "who": "runner",
+      "pep": true,
+      "doc": "scripts/seed/README.md",
+      "note": "Zulagenprofil slots + Lohnart 10080"
+    },
+    {
+      "id": "c2",
+      "who": "runner",
+      "pep": false,
+      "doc": "scripts/seed/README.md",
+      "script": "../../scripts/seed/common/psc-batch.sql",
+      "note": "one G4b batch for c/j/n/o/p"
+    },
+    {
+      "id": "k",
+      "who": "steward",
+      "pep": false,
+      "doc": "scripts/seed/README.md",
+      "note": "STAMMRECHNEN(1) + ORGANIZATION_STRUCTURE PSC; multi-group: done by the steward - verify"
+    },
+    {
+      "id": "d",
+      "who": "runner",
+      "pep": true,
+      "doc": "scripts/seed/README.md",
+      "note": "prepared days with the seed flows"
+    },
+    {
+      "id": "e",
+      "who": "runner",
+      "pep": true,
+      "doc": "scripts/seed/README.md",
+      "note": "seed planned-credit ZEITSUMME removed on prepared presence days"
+    },
+    { "id": "l", "who": "runner", "pep": true, "doc": "scripts/seed/README.md" },
+    { "id": "m", "who": "runner", "pep": false, "doc": "scripts/seed/README.md" },
+    { "id": "q", "who": "runner", "pep": true, "doc": "scripts/seed/README.md", "note": "carved absence (R-04)" },
+    {
+      "id": "f",
+      "who": "runner",
+      "pep": false,
+      "doc": "scripts/seed/README.md",
+      "script": "scripts/seed/write-days.sql"
+    },
+    {
+      "id": "s",
+      "who": "runner",
+      "pep": true,
+      "doc": "scripts/seed/README.md",
+      "note": "E2's Pikett plannings for family O (runner paints, workers never)"
+    },
+    {
+      "id": "g",
+      "who": "runner",
+      "pep": false,
+      "doc": "scripts/seed/README.md",
+      "script": "scripts/harness/baseline.mjs"
+    },
+    { "id": "h", "who": "runner", "pep": false, "doc": "scripts/seed/README.md", "note": "created objects ledger" },
+    {
+      "id": "r",
+      "who": "runner",
+      "pep": false,
+      "doc": "scripts/seed/README.md",
+      "note": "optional CODEART 'S' row (X-02), only with approval"
+    }
+  ],
+  "schedule": {
+    "workers": 2,
+    "first": ["X"],
+    "lanes": [
+      ["O", "W", "M"],
+      ["R", "MO", "L", "C-part1"]
+    ],
+    "after_fanout": ["P"],
+    "exclusive_order": ["P", "C-part2"],
+    "doc": "assets/schedule.md"
+  },
+  "version_gate": {
+    "min_pp_services": "0.0.1800",
+    "contains": ["APIPP-1899", "APIPP-1884"],
+    "bundle_class": {
+      "pre-1801": "customer lines <= 26.3, master < 0.0.1829",
+      "1801": "master >= 0.0.1829 (PR 12910 merged) or PR builds 0.12910.N"
+    },
+    "default": "pp-services master pin >= 0.0.1829 (class 1801)",
+    "doc": "references/runbook.md Phase 0 step 2"
+  },
+  "known_deviations": "references/scenarios.md",
+  "cleanup": [
+    "created stamps / blocks on write days (created_data)",
+    "past-days tenant override deleted (P-03)",
+    "PEP rights restored (P-01a/P-01b/P-04)",
+    "time-recording UNIFIED (C part 2)",
+    "X-02 CODEART 'S' row deleted (seed r)",
+    "prepared data and fixtures kept"
+  ]
+}

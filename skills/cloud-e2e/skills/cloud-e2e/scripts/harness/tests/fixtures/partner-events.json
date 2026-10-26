@@ -1,0 +1,17 @@
+{
+  "logs": {
+    "items": [
+      {
+        "id": "ev1",
+        "type": "v1/OpportunityResponse",
+        "tenant_id": "e2etest",
+        "payload": {
+          "opportunity_id": "op-1",
+          "answer": "YES",
+          "authorization": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJhenAiOiJwb21hIiwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsicG9seXBvaW50LXBvb2xtYW5hZ2VtZW50Ijp7InJvbGVzIjpbIlJPTEVfSEVBTFRIX1BST0ZFU1NJT05BTCIsIlJPTEVfU0hJRlRfUExBTk5FUiJdfX0sImV4cCI6NDEwMjQ0NDgwMH0.c2lnbmF0dXJlLWZha2U"
+        }
+      }
+    ],
+    "next": null
+  }
+}

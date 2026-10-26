@@ -1,0 +1,6 @@
+{
+  "tenant_id": "e2etest",
+  "valid_until": "2027-12-31",
+  "raw_xml": "<license><customer>E2E</customer><key>FAKE</key></license>",
+  "modules": ["PEP", "MYPP"]
+}

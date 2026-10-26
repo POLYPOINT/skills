@@ -1,0 +1,21 @@
+{
+  "id": 42,
+  "name": "Test Provider",
+  "tenantId": "e2etest",
+  "clientId": "polyid-e2etest",
+  "clientSecret": "FAKE-provider-secret",
+  "providerType": "API_GATEWAY_VALIDATION",
+  "active": true,
+  "capabilities": { "twoFactorType": "DISABLED", "showResetPasswordButton": false },
+  "domains": [{ "domain": "e2etest.ch" }],
+  "users": [
+    {
+      "username": "dmseed-abc",
+      "newPassword": "FAKE1",
+      "otp_secret": "JBSWY3DPEHPK3PXP",
+      "hasPassword": true,
+      "tokenType": "x",
+      "passwordStrengthLevel": "STRONG"
+    }
+  ]
+}

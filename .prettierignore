@@ -2,3 +2,5 @@
 skills/utr-e2e/**/*.mjs
 skills/utr-e2e/**/*.html
 skills/deploymate/**/*.mjs
+skills/cloud-e2e/**/*.mjs
+skills/cloud-e2e/**/*.html

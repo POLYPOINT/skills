@@ -1,0 +1,5 @@
+[
+  { "code": "poma.flows.shiftTrades", "type": "BOOLEAN", "value": "true", "master": "true" },
+  { "code": "poma.onPrem.timeRecodingMaxAllowedPastDays", "type": "NUMBER", "value": "14", "master": "30" },
+  { "code": "general.incidents.incidentmsg.de", "type": "STRING", "value": "", "master": "" }
+]

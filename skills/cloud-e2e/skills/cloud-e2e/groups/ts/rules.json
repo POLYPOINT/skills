@@ -1,0 +1,43 @@
+{
+  "ROLES": {
+    "N4": "emp",
+    "N4X": "emp",
+    "N4B": "emp"
+  },
+  "DAY_TOKENS": {
+    "GD1": "absolute",
+    "GD2": "absolute",
+    "GD3": "absolute"
+  },
+  "WRITES": {
+    "TS": []
+  },
+  "PARTS": {},
+  "NEEDS": {
+    "HPN-17": ["W-X-TIMESHEET", "TS-G3"],
+    "HPN-18": ["W-X-TIMESHEET", "HPN-17"],
+    "HPN-19": ["W-X-TIMESHEET", "TS-G1", "TS-G2"],
+    "HPN-20": ["W-X-TIMESHEET", "T3"]
+  },
+  "BY_DESIGN": [],
+  "SCEN_ID": "\\bHPN-(?:1[7-9]|20)\\b",
+  "DAY_RULES": {
+    "relations": {
+      "GD1": "a past or current-month day of N4 with a seed planning (HPN-19 DB cross-check)",
+      "GD2": "another such day",
+      "GD3": "a third such day"
+    },
+    "min_offset_days": -31,
+    "max_offset_days": 0,
+    "note": "month tokens are placeholders (MM1, MP1, MP2, MP13); MONTH (= M0) is generic"
+  },
+  "PLACEHOLDERS": {
+    "N4_NODE": "Gruppe node of Pflege Geriatrie on DM-X (Sollplan save of seed T2): KNOTEN_ID and name",
+    "MM1": "month before the run month, YYYY-MM",
+    "MP1": "month after the run month (Sollplan saved), YYYY-MM",
+    "MP2": "second month after the run month (no Sollplan), YYYY-MM",
+    "MP13": "a month beyond the roster look-ahead (e.g. run month + 13), YYYY-MM",
+    "VERSION_GATE": "TS-G1 result: pass | fail (HPN-19 runs only on pass; on fail it records KNOWN-FAIL HPN-K1 / BLOCKED)",
+    "PORTAL_PROFILE": "absolute path of the runner's portal-ops browser profile folder (outside results/)"
+  }
+}

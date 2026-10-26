@@ -1,0 +1,61 @@
+{
+  "ROLES": {
+    "HPA": "emp+login",
+    "SEEDSP": "emp+login",
+    "NOHP": "emp+login",
+    "LOCKU": "emp+login",
+    "PWU": "emp+login",
+    "OTPU": "emp+login",
+    "T2FU": "emp+login",
+    "OFFU": "emp+login",
+    "SMSU": "emp+login",
+    "BLKU": "emp+login",
+    "NEWU": "emp+login",
+    "EMPU": "emp+login",
+    "IMPBLK": "emp+login",
+    "DISU": "emp+login",
+    "NOEMP": "none",
+    "TA": "borrowed"
+  },
+  "DAY_TOKENS": {},
+  "WRITES": {},
+  "PARTS": { "LOCK": ["1", "2"], "PWD": ["1", "2"], "LOGOUT": ["1", "2"] },
+  "NEEDS": {
+    "AUT-01": ["AUT-G2"],
+    "AUT-02": ["A3", "AUT-G2"],
+    "AUT-03": [],
+    "AUT-04": ["AUT-G2", "A8 (optional step 6)"],
+    "AUT-05": ["AUT-G1", "W-Y-LOCKOUT", "steward unlock (part 2)"],
+    "AUT-06": ["AUT-G1 (Send Messages OFF)", "W-Y-MSG (OFF phase)"],
+    "AUT-07": ["A5", "AUT-G3", "W-Y-MSG (ON phase)", "operator reads the team mailbox"],
+    "AUT-08": ["A5", "AUT-G3", "W-Y-MSG (ON phase)", "PEP lock", "operator reads the team mailbox"],
+    "AUT-09": ["AUT-G1"],
+    "AUT-10": ["W-Y-TENANT2FA", "TA (kit)"],
+    "AUT-11": ["A6", "AUT-G3", "operator reads the sms-logger"],
+    "AUT-14": ["AUT-G2", "part 2 >= 65 min after part 1"],
+    "AUT-16": ["TA (kit)"],
+    "AUT-17": ["TA (kit)", "operator ops-realm sign-in"],
+    "AUT-18": ["NEWU never logged in"],
+    "AUT-20": ["PEP lock"]
+  },
+  "BY_DESIGN": [],
+  "SCEN_ID": "\\bAUT-\\d{2}\\b",
+  "DAY_RULES": {
+    "relations": {
+      "LOGOUT part 2": ">= 65 min after the part-1 login of the profile auth-logout-HPA-b",
+      "LOCK part 2": ">= 31 min after the 13th wrong password of part 1, before the steward's unlock"
+    },
+    "never_other_family_fixture_day": true
+  },
+  "PLACEHOLDERS": {
+    "PIDOPS_PROFILE": "absolute path of the runner's PolyID ops browser profile (support-ops / admin rights; outside results/)",
+    "PORTAL_PROFILE": "absolute path of the runner's PolyPortal ops browser profile (outside results/; tenant read)",
+    "PROVIDER_ID": "PolyID provider id of the env's tenant (gate AUT-G1 provider-read)",
+    "AUTH_MAILBOX": "address of the team-owned mailbox the operator reads (seed A5); an address, never its password",
+    "SMS_LOGGER_URL": "the sms-logger page the operator confirmed live in AUT-G3 (read by the operator, never by the harness)",
+    "PORTAL_HOST": {
+      "doc": "customer portal / PolyPortal web host of the stage",
+      "value": "https://ct-portal-webapp.dev.k8s.polypoint-dev.com"
+    }
+  }
+}
