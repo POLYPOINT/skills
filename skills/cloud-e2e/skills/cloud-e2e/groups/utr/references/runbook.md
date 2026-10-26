@@ -1,6 +1,6 @@
 # UTR E2E — orchestrated time-recording regression of one on-prem bundle
 
-> **cloud-e2e note.** This is the utr-e2e v0.5.0 `SKILL.md` body, moved unchanged into the cloud-e2e group package `utr` (path-only edits). `/utr-e2e` (solo) and `cloud-e2e run <run> --group utr --solo` follow it end to end. What changed around it:
+> **cloud-e2e note.** This is the utr-e2e v0.5.0 `SKILL.md` body, moved unchanged into the cloud-e2e group package `utr` (path-only edits). `/cloud-e2e run <run> --group utr --solo` follows it end to end. What changed around it:
 >
 > - **Paths** are relative to the cloud-e2e skill folder: `scripts/{sql.sh,dm-sql.ps1,tunnels.sh,pep.sh,diff-fixtures.py,gen-prompts.py}`, `scripts/pep/pe-{ready,paint}.sh`, `scripts/harness/{mypp,mypp-inapp,portal-flag,polyid-unlock}.mjs` and `scripts/seed/common/{audit,rights,r0-root-rows,psc-batch}.sql` are core; UTR's own files are under `groups/utr/` (`references/`, `assets/`, `groups/utr/scripts/seed/README.md`, `oracle-day.sh`, `diff-roster-cells.py`, `scripts/pep/pe-{newblock,open,del-zs,reinterp,shots}.sh`, `groups/utr/scripts/harness/utr-lib.mjs` and the ready scripts). `references/gates.md` §2a / §3 / §6 are now `groups/utr/references/gates.md`; §1 / §2 / §4 / §5 are the core `references/env-setup.md`.
 > - **PEP lock**: the lock file became the db lock `locks/<tenant>~pep` on the run dashboard (core `references/coordination.md` §3.2); `{{PEP_LOCK_DOC}}` / `{{PEP_LOCK_STEPS}}` in the brief. Solo runs on one machine may set `"coordination": "local-file"` to keep the v0.5.0 file.
@@ -10,7 +10,7 @@
 
 Runbook for one orchestrator session. It owns the environments, the data, the dashboard and the final report; Sonnet worker agents execute scenario families and report JSON. Nothing here assumes the orchestrator has seen the code: every fact needed is in `references/`.
 
-**Usage:** `/utr-e2e "<run name>" --agents 2 --families R,O,M,W,P,C,L,MO,X [--compare <second env>] [--worker-model opus]`
+**Usage:** `/cloud-e2e run "<run name>" --group utr --solo --agents 2 --families R,O,M,W,P,C,L,MO,X [--compare <second env>] [--worker-model opus]`
 
 ## Prerequisites (operator)
 

@@ -60,6 +60,6 @@ Order of `env-plan.md` §6.2. Log every step in `kits/<env>.log` (`{step, ok, ti
 3. Cleanup check: every `groups/<key>.summary` reports its cleanup; run partner deleted after its last reader (S-CT-REG); GLN; flags back to baseline (`flags-baseline.py --compare`); time-recording UNIFIED; Send Messages OFF; kits stay until destroy; claims and locks released (`status <run>`).
 4. `run/meta.status = "done"`. TTL, stop or destroy (`<dm> destroy <id>`) only on the user's explicit word; never reseed during a run.
 
-## Solo steward path (`run … --solo`, `/utr-e2e`)
+## Solo steward path (`run … --solo`)
 
 One env, no shares, no add-runner; S0 / S0b as above for that one env (the dashboard may keep v0.5.0 rows for `utr`); S1 only what the group's `group.json` `seed[]` marks `who: steward` (for `utr`: steps a, b, j, k run as today); then the runner loop. For `utr` follow `groups/utr/references/runbook.md` Phase 0 → 3.

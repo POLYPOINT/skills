@@ -284,7 +284,7 @@ So:
 
 **Description**
 
-The Unified Time Recording E2E (cloud team, skill `utr-e2e`) needs an env pre-loaded with time-recording data:
+The Unified Time Recording E2E (cloud team, cloud-e2e group `utr`) needs an env pre-loaded with time-recording data:
 
 - six employee archetypes
 - dedicated shift definitions (Kombi with an "ohne Zeitkonto" leg, night, Pikett with and without window, an Einsatz usable for on-call recording, a Sunday allowance crediting a second Zeitkonto)
@@ -350,5 +350,5 @@ Spike first (time-box 1 d): from the env VM, POST one past-dated stamp (T−20) 
 | OQ-5 | Where does the play get the api-pp client secret (`polypoint-p4-api-personnelplanning`) and the local api-pp and PTC URLs on the VM?                                                                                             | DM team (vault / keycloak-configurer vars)              |
 | OQ-6 | Is "employment detail ends at M-3" the right way to produce E6 (no allowed period) without breaking day reads? Alternative: a separate closing date on E6's category.                                                            | Product / cloud team, live test of R-11                 |
 | OQ-7 | Does `ZE_PROFIL` (MITARBEITER_DETAIL.ZE_ID) affect UTR at all, or is AUTO_ZEITSTEMPEL plus the detail interval enough?                                                                                                           | NEON                                                    |
-| OQ-8 | R-09 needs Sunday work with the Zulage, but D4 is a Thursday. Move the allowance day to D7 for E1, or define the Zulage on weekdays?                                                                                             | utr-e2e owner                                           |
+| OQ-8 | R-09 needs Sunday work with the Zulage, but D4 is a Thursday. Move the allowance day to D7 for E1, or define the Zulage on weekdays?                                                                                             | utr group owner                                         |
 | OQ-9 | SL (hourly-wage) closing semantics: monthly like ML, or weekly (data plan: "SM + weekly SH")?                                                                                                                                    | NEON                                                    |

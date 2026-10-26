@@ -34,7 +34,6 @@ Skills can:
 | **cloud-release**                | Plans, runs and reviews cloud production release nights (PCRs) with the `pcr-companion` release board — scope from the Confluence release page and the release-branch diff, step order and downtime estimate, next-step guidance and failure diagnosis on the night (the operator runs every step), retro.       | `/cloud-release plan PCR-2643`                |
 | **deploymate**                   | Provisions and operates POLYPOINT on-prem test environments through the DeployMate API — master/PR-pinned/release/dump envs wired to a CT, REVIEW or PREVIEW tenant, shared envs (OPERATOR/VIEWER), credential reveals, SSH/Oracle/RDP access, lifecycle and the manual DM-213 repair.                           | `/deploymate create --pr 12910`               |
 | **cloud-e2e**                    | Multi-group end-to-end regression of the cloud (myPP, POMA planner, PolyPortal, PolyID, partner API) on shared DeployMate envs — a steward provisions and seeds, each person claims a group and fans out Sonnet workers, a shared dashboard coordinates claims, locks and windows; 11 groups incl. UTR.          | `/cloud-e2e run <run> --group swap`           |
-| **utr-e2e**                      | Shortcut for the `utr` group of `cloud-e2e` in solo mode: the myPOLYPOINT time-recording E2E (unified, classic/legacy, mobile) against one on-prem bundle on a DeployMate env, same arguments as before (incl. `--compare`).                                                                                     | `/utr-e2e "post-merge master"`                |
 
 ## Repository Structure
 
@@ -88,7 +87,6 @@ Works the same in the terminal CLI, VS Code extension, and JetBrains plugin.
 /plugin install cloud-release
 /plugin install deploymate
 /plugin install cloud-e2e
-/plugin install utr-e2e
 ```
 
 **Update to latest version:**
@@ -115,7 +113,7 @@ Once installed, invoke with `/skill-name`:
 /cloud-release plan PCR-2643
 /deploymate create --pr 12910
 /cloud-e2e run e2e-1 --group swap
-/utr-e2e "post-merge master" --agents 2
+/cloud-e2e run utr-1 --group utr --solo --agents 2
 ```
 
 <details>

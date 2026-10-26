@@ -96,12 +96,6 @@
       "source": "./skills/cloud-e2e",
       "description": "Multi-group, multi-person end-to-end regression of the POLYPOINT cloud (myPOLYPOINT, POMA planner, PolyPortal, PolyID, partner API) against DeployMate on-prem environments on CT — env steward provisions and seeds, group runners claim a group and fan out Sonnet workers, the run dashboard's database coordinates claims, PEP locks and tenant-config windows, one consolidated report. Includes the UTR time-recording group.",
       "category": "testing"
-    },
-    {
-      "name": "utr-e2e",
-      "source": "./skills/utr-e2e",
-      "description": "Solo alias of cloud-e2e group utr: orchestrated end-to-end regression run of myPOLYPOINT time recording (Unified, Classic/Legacy, mobile) against one on-prem bundle on a DeployMate CT environment, with an optional --compare overlay — same arguments as before; install cloud-e2e too.",
-      "category": "testing"
     }
   ]
 }

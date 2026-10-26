@@ -1,5 +1,0 @@
-{
-  "name": "utr-e2e",
-  "version": "0.6.0",
-  "description": "Solo alias of the cloud-e2e skill's group utr: orchestrated end-to-end regression run of myPOLYPOINT time recording (Unified, Classic/Legacy, mobile) against one on-prem bundle on a DeployMate CT environment, with an optional --compare overlay — same arguments as before; needs the cloud-e2e plugin."
-}
