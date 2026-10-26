@@ -1,5 +1,5 @@
 {
   "name": "deploymate",
-  "version": "0.1.0",
-  "description": "Provision, inspect and operate POLYPOINT on-prem test environments through the DeployMate REST API: master/PR-pinned/release/dump envs wired to a CT, REVIEW or PREVIEW cloud tenant, one-shot credential reveals, SSH/Oracle/RDP access, time-recording mode switch, lifecycle (auto-stop, TTL, reseed, destroy) and troubleshooting of stuck provisions."
+  "version": "0.2.0",
+  "description": "Provision, inspect and operate POLYPOINT on-prem test environments through the DeployMate REST API: master/PR-pinned/release/dump envs wired to a CT, REVIEW or PREVIEW cloud tenant, one-shot credential reveals, SSH/Oracle/RDP access, sharing one env with several operators (VIEWER/OPERATOR shares, allowlist union, SSH key append), time-recording mode switch, lifecycle (auto-stop, TTL, reseed, destroy) and troubleshooting of stuck provisions."
 }

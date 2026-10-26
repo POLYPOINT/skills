@@ -19,10 +19,15 @@
 #   dm-api.sh extend <id> [days]              1..14
 #   dm-api.sh auto-stop <id> on|off
 #   dm-api.sh time-recording <id> LEGACY|UNIFIED
-#   dm-api.sh refresh-ip <id> [cidr ...]
-#   dm-api.sh ssh-keys <id> <pubkey-file> [...]
+#   dm-api.sh refresh-ip <id> [--union] [cidr ...]  owner: REPLACES the allowlist with your IP (+ cidrs) unless --union;
+#                                             --union / operator: adds your /32 and keeps everyone else's (shared envs)
+#   dm-api.sh ssh-keys <id> <pubkey-file> [...]  owner: PUT = replaces the whole list (<= 5 keys)
+#   dm-api.sh ssh-keys-add <id> <pubkey-file> [...]  owner: GET current list + append (dedup) + PUT, refuses > 5
 #   dm-api.sh retry | reseed | start | stop | restart <id>
-#   dm-api.sh share <id> <viewerSub> [VIEWER|OPERATOR] ; viewers <id> ; unshare <id> <viewerSub>
+#   dm-api.sh share <id> <viewerSub> VIEWER|OPERATOR   owner: VIEWER reads env, logs, services, health, test-data (seed password);
+#                                             OPERATOR also reveals rdp/db/pep for themselves, adds single /32 IPs, extends TTL,
+#                                             start/stop/restart. Re-posting changes the level. <viewerSub> = their `me` userId
+#   dm-api.sh viewers <id> ; unshare <id> <viewerSub>
 #   dm-api.sh destroy <id>                    DELETE (only on an explicit user request)
 #   dm-api.sh raw <METHOD> <path> [json]      anything else
 set -euo pipefail
@@ -93,15 +98,22 @@ case "$cmd" in
   extend) need "$@"; _call POST "/environments/$1/extend" "$(jq -nc --argjson d "${2:-7}" '{days:$d}')" | jq '{id, ttlExpiresAt}' ;;
   auto-stop) need "$@"; [ $# -ge 2 ] || die "auto-stop <id> on|off"; v=false; [ "$2" = on ] && v=true; _call PUT "/environments/$1/auto-stop" "{\"enabled\":$v}" | jq '{id, autoStopEnabled}' ;;
   time-recording) need "$@"; [ $# -ge 2 ] || die "time-recording <id> LEGACY|UNIFIED"; _call PUT "/environments/$1/time-recording" "{\"mode\":\"$2\"}" | jq '{id, timeRecordingMode}' ;;
-  refresh-ip) need "$@"; id=$1; shift; body=$(jq -nc --args '{additionalCidrs: $ARGS.positional, replaceExisting: true}' "$@"); _call POST "/environments/$id/refresh-ip" "$body" | jq '{id, provisioningState, ipAllowlist}' ;;
+  refresh-ip) need "$@"; id=$1; shift; rep=true; [ "${1:-}" = "--union" ] && { rep=false; shift; }
+    body=$(jq -nc --argjson r "$rep" --args '{additionalCidrs: $ARGS.positional, replaceExisting: $r}' "$@"); _call POST "/environments/$id/refresh-ip" "$body" | jq '{id, provisioningState, ipAllowlist}' ;;
   ssh-keys) need "$@"; id=$1; shift; [ $# -ge 1 ] || die "ssh-keys <id> <pubkey-file> [...]"; body=$(cat "$@" | jq -Rsc '{sshPublicKeys: (split("\n") | map(select(length>0)))}'); _call PUT "/environments/$id/ssh-keys" "$body" | jq '{id, provisioningState, sshPublicKeys}' ;;
+  ssh-keys-add) need "$@"; id=$1; shift; [ $# -ge 1 ] || die "ssh-keys-add <id> <pubkey-file> [...]"
+    for f in "$@"; do [ -r "$f" ] || die "$f not readable"; grep -q 'PRIVATE KEY' "$f" && die "$f is a PRIVATE key: send the .pub file"; done
+    cur=$(_call GET "/environments/$id" | jq -c '.sshPublicKeys // []') || exit 1
+    body=$(cat "$@" | jq -Rsc --argjson cur "$cur" '{sshPublicKeys: ($cur + (split("\n") | map(select(length>0))) | unique)}')
+    n=$(printf '%s' "$body" | jq '.sshPublicKeys | length'); [ "$n" -le 5 ] || die "$n keys after append: DeployMate allows at most 5 per env (remove one with ssh-keys first)"
+    _call PUT "/environments/$id/ssh-keys" "$body" | jq '{id, provisioningState, keys: (.sshPublicKeys | length)}' ;;
   retry) need "$@"; _call POST "/environments/$1/retry" | jq '{id, provisioningState, lastFailedState}' ;;
   reseed) need "$@"; _call POST "/environments/$1/reseed" "${2:+$(cat "$2")}" | jq '{id, provisioningState}' ;;
   start|stop|restart) need "$@"; _call POST "/environments/$1/$cmd" | jq '{id, instanceState, provisioningState}' ;;
-  share) need "$@"; [ $# -ge 2 ] || die "share <id> <viewerSub> [VIEWER|OPERATOR]"; _call POST "/environments/$1/viewers" "$(jq -nc --arg s "$2" --arg l "${3:-VIEWER}" '{viewerSub:$s, level:$l}')" | jq . ;;
+  share) need "$@"; [ $# -ge 2 ] || die "share <id> <viewerSub> VIEWER|OPERATOR"; case "${3:-VIEWER}" in VIEWER|OPERATOR) ;; *) die "level must be VIEWER or OPERATOR";; esac; _call POST "/environments/$1/viewers" "$(jq -nc --arg s "$2" --arg l "${3:-VIEWER}" '{viewerSub:$s, level:$l}')" | jq . ;;
   viewers) need "$@"; _call GET "/environments/$1/viewers" | jq . ;;
   unshare) need "$@"; [ $# -ge 2 ] || die "unshare <id> <viewerSub>"; _call DELETE "/environments/$1/viewers/$2" ;;
   destroy) need "$@"; _call DELETE "/environments/$1" | jq '{id, provisioningState, cancelRequested}' ;;
   raw) need "$@"; [ $# -ge 2 ] || die "raw <METHOD> <path> [json]"; _call "$1" "$2" "${3:-}" ;;
-  *) sed -n '2,27p' "$0"; exit 2 ;;
+  *) sed -n '2,32p' "$0"; exit 2 ;;
 esac

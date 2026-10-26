@@ -26,7 +26,7 @@ Windows Server VM (`n4d-standard-4` by default, hyperdisk boot + data disk) boot
 
 DNS (Cloud DNS zone `deploymate.polypoint.dev`): `<id>.deploymate.polypoint.dev` = load-balancer VIP (TLS via wildcard cert, forwards a few ports), `<id>-host.deploymate.polypoint.dev` = the VM's external IP (SSH, RDP, Oracle, 9090/9091). The external IP changes on every stop/start; DNS is reconciled by DeployMate.
 
-Firewall (per env, source = `ipAllowlist` + office VPN range): tcp 22, 1521, 3389, 8383, 8443, 9090, 9091. The cloud needs no inbound port: api-gw dials out. `POST /{id}/refresh-ip` rewrites the rule with the caller's current IP.
+Firewall (per env, source = `ipAllowlist` only — the API adds no office VPN range): tcp 22, 1521, 3389, 8383, 8443, 9090, 9091. The cloud needs no inbound port: api-gw dials out. `POST /{id}/refresh-ip` rewrites the rule with the caller's current IP.
 
 Windows users: `pp-01` (RDP + SSH; password via the rdp reveal), `deploymate` (ansible). PEP users: the seeded login users (shared seed password in the manifest) and `adminec` (configurer superuser); on `PRESERVE_IDENTITIES` dump envs the dump's own users with the pep-reveal password.
 
@@ -74,9 +74,9 @@ PEP's IDM login form is UIA-readable (`edit auto=username`, `edit auto=password`
 
 ## 8. Operating facts
 
-- Quotas: per owner 2 envs in flight (DONE excluded), global 10, derived from GCP vCPU headroom; admins override per user.
+- Quotas: per owner 2 envs in flight (DONE excluded); global ceiling 50, effective = live GCP vCPU headroom ÷ 4; admins override per user.
 - Cost ledger: CHF/day 3.50 (SMALL), 8.50 (DEFAULT), 18.00 (LARGE); nightly rollup, weekly summary on Monday 08:00.
-- Lifecycle crons (Europe/Zurich): auto-stop 19:00, auto-start 07:00 (weekdays for normal envs; opt-out per env), TTL reminder 09:00, scheduled destroy every 5 min, orphan-tenant sweep 04:45 (observe only).
+- Lifecycle crons (Europe/Zurich): auto-stop 19:00, auto-start 07:00 (every day for normal envs, long-lived envs skip weekends; opt-out per env, owner only), TTL reminder 09:00, scheduled destroy every 5 min, orphan-tenant sweep 04:45 (observe only).
 - TTL: default 7 days, extend 1–14 days per call, hard cap created+30 days; long-lived envs (ROLE_long_lived) are never reaped.
 - Logs: provision lines kept 30 days, audit events 365 days.
 - Notifications: Webex bot, routes per event configurable (admin).
