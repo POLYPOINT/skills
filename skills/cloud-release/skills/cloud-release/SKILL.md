@@ -18,9 +18,10 @@ bucket `gs://ppcloud-releases/<release>/` (one folder per release). Three modes:
 | **Retro**       | after the night          | what went wrong → catalogue / engine fixes with test steps, evidence archived              |
 
 Pick the mode from the request; ask when it is unclear. A release can be planned by one person and run by another:
-the plan travels through the bucket (`rb push` / `rb pull`, no PR), the operator holds the release's lease (`rb take`
-… `rb handover`) and their board syncs state + logs (masked) to `<release>/run/`; everyone else follows with
-`rb watch PCR-xxxx`.
+the plan travels through the bucket (`rb push` / `rb pull`, no PR — every pulled change is shown as a diff and becomes
+active only once the operator types `accept`), the operator holds the release's lease (`rb take` … `rb handover`) and
+their board syncs state, logs and artifacts (masked) to `<release>/run/`; everyone else follows with
+`rb watch PCR-xxxx`. A backup operator is ready for every window and takes over if the operator's Mac dies.
 
 ## Ground rules (non-negotiable)
 
@@ -30,6 +31,10 @@ the plan travels through the bucket (`rb push` / `rb pull`, no PR), the operator
   Read-only commands are fine: `rb releases`, `rb watch PCR-xxxx --once`, `rb -r X list`, `next --show`, `where`,
   `log <id>` (no `-f`), `timeline`, `board --once --no-color`, `pull` (without `--force`), and `dry-run` of a step
   **without** `@plan yes` (an `@plan` step's dry-run runs its live read-only plan against the target).
+- **The operator accepts plan changes, never Claude.** `rb pull` / `rb take` print the change and stop at the typed
+  `accept` (Claude has no terminal for it — never work around that). Claude may read the diff and summarise it: what
+  changed in `config.sh`, `steps/`, `probes/`, `lib/`, anything surprising (a `\xNN` control-character warning, a
+  write to prod, a secret) — then the operator types `accept`. Never type `accept` or `takeover` for the user.
 - **No production access by Claude** unless the user grants it explicitly for that task. Prod and staging share the
   prod cluster: steps reach them only through the operator's typed confirmation. When prod data is needed, give the
   operator short read-only commands to run (one per line, explicit `--context`, no `use-context`) and read their output.
@@ -93,8 +98,11 @@ Details, commands and tables: [references/planning.md](references/planning.md).
    521–526 only after a window), run by the operator; fix until green. Steps that cannot be rehearsed are
    marked as such in `RELEASE.md` E.
 6. **Hand over.** The plan is pushed (`rb -r X push`); `rb selftest` is green after any engine change (engine and
-   catalogue changes go through a PR in pcr-companion, when the user asks). No PR for the plan: the incoming operator
-   reviews it (`rb -r X pull --diff`, a `dry-run` walk through the steps), then `rb -r X take` and `rb -r X board`.
+   catalogue changes go through a PR in pcr-companion, when the user asks). No PR for the plan — the bucket replaces
+   it: the incoming operator reviews it (`rb -r X pull` shows the diff, they type `accept`; a `dry-run` walk through
+   the steps), then `rb -r X take` and `rb -r X board`. Name the **backup operator** in `RELEASE.md` (release rule 14:
+   set up, bucket access, own prod access and credentials, plan pulled and accepted, `rb watch` open in the window)
+   and decide `RB_LEASE_STALE_MIN` for the window (e.g. `5` in `config.sh`).
 
 ## Orchestrate mode — the operator runs, Claude reads and prepares
 
@@ -114,6 +122,10 @@ Commands, state-file format and the triage flow: [references/orchestration.md](r
   command). After a fix, say exactly what to rerun and what to check.
 - **Late change after the freeze** (a critical PR) → a release-regeneration step (catalogue `releases/`), never an
   ad-hoc deploy.
+- **The operator's Mac died** (power cut, crash) → the backup operator follows "Emergency takeover" in
+  `docs/release-board.md`: wait until the lease is stale (`rb -r X where` shows the threshold), `rb -r X take` +
+  `takeover` + `accept` (they type both), then check the step that was running (log, probes, the target) before a
+  rerun or a `mark`. Claude reads (`rb watch X --once`, `log <id>`) and advises; it never takes the lease.
 - **The night ends** → `467`-style all-synced check green, maintenance page off, bootstrapping back to 0 with the
   Vault root token removed, then the post steps.
 

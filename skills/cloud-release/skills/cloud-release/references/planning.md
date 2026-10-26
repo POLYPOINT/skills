@@ -80,9 +80,12 @@ Ask about every mismatch:
 - `rb new PCR-xxxx --window "YYYY-MM-DD 22:00" --core` builds the plan in `~/.release-board/<release>/plan/` with
   `catalogue/CORE` and pushes it to `gs://ppcloud-releases/<release>/plan/`. Add the rest with
   `rb -r PCR-xxxx add <group/file> [id]`, then `rb -r PCR-xxxx push` (when the user agrees — the bucket is shared).
-- Several people can edit the plan: `rb pull` (`--diff` shows the changes) before editing, `rb push` after. A push
-  that names a conflicting file means someone pushed it meanwhile: `rb pull --force`, redo the change, push again.
-  Never `--force` over the user's unpushed edits without asking.
+- Several people can edit the plan: `rb pull` before editing (it prints the others' changes as a diff and activates
+  them only once the user types `accept` — Claude summarises the diff, never accepts), `rb push` after. A push that
+  names a conflicting file means someone pushed it meanwhile: `rb pull --force` (review + `accept`), redo the change,
+  push again. Never `--force` over the user's unpushed edits without asking.
+- The bucket replaces the PR review: write access is the release team's, and the operator's acceptance diff is the
+  review. Keep secrets out of every plan file.
 - Ids encode the phase: 1xx pre · 2xx staging · 3xx prep · 4xx window · 5xx post · 9xx rollback (on demand). Keep gaps
   so a forgotten step fits in on release day.
 - New steps start from `tools/release-board/templates/step.sh`. A step:
@@ -136,6 +139,8 @@ Ask about every mismatch:
 ## 5. Questions to settle with the user before the plan goes to the operator
 
 - Who is the operator, who is the release manager, and who communicates? When does the maintenance banner go up?
+- Who is the backup operator (release rule 14), and is their Mac set up with bucket and prod access before the week?
+  Which `RB_LEASE_STALE_MIN` applies in the window (e.g. 5 in `config.sh`, so a takeover can start after 5 minutes)?
 - Which rotation mode applies after the release?
 - What are the go/no-go criteria, and who decides?
 - What is the rollback for each risky change? Which ones get an on-demand 9xx step?
