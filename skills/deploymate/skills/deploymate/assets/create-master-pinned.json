@@ -1,0 +1,21 @@
+{
+  "id": "<env-id, e.g. utr-m-1801>",
+  "track": "master",
+  "version": "26.1.0",
+  "stage": "CT",
+  "machineSize": "DEFAULT",
+  "p2Enabled": true,
+  "timeRecordingMode": "UNIFIED",
+  "ttlDays": 14,
+  "seedConfig": {
+    "preset": "customer-roster",
+    "peopleCount": 40,
+    "includePalette": true,
+    "includeLoginUsers": true,
+    "includeRest": false,
+    "randomSeed": 42
+  },
+  "ipAllowlist": ["<your public IP>/32"],
+  "sshPublicKeys": ["<ssh-ed25519 AAAA... comment>"],
+  "masterBuildPins": { "PP_SERVICES": "<version from dm-api.sh master-builds, e.g. 0.0.1794>" }
+}

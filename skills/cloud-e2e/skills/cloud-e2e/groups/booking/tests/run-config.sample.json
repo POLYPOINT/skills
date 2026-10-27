@@ -1,0 +1,123 @@
+{
+  "run": "<run>",
+  "run_dir": "/ABSOLUTE/PATH/results/<run>",
+  "group": "booking",
+  "mode": "multi",
+  "tenant": "<DeployMate env id>",
+  "env_role": "X",
+  "runner": "<runner name>",
+  "dashboard_url": "https://claude.ai/artifact/<dashboard id>",
+  "coordination": "artifact-db",
+  "bundle": "0.0.1829",
+  "bundle_class": "1801",
+  "run_date": "2026-11-03",
+  "roster_end": "2026-11-12",
+  "painted_days": ["2026-11-14", "2026-11-15", "2026-11-16", "2026-11-17", "2026-11-18", "2026-11-19"],
+  "employees": {
+    "SP": {
+      "login": "dmseed-sp",
+      "id": 400
+    },
+    "SP2": {
+      "login": "dmseed-sp2",
+      "id": 401
+    },
+    "PM": {
+      "login": "dmseed-pm",
+      "id": 402
+    },
+    "HPA": {
+      "login": "dmseed-hpa",
+      "id": 403
+    },
+    "HPB": {
+      "login": "dmseed-hpb",
+      "id": 404
+    },
+    "HPC": {
+      "login": "dmseed-hpc",
+      "id": 405
+    },
+    "HPD": {
+      "login": "dmseed-hpd",
+      "id": 406
+    },
+    "HPE": {
+      "login": "dmseed-hpe",
+      "id": 407
+    },
+    "HPF": {
+      "login": "dmseed-hpf",
+      "id": 408
+    },
+    "HPG": {
+      "login": "dmseed-hpg",
+      "id": 409
+    },
+    "HPH": {
+      "login": "dmseed-hph",
+      "id": 410
+    },
+    "ER": {
+      "login": "dmseed-er",
+      "id": 411
+    },
+    "HPN": {
+      "login": "dmseed-hpn",
+      "id": 412
+    },
+    "HPM": {
+      "login": "dmseed-hpm",
+      "id": 413
+    }
+  },
+  "days": {
+    "HPA_PRES": "2026-11-05",
+    "HPA_ABS": "2026-11-20",
+    "HPA_FREE1": "2026-11-21",
+    "HPA_FREE2": "2026-11-22",
+    "HPA_FREE3": "2026-11-28",
+    "W2": "2026-11-23",
+    "R1": "R+1",
+    "HPB_MON": "2026-11-16",
+    "HPB_MON2": "2026-12-07",
+    "HPC_FREE1": "2026-11-21",
+    "HPC_FREE2": "2026-11-22",
+    "HPC_FREE3": "2026-11-29",
+    "HPD_PRES": "2026-11-06",
+    "HPD_ABS": "2026-11-24",
+    "HPD_FREE1": "2026-11-21",
+    "HPD_FREE2": "2026-11-22",
+    "HPD_FREE3": "2026-11-25",
+    "HPD_FREE4": "2026-11-26",
+    "HPD_FREE5": "2026-11-27",
+    "HPD_FAR": "R+100",
+    "HPE_FREE1": "2026-11-17",
+    "HPE_NIGHT": "2026-11-18",
+    "HPE_CONF": "2026-11-19",
+    "HPF_FREE1": "2026-11-17",
+    "HPF_FREE2": "2026-11-20",
+    "HPF_FREE3": "2026-11-24",
+    "HPF_FREE4": "2026-11-27",
+    "RR_DAY": "2026-11-05",
+    "RR_DAY2": "2026-11-06",
+    "RR_DAY3": "2026-11-18",
+    "IPO_DAY": "2026-11-19",
+    "IPO_DAY2": "2026-11-20",
+    "IPO_DAY3": "2026-11-23"
+  },
+  "config": {
+    "GROUP_NODE": "<group_node>",
+    "GROUP_NAME": "<group_name>",
+    "POOL_A": "<pool_a>",
+    "POOL_B": "<pool_b>",
+    "POOL_IPO": "<pool_ipo>",
+    "ABS_DEF": "<abs_def>",
+    "DAY_DEF": "<day_def>",
+    "NIGHT_DEF": "<night_def>",
+    "PORTAL_PROFILE": "<portal_profile>",
+    "PARTNER_ID": "<partner_id>",
+    "PARTNER_NAME": "<partner_name>"
+  },
+  "_comment": "Sample run config for gen-prompts.py --group booking (offline test fixture of agent I3a, 2026-10-23). Every <...> and every config value is a placeholder: fill employees from R1 claims / employees.md, days from the seed allocation, config from rules.json PLACEHOLDERS. Test: gen-prompts.py <this file> --group booking --out <scratch dir> with run_dir and tenant set to real values; no leftover {{ expected."
+}

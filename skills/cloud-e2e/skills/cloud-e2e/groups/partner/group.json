@@ -1,0 +1,275 @@
+{
+  "key": "partner",
+  "title": "Integration partners, partner events, Partner API, external workforce, external bookings",
+  "env": {
+    "kind": "deploymate",
+    "preferred": "X",
+    "track": "master",
+    "pep_desktop_min": 15,
+    "ssh": true,
+    "service_token": false,
+    "stage_objects": ["run-partner", "gln", "provider-gate"],
+    "stage": "CT stage registries (PolyPortal partners, external-workforce provider, gateway mock) next to DM-X"
+  },
+  "requires": ["DM", "OP", "SSH", "PEP", "PO-ADMIN", "POMA-ADMIN", "USER-OK"],
+  "families": [
+    {
+      "id": "PA",
+      "name": "Integration partner administration (throw-away partners)",
+      "brief": "assets/family-briefs/PA.md",
+      "scenarios": ["PTN-01", "PTN-02"],
+      "lane": "L1"
+    },
+    {
+      "id": "PAPI",
+      "name": "Partner API: tokens, full sync, guards, scheduling requests, trade, RR application",
+      "brief": "assets/family-briefs/PAPI.md",
+      "scenarios": ["PTN-03", "PTN-04", "PTN-05", "PTN-06", "PTN-07", "PTN-19"],
+      "lane": "L2"
+    },
+    {
+      "id": "PE",
+      "name": "Partner events: planned shifts and the partner-initiated trade",
+      "brief": "assets/family-briefs/PE.md",
+      "scenarios": ["PTN-09", "PTN-08"],
+      "lane": "L2",
+      "note": "after PAPI has reported PTN-07 (PTN-08 reads its opportunity); PTN-09 holds the PEP lock ≈ 15 min"
+    },
+    {
+      "id": "EW",
+      "name": "External workforce: simulator, GLN scoping, BADI external pools, external-pool tab",
+      "brief": "assets/family-briefs/EW.md",
+      "scenarios": ["PTN-12", "PTN-17", "PTN-13", "PTN-14", "PTN-15"],
+      "lane": "L3"
+    },
+    {
+      "id": "EB",
+      "name": "External bookings import tab (booking partner records)",
+      "brief": "assets/family-briefs/EB.md",
+      "scenarios": ["PTN-16"],
+      "lane": "L1"
+    },
+    {
+      "id": "PWAPI",
+      "name": "Partner session negatives (API only, no link side effects)",
+      "brief": "assets/family-briefs/PWAPI.md",
+      "scenarios": ["PTN-21"],
+      "lane": "L1"
+    },
+    {
+      "id": "X20",
+      "name": "Provider error strategies (CT-wide window)",
+      "brief": "assets/family-briefs/X20.md",
+      "scenarios": ["PTN-20"],
+      "window": "S-CT-GWMOCK",
+      "note": "after EW; launched only when windows/ct~S-CT-GWMOCK is active (steward, user OK)"
+    }
+  ],
+  "roles": [
+    {
+      "token": "PH1",
+      "count": 1,
+      "kit_group": null,
+      "partition": "P1",
+      "mode": "same-category",
+      "rule": "seed presence (111/112/113) on ST_DAY: owner of the partner trade (PTN-03, 05, 07)"
+    },
+    {
+      "token": "PH2",
+      "count": 1,
+      "kit_group": null,
+      "partition": "P1",
+      "mode": "same-category",
+      "rule": "trade candidate, same personnel category as PH1, listed by shift-trade-candidates for PH1's ST_DAY shift"
+    },
+    {
+      "token": "PH3",
+      "count": 1,
+      "kit_group": null,
+      "partition": "P1",
+      "mode": "same-category",
+      "rule": "second trade candidate (answers NO)"
+    },
+    {
+      "token": "PH4",
+      "count": 1,
+      "kit_group": null,
+      "partition": "P1",
+      "mode": "any",
+      "rule": "scheduling-request HP, no planning on SR_DAY"
+    },
+    {
+      "token": "PH5",
+      "count": 1,
+      "kit_group": null,
+      "partition": "P1",
+      "mode": "any",
+      "rule": "planned-shift events (seed plannings R..R+6, free on CM_DAY / NM_DAY) and RR candidate of PTN-19"
+    },
+    {
+      "token": "SPX",
+      "count": 1,
+      "kit_group": "E2E:EXTPOOL",
+      "partition": "P2",
+      "mode": "any",
+      "rule": "planner with 1065 + 1062 (kit) and 1050 / 1070 (stays in DMSEED:Planner): BADI external pools, trade approval, RR start"
+    },
+    {
+      "token": "SPN",
+      "count": 1,
+      "kit_group": null,
+      "partition": "P2",
+      "mode": "any",
+      "rule": "seed planner without 1062 / 1065 (PTN-16 permission part)"
+    },
+    {
+      "token": "ERX",
+      "count": 1,
+      "kit_group": null,
+      "partition": "P2",
+      "mode": "optional",
+      "rule": "replaced employee of the PTN-19 resource replacement (painted presence on RRX_DAY)"
+    }
+  ],
+  "partition": [
+    {
+      "id": "P1",
+      "people": 5,
+      "one_gruppe": true,
+      "same_category": true,
+      "exclusive_nodes": false,
+      "preferred": "Notfallzentrum",
+      "note": "PH1–PH3 share one personnel category (3 TS / 2 BL at 50 people)"
+    },
+    {
+      "id": "P2",
+      "people": 4,
+      "one_gruppe": true,
+      "same_category": false,
+      "exclusive_nodes": false,
+      "preferred": "Intensivpflege",
+      "note": "SPX, SPN, optional ERX, 1 spare; SPX's Planblatt node receives the virtual plannings of the external bookings"
+    }
+  ],
+  "baseline_flags": {
+    "poma.webApp.partnerSimulator": true,
+    "poma.flows.externalAvailabilities": true,
+    "poma.flows.schedulingRequestV1": true,
+    "poma.flows.shiftTrades": true,
+    "poma.flows.opportunities": true,
+    "poma.onPrem.writeShiftsOnPrem": true,
+    "poma.onPrem.writeResourceReplacementShiftsToPep": true,
+    "poma.onPrem.events": true,
+    "poma.msTeams.notifications": false,
+    "poma.internalPool.sendEmailConfirmation": false
+  },
+  "windows": [
+    {
+      "id": "S-CT-GWMOCK",
+      "class": "STAGE",
+      "scenarios": ["PTN-20"],
+      "changes": [
+        {
+          "gwmock_strategy": "booking",
+          "value": "CONFLICT, then GENERIC_ERROR, then HTTP_500",
+          "restore": "SUCCESS (GET-verified)"
+        },
+        { "gwmock_strategy": "cancel", "value": "DEADLINE_PASSED", "restore": "SUCCESS (GET-verified)" }
+      ],
+      "est_min": 30,
+      "pauses": ["partner:EW"],
+      "note": "doc windows/ct~S-CT-GWMOCK, requested by the steward with the user's OK; the X20 worker holds locks/ct~gwmock for every strategy change; one gateway-mock pod serves all teams"
+    }
+  ],
+  "gates": [
+    {
+      "id": "G-PTN-1",
+      "check": "steward: run partner e2e-ptn-<run> exists with tenant access to DM-X (USERS, PLANNED_SHIFTS, SHIFT_REQUESTS, NOTIFICATIONS, API_GATEWAY, POMA_SHIFT_TRADE_API, POMA_OPPORTUNITY_API, POMA_SHIFT_REQUEST_API; no UI_EMBEDDING), logging ON after its last edit; an ops 'Partner' publish appears in its Debug log within 2 min (stage/run-partner)"
+    },
+    {
+      "id": "P-PTN-3",
+      "check": "steward: provider gate — partner simulator lists the server HPs (GET /api/external-workforce/v1/health-professionals 200, no 'providerCode mapper' 401) and gwmock.mjs strategy get answers SUCCESS / SUCCESS (stage/provider-gate)"
+    },
+    {
+      "id": "P-PTN-4",
+      "check": "steward: tenant GLN of DM-X set for today (S-CT-GLN after 00:00, stage/gln); without it PTN-12..15, 17, 20 are BLOCKED-data"
+    },
+    {
+      "id": "PTN-G1",
+      "check": "SPX planner permissions: external_pool.book_external_pool_employee and pool.import_external_bookings true; SPN both false; SPX reaches /partner-simulator and BADI shows 'Externe Pools'"
+    },
+    {
+      "id": "PTN-G2",
+      "check": "PH1..PH5, SPX, SPN logged in once (POMA user rows); tenant subjects recorded in partner-allocation.md (claim values only)"
+    },
+    {
+      "id": "PTN-G3",
+      "check": "PH1 holds a swappable seed presence on ST_DAY and GET …/shift-trade-candidates for it lists PH2 and PH3"
+    },
+    {
+      "id": "PTN-G5",
+      "check": "booking-partner records for DM-X exist (GET /api/private/external-bookings as SPX total ≥ 11); none → PTN-16 list part BLOCKED-data, permission part still runs"
+    }
+  ],
+  "seed": [
+    {
+      "id": "P-PTN-6",
+      "who": "runner",
+      "pep": false,
+      "doc": "seed/P-seed.md",
+      "script": "../../scripts/seed/common/kit-member.sql",
+      "note": "SPX joins E2E:EXTPOOL (leave nothing: SPX keeps DMSEED:Planner for 1050 / 1070)"
+    },
+    {
+      "id": "P-PTN-7",
+      "who": "runner",
+      "pep": false,
+      "doc": "seed/P-seed.md",
+      "note": "one login per actor, tenant subjects, gates PTN-G1 / PTN-G2"
+    },
+    {
+      "id": "P-PTN-9",
+      "who": "runner",
+      "pep": false,
+      "doc": "seed/P-seed.md",
+      "note": "day tokens, PH2 / PH3 eligibility (PTN-G3), PH4 / PH5 free days"
+    },
+    {
+      "id": "P-PTN-9b",
+      "who": "runner",
+      "pep": "fallback",
+      "doc": "seed/P-seed.md",
+      "script": "../../scripts/pp-plan.sh",
+      "note": "optional: ERX presence on RRX_DAY for PTN-19"
+    },
+    {
+      "id": "P-PTN-11",
+      "who": "runner",
+      "pep": false,
+      "doc": "seed/P-seed.md",
+      "script": "scripts/ext-planning.sql",
+      "note": "oracles: plan-day.sh, ext-planning.sql dry read, PEP palette coordinates for PTN-09"
+    }
+  ],
+  "schedule": {
+    "workers": 3,
+    "lanes": [
+      ["PTN-01", "PTN-02", "PTN-21", "PTN-16"],
+      ["PTN-03", "PTN-04", "PTN-05", "PTN-06", "PTN-07", "PTN-19", "PTN-09", "PTN-08"],
+      ["PTN-12", "PTN-17", "PTN-13", "PTN-14", "PTN-15"]
+    ],
+    "after_fanout": [],
+    "exclusive_order": ["PTN-20"],
+    "doc": "assets/schedule.md"
+  },
+  "version_gate": null,
+  "known_deviations": "references/known-deviations.md",
+  "cleanup": [
+    "throw-away partners e2e-ptn-x|l|g-<tag> deleted by their scenario (verified by a list read)",
+    "external HPs e2e-ptn-<tag>-a|b|c unregistered in the simulator after PTN-20",
+    "gateway-mock strategies SUCCESS / SUCCESS (GET) before the window is released",
+    "open external bookings cancelled; scheduling request of PH4 deleted; trade of PTN-07 approved (logged) or cancelled",
+    "the run partner is never edited; the steward deletes it after the last reader (swap F, booking NT, partner PE)",
+    "SPX membership restored only if the env is reused"
+  ]
+}

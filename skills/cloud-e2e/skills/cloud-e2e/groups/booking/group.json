@@ -1,0 +1,221 @@
+{
+  "key": "booking",
+  "title": "Availabilities, Find HP, BADI, resource replacement, internal pool opportunity, their notifications",
+  "env": {
+    "kind": "deploymate",
+    "preferred": "X",
+    "track": "master",
+    "pep_desktop_min": 60,
+    "ssh": true,
+    "service_token": true,
+    "stage_objects": ["run-partner"]
+  },
+  "requires": ["DM", "OP", "SSH", "PEP-fallback", "VLT", "PO-ADMIN"],
+  "families": [
+    {
+      "id": "AV",
+      "name": "Availabilities (myPP, HP)",
+      "brief": "assets/family-briefs/AV.md",
+      "scenarios": ["BKG-01", "BKG-02", "BKG-04", "BKG-03", "BKG-09", "BKG-07", "BKG-05", "BKG-06", "BKG-33", "BKG-08"],
+      "lane": "L1/L2/L6"
+    },
+    {
+      "id": "FH",
+      "name": "Find HP and manage shift bookings (planner, SP)",
+      "brief": "assets/family-briefs/FH.md",
+      "scenarios": ["BKG-11", "BKG-12", "BKG-14", "BKG-15", "BKG-13"],
+      "lane": "L3"
+    },
+    {
+      "id": "BD",
+      "name": "BADI and the PEP-side availability cancel",
+      "brief": "assets/family-briefs/BD.md",
+      "scenarios": ["BKG-16", "BKG-17", "BKG-18", "BKG-19", "BKG-20", "BKG-26"],
+      "lane": "L4"
+    },
+    {
+      "id": "RR",
+      "name": "Resource replacement",
+      "brief": "assets/family-briefs/RR.md",
+      "scenarios": ["BKG-21", "BKG-22"],
+      "lane": "L5"
+    },
+    {
+      "id": "IP",
+      "name": "Internal pool opportunity",
+      "brief": "assets/family-briefs/IP.md",
+      "scenarios": ["BKG-23", "BKG-24"],
+      "lane": "L5"
+    },
+    {
+      "id": "NT",
+      "name": "Notification channels (partner log, notification centre)",
+      "brief": "assets/family-briefs/NT.md",
+      "scenarios": ["BKG-27", "BKG-28"],
+      "lane": "after_fanout"
+    },
+    {
+      "id": "X10",
+      "name": "Series off (window)",
+      "brief": "assets/family-briefs/X10.md",
+      "scenarios": ["BKG-10"],
+      "window": "W-X-SERIES-OFF"
+    },
+    {
+      "id": "X25",
+      "name": "PEP-pull mode (window, two parts)",
+      "brief": "assets/family-briefs/X25.md",
+      "scenarios": ["BKG-25"],
+      "window": "W-X-WRITE-OFF"
+    }
+  ],
+  "roles": [
+    { "token": "SP", "count": 1, "kit_group": "E2E:SP-ALL", "partition": "P1" },
+    { "token": "SP2", "count": 1, "kit_group": "E2E:SP-ALL", "partition": "P1" },
+    { "token": "PM", "count": 1, "kit_group": "E2E:PM-ALL", "partition": "P1" },
+    { "token": "HPA", "count": 1, "kit_group": null, "partition": "P1", "mode": "any" },
+    { "token": "HPB", "count": 1, "kit_group": null, "partition": "P1", "mode": "any" },
+    { "token": "HPC", "count": 1, "kit_group": null, "partition": "P1", "mode": "any" },
+    { "token": "HPD", "count": 1, "kit_group": null, "partition": "P1", "mode": "any" },
+    { "token": "HPE", "count": 1, "kit_group": null, "partition": "P1", "mode": "any" },
+    { "token": "HPF", "count": 1, "kit_group": null, "partition": "P1", "mode": "any" },
+    { "token": "HPG", "count": 1, "kit_group": null, "partition": "P1", "mode": "any" },
+    { "token": "HPH", "count": 1, "kit_group": null, "partition": "P1", "mode": "any" },
+    { "token": "ER", "count": 1, "kit_group": null, "partition": "P1", "mode": "any" },
+    { "token": "HPN", "count": 1, "kit_group": null, "partition": "P1", "mode": "any" },
+    { "token": "HPM", "count": 1, "kit_group": null, "partition": "P2", "mode": "optional" }
+  ],
+  "partition": [
+    {
+      "id": "P1",
+      "people": 13,
+      "one_gruppe": true,
+      "same_category": false,
+      "exclusive_nodes": true,
+      "preferred": "Pflege Medizin"
+    },
+    {
+      "id": "P2",
+      "people": 1,
+      "one_gruppe": true,
+      "same_category": false,
+      "exclusive_nodes": false,
+      "preferred": "Paediatrie"
+    }
+  ],
+  "baseline_flags": {
+    "poma.flows.availabilities": true,
+    "poma.flows.internalPools": true,
+    "poma.flows.opportunities": true,
+    "poma.flows.availabilitySeries": true,
+    "poma.onPrem.writeShiftsOnPrem": true,
+    "poma.onPrem.writeResourceReplacementShiftsToPep": true,
+    "poma.onPrem.events": true,
+    "poma.webApp.simulatePEP": false,
+    "poma.onPrem.conflictsWithAbsences": false,
+    "poma.msTeams.notifications": false,
+    "poma.internalPool.sendEmailConfirmation": false,
+    "poma.onPrem.conflictCheckingMonths": 3
+  },
+  "windows": [
+    {
+      "id": "W-X-SERIES-OFF",
+      "class": "INTERNAL",
+      "scenarios": ["BKG-10"],
+      "changes": [{ "flag": "poma.flows.availabilitySeries", "value": false }],
+      "est_min": 25,
+      "pauses": ["booking:AV"]
+    },
+    {
+      "id": "W-X-WRITE-OFF",
+      "class": "FLAG",
+      "shared_with": ["swap"],
+      "scenarios": ["BKG-25"],
+      "changes": [
+        { "flag": "poma.onPrem.writeShiftsOnPrem", "value": false },
+        { "flag": "poma.onPrem.writeResourceReplacementShiftsToPep", "value": false },
+        { "flag": "poma.webApp.simulatePEP", "value": true }
+      ],
+      "est_min": 90,
+      "pauses": [
+        "swap:B",
+        "swap:C",
+        "swap:D",
+        "swap:E",
+        "booking:FH",
+        "booking:BD",
+        "booking:RR",
+        "booking:IP",
+        "partner:PAPI"
+      ]
+    },
+    {
+      "id": "J-X-JOBS",
+      "class": "JOBS",
+      "scenarios": ["BKG-26"],
+      "changes": [{ "job": "poma-core AvailabilityConflictChecker", "tenantIds": "<DM-X>" }],
+      "est_min": 10,
+      "pauses": []
+    }
+  ],
+  "gates": [
+    {
+      "id": "BKG-G1",
+      "check": "SP and SP2 tokens: pool.book_pool_employee and resource_replacement.start_resource_replacement true (Find HP and 'Anfragen verwalten' visible); PM lands on /pool-manager/dashboard"
+    },
+    {
+      "id": "BKG-G2",
+      "check": "definitions kit: GET /api/private/shift-definition/roster?group-node-id=<GROUP_NODE>&...&available-for-internal-pool=true is non-empty; POMA shift types set on 111/112/113/141"
+    },
+    {
+      "id": "BKG-G3",
+      "check": "pools E2E-BKG-A {HPA..HPF}, E2E-BKG-B {HPE}, E2E-BKG-IPO {HPG, HPH} exist with their members (GET /api/private/tenant/pools/{id}/users as PM)"
+    },
+    {
+      "id": "BKG-G4",
+      "check": "api-pp availability oracle answers: scripts/api-pp.sh <env> avail <HPA id> <from> <to> → 200"
+    }
+  ],
+  "seed": [
+    {
+      "id": "P2",
+      "who": "runner",
+      "pep": false,
+      "doc": "seed/P2-P3-roles-pools.md",
+      "script": "../../scripts/seed/common/kit-member.sql"
+    },
+    { "id": "P3a", "who": "runner", "pep": false, "doc": "seed/P2-P3-roles-pools.md" },
+    { "id": "P3b", "who": "runner", "pep": false, "doc": "seed/P2-P3-roles-pools.md" },
+    {
+      "id": "P5",
+      "who": "runner",
+      "pep": "fallback",
+      "doc": "seed/P5-paints.md",
+      "script": "../../scripts/pp-plan.sh"
+    },
+    { "id": "P6", "who": "runner", "pep": false, "doc": "seed/P6-P7-P9-extras.md" },
+    { "id": "P7", "who": "runner", "pep": true, "doc": "seed/P6-P7-P9-extras.md" },
+    { "id": "P9", "who": "runner", "pep": false, "doc": "seed/P6-P7-P9-extras.md", "script": "scripts/rr-ids.sql" }
+  ],
+  "schedule": {
+    "workers": 3,
+    "lanes": [
+      ["BKG-01", "BKG-02", "BKG-04", "BKG-03", "BKG-09", "BKG-07"],
+      ["BKG-05", "BKG-06", "BKG-33"],
+      ["BKG-11", "BKG-12", "BKG-14", "BKG-15", "BKG-13"],
+      ["BKG-16", "BKG-17", "BKG-18", "BKG-19", "BKG-20", "BKG-26"],
+      ["BKG-21", "BKG-22", "BKG-23", "BKG-24"],
+      ["BKG-08"]
+    ],
+    "after_fanout": ["BKG-27", "BKG-28"],
+    "exclusive_order": ["BKG-10", "BKG-25"]
+  },
+  "version_gate": null,
+  "known_deviations": "references/known-deviations.md",
+  "cleanup": [
+    "pools E2E-BKG-* kept until destroy",
+    "flags back to baseline after each window (restore proof)",
+    "no open RR / IPO opportunity of SP / SP2 left (cancel)",
+    "PM / SP / SP2 memberships restored only if the env is reused"
+  ]
+}

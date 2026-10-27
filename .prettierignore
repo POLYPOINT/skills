@@ -1,0 +1,4 @@
+# Dense harness scripts and the dashboard pages are not reformatted (Prettier would reflow them by thousands of lines).
+skills/deploymate/**/*.mjs
+skills/cloud-e2e/**/*.mjs
+skills/cloud-e2e/**/*.html

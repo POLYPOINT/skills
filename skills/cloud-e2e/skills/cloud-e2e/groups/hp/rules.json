@@ -1,0 +1,47 @@
+{
+  "ROLES": {
+    "N1": "emp",
+    "N2": "emp",
+    "N3": "emp",
+    "N3C": "emp",
+    "N5": "emp",
+    "N5C": "emp"
+  },
+  "DAY_TOKENS": {
+    "N5_DAY": "seeded-future-weekday"
+  },
+  "WRITES": {
+    "HP": [["N3", "TODAY"]],
+    "NC": [["N1", "TODAY"]],
+    "PV": []
+  },
+  "PARTS": {},
+  "NEEDS": {
+    "HPN-01": ["HPN-G1"],
+    "HPN-04": ["HPN-G1"],
+    "HPN-05": ["HPN-G3"],
+    "HPN-07": ["HPN-G2"],
+    "HPN-08": ["HPN-G1"],
+    "HPN-09": ["HPN-08"],
+    "HPN-10": ["HPN-09"],
+    "HPN-11": ["HPN-10"],
+    "HPN-12": ["HPN-11"],
+    "HPN-15": ["W-X-SYSMSG", "HPN-G4"],
+    "HPN-21": ["HPN-G3"]
+  },
+  "BY_DESIGN": [],
+  "SCEN_ID": "\\bHPN-(?:0\\d|1[0-6]|21)\\b",
+  "DAY_RULES": {
+    "relations": {
+      "N5_DAY": "a seeded weekday >= R+1 where N5 and N5C both have a swappable presence (111 / 112 / 113) with different definitions"
+    },
+    "min_offset_days": 1,
+    "max_offset_days": 6,
+    "note": "W0 (current week) and M0 (= MONTH) need no token; N3 must have seed plannings on >= 3 of the next 7 days (run inside the seeded window)"
+  },
+  "PLACEHOLDERS": {
+    "HP_NODE": "Gruppe node of Geburtshilfe on DM-X (N1, N2, N3, N3C): KNOTEN_ID and name",
+    "N1_SUBJECT": "tenant_subject claim value of N1 (recorded by seed H1 from the decoded token in memory; a claim value, not a credential)",
+    "PORTAL_PROFILE": "absolute path of the runner's portal-ops browser profile folder (outside results/)"
+  }
+}

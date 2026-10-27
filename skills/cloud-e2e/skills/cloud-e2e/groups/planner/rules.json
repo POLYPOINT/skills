@@ -1,0 +1,113 @@
+{
+  "ROLES": {
+    "PLANALL": "emp",
+    "SPA": "emp",
+    "PMA": "emp",
+    "TA": "emp",
+    "SEEDSP": "emp",
+    "HP1": "emp",
+    "HP2": "emp",
+    "HP3": "emp",
+    "HP4": "emp",
+    "HP5": "emp",
+    "HP6": "emp",
+    "HP7": "emp",
+    "HP8": "emp",
+    "HP9": "emp"
+  },
+  "DAY_TOKENS": {
+    "D1": "absolute",
+    "D2": "absolute",
+    "D2M1": "absolute",
+    "D3": "absolute",
+    "DW": "absolute",
+    "DW1": "absolute",
+    "M1A": "absolute",
+    "M1B": "absolute",
+    "RM1": "R-relative"
+  },
+  "WRITES": {
+    "POOL": [["HP6", "RM1"]],
+    "PERM": [
+      ["HP1", "D1"],
+      ["HP5", "D1"]
+    ],
+    "CONF": [
+      ["HP3", "D2M1"],
+      ["HP3", "D2"],
+      ["HP4", "D3"]
+    ],
+    "PEPSET": [
+      ["HP8", "M1A"],
+      ["HP8", "M1B"],
+      ["HP9", "M1A"],
+      ["HP9", "M1B"]
+    ],
+    "WISH": [
+      ["HP7", "DW"],
+      ["HP7", "DW1"]
+    ]
+  },
+  "PARTS": {},
+  "NEEDS": {
+    "PSP-01": ["PSP-G1"],
+    "PSP-02": ["PSP-G1"],
+    "PSP-03": ["PSP-G1"],
+    "PSP-04": ["F1", "F2"],
+    "PSP-05": ["F4"],
+    "PSP-06": ["F2"],
+    "PSP-07": ["F1", "F5"],
+    "PSP-08": ["F6"],
+    "PSP-09": ["PSP-G2"],
+    "PSP-10": ["PSP-G2", "F3", "F6", "F7"],
+    "PSP-11": ["PSP-G1"],
+    "PSP-12": ["F6", "F8"],
+    "PSP-13": ["F8"],
+    "PSP-15": ["PSP-G1"],
+    "PSP-16": ["F3", "W-Y-CONFRULE"],
+    "PSP-17": ["PSP-G4", "F10"],
+    "PSP-18": ["F11", "J-Y-JOBS"],
+    "PSP-19": ["F1", "J-Y-JOBS"],
+    "PSP-20": ["D1", "PSP-GD"],
+    "PSP-21": ["D2", "R5", "W-Y-SOLLPLAN"],
+    "PSP-22": ["D3", "PSP-GD"]
+  },
+  "BY_DESIGN": [],
+  "SCEN_ID": "\\bPSP-\\d{2}\\b",
+  "DAY_RULES": {
+    "relations": {
+      "D1": "first weekday >= R+7",
+      "D2": "first weekday >= R+9 with no planning of HP3 on D2-1 and D2",
+      "D2M1": "D2 - 1 day",
+      "D3": "first weekday >= R+5 with no planning of HP4",
+      "DW": "first weekday >= R+14 in an open planning period",
+      "DW1": "DW + 1 day",
+      "M1A": "a weekday of month M1 (the calendar month after R) for HP8 / HP9",
+      "M1B": "another weekday of M1",
+      "RM1": "R - 1 (HP6 employment end)"
+    },
+    "min_offset_days": -1,
+    "max_offset_days": 89,
+    "free": ["D2M1", "D2", "D3", "M1A", "M1B", "DW", "DW1"],
+    "never_other_family_fixture_day": true
+  },
+  "PLACEHOLDERS": {
+    "GA_NODE": "Gruppe node of G-A (Pflege Medizin on DM-Y): KNOTEN_ID",
+    "GA_NAME": "name of the G-A plan sheet as shown in the planner app",
+    "GA_STATION": "Station of G-A that holds pool P-A (KNOTEN_ID and name)",
+    "GB_NODE": "Gruppe node of G-B (Geburtshilfe on DM-Y): KNOTEN_ID",
+    "GB_STATION": "Station of G-B that holds pool P-B (KNOTEN_ID and name)",
+    "POOL_PA": "pool id of P-A",
+    "POOL_PB": "pool id of P-B",
+    "DEF_EARLY": "PA code of the POMA-type EARLY Dienst in G-A's palette (definitions kit)",
+    "DEF_NIGHT": "PA code of the POMA-type NIGHT Dienst in G-A's palette (definitions kit)",
+    "DEF_IP_JA": "PA code of PSP-IP-JA (INTERNER_POOL T, RESSOURCENERSATZ F)",
+    "DEF_IP_NEIN": "PA code of PSP-IP-NEIN (INTERNER_POOL F, RESSOURCENERSATZ T)",
+    "DEF_IMMER": "PA code of PSP-IMMER (ALWAYS_VISIBLE T)",
+    "DEF_WUNSCH_JA": "PA code of PSP-WUNSCH-JA (PLANUNGSWUNSCH on DIENST and on the G-A DIENST_DETAIL)",
+    "DEF_WUNSCH_NEIN": "PA code of PSP-WUNSCH-NODE-NEIN (PLANUNGSWUNSCH only on DIENST)",
+    "M1": "month after the run date, YYYY-MM",
+    "BUNDLE_LINE": "master or main-26 (PSP-20 expectations differ per line)",
+    "PORTAL_PROFILE": "absolute path of the runner's portal-ops browser profile folder (outside results/)"
+  }
+}

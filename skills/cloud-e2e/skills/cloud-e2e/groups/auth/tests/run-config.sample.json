@@ -1,0 +1,83 @@
+{
+  "run": "sample01",
+  "run_dir": "/ABSOLUTE/PATH/results/sample01",
+  "group": "auth",
+  "mode": "multi",
+  "tenant": "e2e-y-sample01",
+  "env_role": "Y",
+  "runner": "<runner name>",
+  "dashboard_url": "https://claude.ai/artifact/<dashboard id>",
+  "coordination": "artifact-db",
+  "bundle": "0.0.1829",
+  "bundle_class": "1801",
+  "run_date": "2026-11-03",
+  "employees": {
+    "HPA": {
+      "login": "dmseed-hpa",
+      "id": 430
+    },
+    "SEEDSP": {
+      "login": "dmseed-seedsp",
+      "id": 431
+    },
+    "NOHP": {
+      "login": "dmseed-nohp",
+      "id": 432
+    },
+    "LOCKU": {
+      "login": "dmseed-locku",
+      "id": 433
+    },
+    "PWU": {
+      "login": "dmseed-pwu",
+      "id": 434
+    },
+    "OTPU": {
+      "login": "dmseed-otpu",
+      "id": 435
+    },
+    "T2FU": {
+      "login": "dmseed-t2fu",
+      "id": 436
+    },
+    "OFFU": {
+      "login": "dmseed-offu",
+      "id": 437
+    },
+    "BLKU": {
+      "login": "dmseed-blku",
+      "id": 439
+    },
+    "NEWU": {
+      "login": "dmseed-newu",
+      "id": 440
+    },
+    "EMPU": {
+      "login": "dmseed-empu",
+      "id": 441
+    },
+    "IMPBLK": {
+      "login": "dmseed-impblk",
+      "id": 442
+    },
+    "DISU": {
+      "login": "dmseed-disu",
+      "id": 443
+    },
+    "NOEMP": {
+      "login": "none",
+      "id": 0
+    },
+    "TA": {
+      "login": "dmseed-ta",
+      "id": 403
+    }
+  },
+  "config": {
+    "PIDOPS_PROFILE": "<pidops_profile>",
+    "PORTAL_PROFILE": "<portal_profile>",
+    "PROVIDER_ID": "<provider_id>",
+    "AUTH_MAILBOX": "e2e-auth-team@example.invalid"
+  },
+  "_comment": "Sample run config for gen-prompts.py --group auth (DM-Y, review fix F-05, 2026-10-27). Run sample01, env e2e-y-sample01, logins dmseed-<role> and ids are fakes: fill employees from the R1 claims / auth-allocation.md (seed A1; every role of rules.json, optional IMPBLK / DISU = claimed spares; NOEMP stays {login none, id 0} when seed A8 is skipped; TA = the steward's kit actor from kits/<env>). No days: auth has no day rules. User-supplied, fake here: AUTH_MAILBOX (the team-owned mailbox confirmed in AUT-G3; never a seeded or personal address), PIDOPS_PROFILE and PORTAL_PROFILE (headed ops sign-ins, outside results/), PROVIDER_ID (gate AUT-G1 provider-read). Test: gen-prompts.py <this file> --group auth --dry-run (exit 0, no NEEDS CONFIG line); a real run adds --claims."
+}

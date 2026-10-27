@@ -1,0 +1,60 @@
+{
+  "ROLES": { "CPU": "emp+login", "TA": "borrowed" },
+  "DAY_TOKENS": {},
+  "WRITES": {},
+  "PARTS": { "X13": ["1", "2"] },
+  "NEEDS": {
+    "OPS-01": ["OPS-G1"],
+    "OPS-02": ["OPS-G3"],
+    "OPS-03": ["OPS-02"],
+    "OPS-04": ["OPS-03"],
+    "OPS-05": ["OPS-03"],
+    "OPS-06": ["always (after OPS-02..05, also after failures)"],
+    "OPS-07": ["OPS-G2"],
+    "OPS-08": ["OPS-G2", "W-Y-HEALTH (part B)"],
+    "OPS-09": ["OPS-G1", "OPS-G2", "PEP lock"],
+    "OPS-10": ["OPS-G2"],
+    "OPS-11": ["OPS-G2", "operator PEP DB login (optional part C)"],
+    "OPS-12": ["OPS-G2", "OPS-G4"],
+    "OPS-13": ["W-Y-MSG", "OPS-G5 (part 2)"],
+    "OPS-14": ["OPS-G1", "operator OK (optional part B)"],
+    "OPS-15": ["OPS-G1"],
+    "OPS-16": ["S-CT-LOGLEVEL"],
+    "OPS-17": ["OPS-G2"],
+    "OPS-18": ["J-Y-JOBS", "S-CT-JOBS"],
+    "OPS-19": ["OPS-G1", "T-Y-TENANTFORM"],
+    "OPS-20": ["OPS-G4", "firefox / webkit engines"],
+    "OPS-21": ["OPS-G1", "OPS-G4"],
+    "OPS-22": ["single-role ops profiles (OQ-25)"],
+    "OPS-23": ["operator: suite copy + own ops credentials (part A), master password (part B)"],
+    "OPS-24": ["POMA ops ADMIN session"],
+    "OPS-25": ["OPS-G4"]
+  },
+  "BY_DESIGN": [],
+  "SCEN_ID": "\\bOPS-\\d{2}\\b",
+  "DAY_RULES": { "never_other_family_fixture_day": true },
+  "PLACEHOLDERS": {
+    "PORTAL_PROFILE": "absolute path of the runner's PolyPortal ops browser profile (ADMIN; outside results/)",
+    "POMA_OPS_PROFILE": "absolute path of the runner's POMA ops browser profile (ADMIN; outside results/)",
+    "PORTAL_ORG": "PolyPortal organisation slug of the DeployMate env (deploymate-<uuid>, OPS-G2)",
+    "RUN_TAG": "8 characters [a-z0-9] for the throw-away names, e.g. the run start MMDDHHmm: organisation e2e-ops-<tag>, tenants e2e-ops-<tag>-test / -prod, plugin e2e-ops-p<tag>, master flag e2e.ops.f<tag>, incidents E2E-OPS-<tag>-*",
+    "IGNORES_BASELINE": "the exact value of portal.onPrem.deephealthcheckIgnores recorded in OPS-G2, or 'no tenant override'",
+    "OPS_ROLE_PROFILES": {
+      "doc": "profile folders of the single-role CT ops accounts for OPS-22 as role=path pairs (SUPPORT, OPERATIONS, POLYPOINT_EMPLOYEE, DATA_ANALYST), or 'none' (OPS-22 BLOCKED)",
+      "value": "none"
+    },
+    "SUITE_REPORT": {
+      "doc": "absolute path of the Playwright JSON / HTML report the operator produced for OPS-23 part A, or 'none'",
+      "value": "none"
+    },
+    "MASTER_FLAG_OK": {
+      "doc": "'yes' when the operator approved the inert master flag of OPS-14 part B, else 'no'",
+      "value": "no"
+    },
+    "PORTAL_HOST": {
+      "doc": "PolyPortal web host of the stage",
+      "value": "https://ct-portal-webapp.dev.k8s.polypoint-dev.com"
+    },
+    "PORTAL_API": { "doc": "portal-api host of the stage", "value": "https://ct-portal-api.dev.k8s.polypoint-dev.com" }
+  }
+}

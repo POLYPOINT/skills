@@ -1,0 +1,149 @@
+{
+  "_doc": "gen-prompts data of group utr, extracted 1:1 from utr-e2e v0.5.0 scripts/gen-prompts.py lines 58-77 (ROLES, FAMILIES -> group.json, DAY_TOKENS, PARTS, WRITES, BY_DESIGN, STAMPING -> DAY_RULES.stamping_families, NEEDS_* -> DAY_RULES.planning_type, SCEN_ID). Schema: skill-design.md 4.2.",
+  "ROLES": {
+    "E1": "emp+login",
+    "E2": "emp+login",
+    "E3": "emp+login",
+    "E4": "emp+login",
+    "E5": "emp+login",
+    "E6": "emp+login",
+    "ES": "emp+login",
+    "ER": "emp+login"
+  },
+  "DAY_TOKENS": {
+    "WD1": "R-relative",
+    "WD2": "R-relative",
+    "WE1": "R-relative",
+    "WE2": "R-relative",
+    "TODAY": "R-relative",
+    "P0": "absolute",
+    "P1": "absolute",
+    "P2": "absolute",
+    "P3": "absolute",
+    "KOMBI_DAY": "absolute",
+    "CARVE_DAY": "absolute",
+    "E6_WD": "absolute"
+  },
+  "WRITES": {
+    "O": [
+      ["E2", "WE1"],
+      ["E2", "WE2"],
+      ["E2", "WD1"],
+      ["E2", "WD2"],
+      ["E2", "TODAY"]
+    ],
+    "W": [
+      ["E1", "WD1"],
+      ["E1", "WD2"],
+      ["E1", "WE2"],
+      ["E3", "WD1"],
+      ["E3", "WD2"],
+      ["E6", "E6_WD"]
+    ],
+    "L": [["E3", "P3"]],
+    "MO": [
+      ["E5", "TODAY"],
+      ["E5", "WD1"],
+      ["ES", "WD1"]
+    ],
+    "P": [["E1", "WD1"]],
+    "C": [
+      ["E5", "WD1"],
+      ["E3", "P3"],
+      ["E2", "WD2"]
+    ]
+  },
+  "PARTS": {
+    "C": ["1", "2"]
+  },
+  "NEEDS": {
+    "R-01": "seed d, e, g (G5 fixtures, pep-oracle.md)",
+    "R-02": "seed o (Kombi 9102/9103)",
+    "R-04": "seed q (carved absence)",
+    "R-07": "seed m (BG-reduced SOLLZEIT for E4)",
+    "R-09": "seed p (Zulagenprofil + Lohnart 10080)",
+    "M-01": "seed l (planned-credit ZEITSUMME removed)",
+    "M-02": "seed m",
+    "O-01": "seed n + s, gate G4b (150/151)",
+    "O-02": "seed n + s, gate G4b",
+    "O-04": "seed n + s, gate G4b",
+    "W-05": "version gate APIPP-1899 (pp-services >= 0.0.1797)",
+    "W-06": "seed j (R0 root rows, PEP-plannable 111-141)",
+    "P-03": "portal session (portal-flag.mjs login right before P)",
+    "C-01": "seed k (HIERARCHIE.STAMM + ORGANIZATION_STRUCTURE)",
+    "C-02": "seed l",
+    "X-02": "seed r (optional, approval)",
+    "X-05": "gate G4b"
+  },
+  "BY_DESIGN": [
+    ["L", "E3", "P3"],
+    ["C", "E3", "P3"]
+  ],
+  "SCEN_ID": "\\b(?:MO|[RMOWLPCX])-\\d{2}[ab]?\\b",
+  "DAY_RULES": {
+    "oldest_offset": 6,
+    "derive_week": true,
+    "stamping_families": ["O", "W", "P", "MO", "C"],
+    "planning_type": {
+      "day_planning": [
+        ["W", "E1", "WD1", "W-01"],
+        ["W", "E3", "WD1", "W-02 / W-06a"],
+        ["W", "E6", "E6_WD", "W-06b"],
+        ["P", "E1", "WD1", "P-01b"],
+        ["MO", "ES", "WD1", "MO-05"]
+      ],
+      "planning": [["MO", "E5", "TODAY", "MO-02"]],
+      "no_planning": [["W", "E1", "WE2", "W-05"]]
+    },
+    "prepared": {
+      "config_key": "prepared_days",
+      "prefix": "P",
+      "weekday": true,
+      "before_run_date": true,
+      "not_write_tokens": true,
+      "roster_start_painted": true,
+      "min_oldest": { "index": 3, "families": ["L", "C"], "label": "C-04 / L-02 write on E3 P3: P3 >= R-6" }
+    },
+    "fixture_roles": [
+      ["KOMBI_EMP", "KOMBI_DAY"],
+      ["CARVE_EMP", "CARVE_DAY"]
+    ],
+    "role_label_keys": ["KOMBI_EMP", "CARVE_EMP"],
+    "date_keys": ["KOMBI_DAY", "CARVE_DAY", "E6_WD"],
+    "day_map_keys": [
+      "R",
+      "TODAY",
+      "P0",
+      "P1",
+      "P2",
+      "P3",
+      "WE1",
+      "WE2",
+      "WD1",
+      "WD2",
+      "KOMBI_DAY",
+      "CARVE_DAY",
+      "E6_WD"
+    ],
+    "we1_note": true
+  },
+  "PLACEHOLDERS": {
+    "RUN_TITLE": { "value": "UTR E2E", "doc": "prompt title prefix (v0.5.0 header)" },
+    "DEVIATIONS_HINT": {
+      "value": "scenarios.md \"Known product defects\" and \"Bundle-aware expectations\"",
+      "doc": "where a worker judges a mismatch (header guardrail)"
+    },
+    "DATE_SHIFT_RULE": {
+      "value": "common hard rule 11 (date shift)",
+      "doc": "the brief's date-shift rule (header guardrail)"
+    },
+    "TEAM_NODE": "the team's plan-sheet / palette node, name and id (config)",
+    "PLANNER_ROLE_ID": "P family: seed planner role id, audit A2 (config)",
+    "E1_NODE": "P family: E1's category node (config)",
+    "ER_NODE": "P family: ER's isolated category node (config)",
+    "PORTAL_PROFILE": "P family: the operator's portal-ops profile folder (config)",
+    "PORTAL_ORG": "P family: DeployMate organisation slug in portal ops (config)",
+    "KOMBI_EMP": "R family: role of the Kombi employee (config)",
+    "CARVE_EMP": "R family: role of the carve employee (config)"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "run": "sample01",
+  "run_dir": "/ABSOLUTE/PATH/results/sample01",
+  "group": "shared",
+  "mode": "multi",
+  "tenant": "beekeeper-integration-tenant-test",
+  "runner": "<runner name>",
+  "dashboard_url": "https://claude.ai/artifact/<dashboard id>",
+  "coordination": "artifact-db",
+  "bundle": "n/a",
+  "bundle_class": "n/a",
+  "run_date": "2026-11-03",
+  "employees": {
+    "BEEHP": {
+      "login": "<beehp_login>",
+      "id": "n/a"
+    }
+  },
+  "config": {
+    "STAGE": "ct",
+    "BEE_DECISION": "pending",
+    "PIDOPS_PROFILE": "<pidops_profile>",
+    "PORTAL_PROFILE": "<portal_profile>"
+  },
+  "_comment": "Sample run config for gen-prompts.py --group shared --families SH-BEE (shared tenant beekeeper-integration-tenant-test on CT, review fix F-05, 2026-10-27). One config per shared family: the engine has one tenant per config, and each family runs on another shared tenant (group.json env.tenants). Run sample01 and the paths are fakes. BEE_DECISION stays pending until the user decided the Beekeeper entry source (OQ-28, gate SH-G4) and the runner prepared the entry profile (seed SH1 step 6); then approved. Supplied by the runner or the user, fake here: BEEHP login (the HP reached through that entry), PIDOPS_PROFILE and PORTAL_PROFILE (headed ops sign-ins for this stage, outside results/). bundle / bundle_class n/a unless known. Test: gen-prompts.py <this file> --group shared --families SH-BEE --dry-run (exit 0, no NEEDS CONFIG line)."
+}

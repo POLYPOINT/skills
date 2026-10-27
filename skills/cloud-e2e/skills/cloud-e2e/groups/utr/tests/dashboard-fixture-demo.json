@@ -1,0 +1,184 @@
+{
+  "_doc": "Offline fixture for dashboard-check.mjs: one dummy second group `demo` plus coordination documents, in the db schema of references/coordination.md. The UTR rows are added by the check from groups/utr/assets/scenarios.json as v0.5.0-style rows (doc id = scenario id, status in envM). Example data only.",
+  "run/meta": {
+    "run": "fixture-run",
+    "status": "running",
+    "stage": "CT",
+    "pin": "0.0.1829",
+    "bundle_class": "1801",
+    "envs": ["e2e-y-fix", "e2e-x-fix"],
+    "groups": [
+      {
+        "key": "utr",
+        "title": "UTR time recording",
+        "env": "e2e-y-fix",
+        "families": [
+          ["X", "Contract"],
+          ["R", "Reads & amounts"],
+          ["O", "On-call"],
+          ["M", "Month report"],
+          ["W", "Writes"],
+          ["L", "Legacy API"],
+          ["MO", "Mobile"],
+          ["P", "Permissions"],
+          ["C", "Classic stack"]
+        ]
+      },
+      {
+        "key": "demo",
+        "title": "Dummy second group",
+        "env": "e2e-x-fix",
+        "families": [
+          ["A", "Gates"],
+          ["B", "Lifecycle"]
+        ]
+      }
+    ],
+    "updated": "2026-10-23T08:00:00Z",
+    "notes": "fixture: offline render check"
+  },
+  "envs": {
+    "e2e-x-fix": {
+      "role": "X",
+      "state": "DONE",
+      "instanceState": "RUNNING",
+      "autoStop": false,
+      "seed_date": "2026-10-22",
+      "pin": "0.0.1829",
+      "partitions": { "Pflege Chirurgie": "demo" },
+      "flags_hash": "3f2a9c0d11aa"
+    },
+    "e2e-y-fix": {
+      "role": "Y",
+      "state": "DONE",
+      "instanceState": "RUNNING",
+      "autoStop": false,
+      "seed_date": "2026-10-22",
+      "pin": "0.0.1829",
+      "partitions": { "Pflege Chirurgie": "utr", "Paediatrie": "utr" }
+    }
+  },
+  "kits": {
+    "e2e-y-fix": {
+      "log": [
+        { "step": "audit", "ok": true },
+        { "step": "rights", "ok": true },
+        { "step": "r0", "ok": true },
+        { "step": "definitions-kit", "ok": false }
+      ]
+    }
+  },
+  "stage": {
+    "run-partner": { "id": "e2e-ptn-fixture", "ok": true },
+    "gln": { "value": "7600000000000", "day": "2026-10-23", "ok": true }
+  },
+  "runners": {
+    "steward": {
+      "groups": ["utr"],
+      "activeWorkers": { "e2e-y-fix": { "utr:R": 1, "utr:O": 1 } },
+      "heartbeat": "2026-10-23T07:58:00Z"
+    },
+    "runner-b": {
+      "groups": ["demo"],
+      "activeWorkers": { "e2e-x-fix": { "demo:A": 1 } },
+      "heartbeat": "2026-10-23T06:00:00Z"
+    }
+  },
+  "groups": {
+    "utr": { "runner": "steward", "env": "e2e-y-fix", "status": "running" },
+    "demo": { "runner": "runner-b", "env": "e2e-x-fix", "status": "seeding" }
+  },
+  "claims": {
+    "e2e-y-fix~emp-480": { "group": "utr", "runner": "steward" },
+    "e2e-y-fix~emp-484": { "group": "utr", "runner": "steward" },
+    "e2e-y-fix~login-dmseed-lhug": { "group": "utr", "runner": "steward" },
+    "e2e-x-fix~emp-501": { "group": "demo", "runner": "runner-b" },
+    "e2e-x-fix~node-457": { "group": "demo", "runner": "runner-b" }
+  },
+  "locks": {
+    "e2e-y-fix~pep": {
+      "holder": "steward/O",
+      "purpose": "Pikett check",
+      "since": "2026-10-23T07:55:00Z",
+      "expiresAt": "2026-10-23T08:15:00Z"
+    }
+  },
+  "windows": {
+    "e2e-y-fix~UTR-P": {
+      "class": "INTERNAL",
+      "state": "requested",
+      "group": "utr",
+      "pauses": ["utr:R", "utr:W"],
+      "requestedAt": "2026-10-23T07:50:00Z"
+    },
+    "e2e-x-fix~W-X-WRITE-OFF": {
+      "class": "FLAG",
+      "state": "draining",
+      "group": "demo",
+      "pauses": ["demo:B"],
+      "requestedAt": "2026-10-23T07:40:00Z"
+    }
+  },
+  "schedule": {
+    "e2e-x-fix": {
+      "slots": [
+        { "id": "W-X-SERIES-OFF", "from": "2026-10-23T13:30:00Z", "to": "2026-10-23T13:55:00Z", "owner": "demo" }
+      ]
+    }
+  },
+  "findings": {
+    "demo~N-DEMO-1": {
+      "text": "Candidate list shows a duplicate entry",
+      "scenarios": ["demo~DEM-03"],
+      "env": "e2e-x-fix",
+      "known": "new"
+    }
+  },
+  "scenarios": {
+    "demo~DEM-01": {
+      "group": "demo",
+      "family": "A",
+      "title": "Gate: capabilities and flags",
+      "status": "pass",
+      "env": "e2e-x-fix",
+      "runner": "runner-b",
+      "agent": "worker-A",
+      "updated": "2026-10-23T07:30:00Z"
+    },
+    "demo~DEM-02": {
+      "group": "demo",
+      "family": "A",
+      "title": "Gate: rights of the kit actors",
+      "status": "running",
+      "env": "e2e-x-fix",
+      "runner": "runner-b",
+      "agent": "worker-A"
+    },
+    "demo~DEM-03": {
+      "group": "demo",
+      "family": "B",
+      "title": "Lifecycle happy path",
+      "status": "fail",
+      "verdict": "N-DEMO-1: duplicate candidate",
+      "env": "e2e-x-fix",
+      "runner": "runner-b",
+      "shots": [
+        {
+          "id": "s1",
+          "url": "https://example.invalid/fixture.png",
+          "caption": "Candidate list shows 3, oracle 2",
+          "kind": "app"
+        }
+      ]
+    },
+    "demo~DEM-04": {
+      "group": "demo",
+      "family": "B",
+      "title": "Lifecycle cancel",
+      "status": "fail",
+      "verdict": "KNOWN-FAIL SW-K3 PPCLOUD-00000 (fixture)",
+      "env": "e2e-x-fix",
+      "runner": "runner-b"
+    }
+  }
+}

@@ -1,0 +1,235 @@
+{
+  "key": "planner",
+  "title": "POMA planner web app: pools, permissions, SP lists, tenant admin, PEP settings, wishes",
+  "env": {
+    "kind": "deploymate",
+    "preferred": "Y",
+    "track": "master",
+    "pep_desktop_min": 180,
+    "ssh": true,
+    "service_token": false,
+    "stage_objects": []
+  },
+  "requires": ["DM", "OP", "SSH", "PEP", "PO-ADMIN", "POMA-optional"],
+  "families": [
+    {
+      "id": "NAV",
+      "name": "Shell: landing, menus, small screen, languages",
+      "brief": "assets/family-briefs/NAV.md",
+      "scenarios": ["PSP-01", "PSP-02", "PSP-03"],
+      "lane": "L1"
+    },
+    {
+      "id": "POOL",
+      "name": "Pool management (dashboard, create, manage, HP pools, expired employment)",
+      "brief": "assets/family-briefs/POOL.md",
+      "scenarios": ["PSP-04", "PSP-05", "PSP-06", "PSP-07", "PSP-19"],
+      "lane": "L1"
+    },
+    {
+      "id": "METRICS",
+      "name": "Pool metrics",
+      "brief": "assets/family-briefs/METRICS.md",
+      "scenarios": ["PSP-08"],
+      "lane": "L1"
+    },
+    {
+      "id": "PERM",
+      "name": "Node restrictions and rights guards",
+      "brief": "assets/family-briefs/PERM.md",
+      "scenarios": ["PSP-09", "PSP-10", "PSP-11"],
+      "lane": "L2"
+    },
+    {
+      "id": "SP",
+      "name": "Shift-planner dashboard and request lists",
+      "brief": "assets/family-briefs/SP.md",
+      "scenarios": ["PSP-12", "PSP-13"],
+      "lane": "L2"
+    },
+    {
+      "id": "ADMIN",
+      "name": "Tenant admin pages",
+      "brief": "assets/family-briefs/ADMIN.md",
+      "scenarios": ["PSP-15"],
+      "lane": "L2"
+    },
+    {
+      "id": "CONF",
+      "name": "Conflict checker: PEP night warning, nightly cleanup, tenant rule",
+      "brief": "assets/family-briefs/CONF.md",
+      "scenarios": ["PSP-17", "PSP-18", "PSP-16"],
+      "lane": "pep-tail"
+    },
+    {
+      "id": "PEPSET",
+      "name": "PEP Dienst / global settings as seen in the cloud",
+      "brief": "assets/family-briefs/PEPSET.md",
+      "scenarios": ["PSP-20", "PSP-21"],
+      "lane": "pep-tail"
+    },
+    {
+      "id": "WISH",
+      "name": "Planning wish v1",
+      "brief": "assets/family-briefs/WISH.md",
+      "scenarios": ["PSP-22"],
+      "lane": "pep-tail"
+    }
+  ],
+  "roles": [
+    { "token": "PLANALL", "count": 1, "kit_group": "E2E:PLANALL", "partition": "P1" },
+    { "token": "SPA", "count": 1, "kit_group": "E2E:SP-GA", "partition": "P1" },
+    { "token": "PMA", "count": 1, "kit_group": "E2E:PM-GA", "partition": "P1" },
+    { "token": "TA", "count": 1, "kit_group": "E2E:TA", "partition": "P1", "mode": "steward-kit-actor" },
+    { "token": "SEEDSP", "count": 1, "kit_group": null, "partition": "P1", "mode": "untouched" },
+    { "token": "HP1", "count": 1, "kit_group": null, "partition": "P1", "mode": "same-station-as-HP2" },
+    { "token": "HP2", "count": 1, "kit_group": null, "partition": "P1", "mode": "same-station-as-HP1" },
+    { "token": "HP3", "count": 1, "kit_group": null, "partition": "P1", "mode": "any" },
+    { "token": "HP4", "count": 1, "kit_group": null, "partition": "P1", "mode": "any" },
+    { "token": "HP7", "count": 1, "kit_group": null, "partition": "P1", "mode": "any" },
+    { "token": "HP8", "count": 1, "kit_group": null, "partition": "P1", "mode": "any" },
+    { "token": "HP9", "count": 1, "kit_group": null, "partition": "P1", "mode": "any" },
+    { "token": "HP5", "count": 1, "kit_group": null, "partition": "P2", "mode": "any" },
+    { "token": "HP6", "count": 1, "kit_group": null, "partition": "P2", "mode": "one-employment" }
+  ],
+  "partition": [
+    {
+      "id": "P1",
+      "people": 13,
+      "one_gruppe": true,
+      "same_category": false,
+      "exclusive_nodes": true,
+      "preferred": "Pflege Medizin"
+    },
+    {
+      "id": "P2",
+      "people": 2,
+      "one_gruppe": true,
+      "same_category": false,
+      "exclusive_nodes": false,
+      "preferred": "Geburtshilfe"
+    }
+  ],
+  "baseline_flags": {
+    "poma.flows.availabilities": true,
+    "poma.flows.internalPools": true,
+    "poma.flows.opportunities": true,
+    "poma.flows.shiftTrades": true,
+    "poma.flows.schedulingRequestV1": true,
+    "poma.onPrem.writeShiftsOnPrem": true,
+    "poma.flows.externalAvailabilities": false,
+    "poma.webApp.partnerSimulator": false,
+    "poma.webApp.simulatePEP": false,
+    "poma.onPrem.conflictsWithAbsences": false,
+    "poma.internalPool.sendEmailConfirmation": false,
+    "poma.msTeams.notifications": false,
+    "poma.flows.timesheet": false,
+    "poma.onPrem.conflictCheckingMonths": 3
+  },
+  "windows": [
+    {
+      "id": "W-Y-CONFRULE",
+      "class": "INTERNAL",
+      "scenarios": ["PSP-16"],
+      "changes": [
+        { "setting": "conflict-checker tenant extra rule ALWAYS_CONFLICT_TEST_RULE", "value": "added, then removed" }
+      ],
+      "est_min": 15,
+      "pauses": ["planner:PERM", "planner:CONF"]
+    },
+    {
+      "id": "W-Y-SOLLPLAN",
+      "class": "FLAG",
+      "scenarios": ["PSP-21"],
+      "changes": [
+        {
+          "setting": "PEP Grundeinstellungen 'Es muss ein Sollplan gesichert sein'",
+          "value": "on, then the recorded value"
+        }
+      ],
+      "est_min": 50,
+      "pauses": [
+        "utr:X",
+        "utr:R",
+        "utr:M",
+        "utr:O",
+        "utr:W",
+        "utr:L",
+        "utr:MO",
+        "utr:P",
+        "utr:C",
+        "auth:UM",
+        "planner:WISH"
+      ],
+      "note": "HARD against utr: request only after utr has finished on this env (env-plan W-Y-SOLLPLAN)"
+    },
+    {
+      "id": "J-Y-JOBS",
+      "class": "JOBS",
+      "shared_with": ["ops"],
+      "scenarios": ["PSP-18", "PSP-19"],
+      "changes": [
+        { "job": "poma-core AvailabilityConflictChecker", "tenantIds": "<DM-Y>" },
+        { "job": "poma-core EmploymentExpiration", "tenantIds": "<DM-Y>" }
+      ],
+      "est_min": 30,
+      "pauses": []
+    }
+  ],
+  "gates": [
+    {
+      "id": "PSP-G1",
+      "check": "decoded token roles: PLANALL ⊇ {ROLE_POOL_MANAGER, ROLE_SHIFT_PLANNER}; SPA has ROLE_SHIFT_PLANNER and not ROLE_POOL_MANAGER; PMA ROLE_POOL_MANAGER and not ROLE_SHIFT_PLANNER; TA ROLE_TENANT_ADMIN; record SEEDSP (OQ-17)"
+    },
+    {
+      "id": "PSP-G2",
+      "check": "GET /api/private/organization/readable-nodes: SPA and PMA only the G-A subtree, PLANALL the whole tree"
+    },
+    { "id": "PSP-G3", "check": "pools P-A (HP1..HP4) and P-B (HP5, HP6) exist; HP1..HP5 have an availability on D1" },
+    {
+      "id": "PSP-G4",
+      "check": "GET /api/private/shift-definition/roster?group-node-id=<G-A>&from=D2&to=D2&include-presences=true&shift-type-filter=USE_IN_PLANNING lists a POMA type EARLY and a NIGHT Dienst (definitions kit)"
+    },
+    {
+      "id": "PSP-GD",
+      "check": "own Dienste PSP-IP-JA / PSP-IP-NEIN / PSP-IMMER / PSP-WUNSCH-JA / PSP-WUNSCH-NODE-NEIN loaded by api-pp after the G4b batch (roster / scheduling-request definition reads)"
+    }
+  ],
+  "seed": [
+    {
+      "id": "R1-R4",
+      "who": "runner",
+      "pep": false,
+      "doc": "seed/R-rights.md",
+      "script": "../../scripts/seed/common/kit-member.sql"
+    },
+    { "id": "R5", "who": "runner", "pep": true, "doc": "seed/R-rights.md" },
+    {
+      "id": "D1-D3",
+      "who": "runner",
+      "pep": true,
+      "doc": "seed/D-definitions.md",
+      "script": "scripts/planner-checks.sql"
+    },
+    { "id": "F1-F11", "who": "runner", "pep": false, "doc": "seed/F-fixtures.md" }
+  ],
+  "schedule": {
+    "workers": 2,
+    "lanes": [
+      ["PSP-01", "PSP-02", "PSP-03", "PSP-04", "PSP-05", "PSP-06", "PSP-07", "PSP-08", "PSP-19"],
+      ["PSP-09", "PSP-10", "PSP-11", "PSP-12", "PSP-13", "PSP-15"],
+      ["PSP-17", "PSP-18", "PSP-20", "PSP-22"]
+    ],
+    "after_fanout": ["PSP-16"],
+    "exclusive_order": ["PSP-21"]
+  },
+  "version_gate": null,
+  "known_deviations": "references/known-deviations.md",
+  "cleanup": [
+    "PSP-* pools and Dienste kept until destroy",
+    "conflict-checker config restored (W-Y-CONFRULE)",
+    "PEP option 'Sollplan gesichert' back to its recorded value (W-Y-SOLLPLAN)",
+    "HP6 employment end restored",
+    "SPA / PMA back into DMSEED:Planner only if the env is reused"
+  ]
+}

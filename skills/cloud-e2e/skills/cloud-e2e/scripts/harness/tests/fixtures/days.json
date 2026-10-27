@@ -1,0 +1,27 @@
+[
+  {
+    "date": "2026-10-20",
+    "roster_cell_id": 123,
+    "allowed_actions": ["ADD_TIMESTAMP"],
+    "permissions": { "can_add_timestamps": true, "is_read_only": false },
+    "shifts": [
+      {
+        "shift_planning_id": 456,
+        "shift_definition_id": 111,
+        "shift_kind": "PRESENCE",
+        "planned_duration": { "total_minutes": 480 },
+        "blocks": [
+          {
+            "block_id": 789,
+            "start": "2026-10-20T07:00:00",
+            "end": "2026-10-20T15:24:00",
+            "note": null,
+            "allowed_actions": ["EDIT"]
+          }
+        ]
+      }
+    ],
+    "timestamps": [{ "id": 1, "time": "07:00", "type": "IN", "shift_planning_id": 456, "is_automatic": false }],
+    "time_amounts": { "planned": { "total_minutes": 480 } }
+  }
+]

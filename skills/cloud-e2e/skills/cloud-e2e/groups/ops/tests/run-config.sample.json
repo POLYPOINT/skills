@@ -1,0 +1,35 @@
+{
+  "run": "sample01",
+  "run_dir": "/ABSOLUTE/PATH/results/sample01",
+  "group": "ops",
+  "mode": "multi",
+  "tenant": "e2e-y-sample01",
+  "env_role": "Y",
+  "runner": "<runner name>",
+  "dashboard_url": "https://claude.ai/artifact/<dashboard id>",
+  "coordination": "artifact-db",
+  "bundle": "0.0.1829",
+  "bundle_class": "1801",
+  "run_date": "2026-11-03",
+  "employees": {
+    "CPU": {
+      "login": "dmseed-cpu",
+      "id": 450
+    },
+    "TA": {
+      "login": "dmseed-ta",
+      "id": 403
+    }
+  },
+  "config": {
+    "PORTAL_PROFILE": "<portal_profile>",
+    "POMA_OPS_PROFILE": "<poma_ops_profile>",
+    "PORTAL_ORG": "<portal_org>",
+    "RUN_TAG": "sample01",
+    "IGNORES_BASELINE": "<ignores_baseline>",
+    "OPS_ROLE_PROFILES": "none",
+    "SUITE_REPORT": "none",
+    "MASTER_FLAG_OK": "no"
+  },
+  "_comment": "Sample run config for gen-prompts.py --group ops (DM-Y, review fix F-05, 2026-10-27). Run sample01, env e2e-y-sample01, logins dmseed-<role> and ids are fakes: fill CPU from the R1 claims (gate OPS-G4) and TA from kits/<env> (the steward's kit actor, borrowed). No days: ops has no day rules. Supplied by the runner, the operator or the user, fake here: PORTAL_PROFILE and POMA_OPS_PROFILE (headed ops sign-ins, outside results/), PORTAL_ORG (organisation slug deploymate-<uuid>, OPS-G2), IGNORES_BASELINE (exact deephealthcheckIgnores value from OPS-G2, or 'no tenant override'). RUN_TAG = 8 characters [a-z0-9] whose throw-away names are free (OPS-G3). OPS_ROLE_PROFILES / SUITE_REPORT / MASTER_FLAG_OK carry their safe defaults (none / none / no); change them only after the user or operator decided (seed O2). Test: gen-prompts.py <this file> --group ops --dry-run (exit 0, no NEEDS CONFIG line); a real run adds --claims."
+}

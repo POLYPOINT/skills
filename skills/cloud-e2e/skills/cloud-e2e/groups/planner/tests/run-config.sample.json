@@ -1,0 +1,105 @@
+{
+  "run": "<run>",
+  "run_dir": "/ABSOLUTE/PATH/results/<run>",
+  "group": "planner",
+  "mode": "multi",
+  "tenant": "<DeployMate env id>",
+  "env_role": "Y",
+  "runner": "<runner name>",
+  "dashboard_url": "https://claude.ai/artifact/<dashboard id>",
+  "coordination": "artifact-db",
+  "bundle": "0.0.1829",
+  "bundle_class": "1801",
+  "run_date": "2026-11-03",
+  "roster_end": "2026-11-12",
+  "painted_days": ["2026-11-14", "2026-11-15", "2026-11-16", "2026-11-17", "2026-11-18", "2026-11-19"],
+  "employees": {
+    "PLANALL": {
+      "login": "dmseed-planall",
+      "id": 400
+    },
+    "SPA": {
+      "login": "dmseed-spa",
+      "id": 401
+    },
+    "PMA": {
+      "login": "dmseed-pma",
+      "id": 402
+    },
+    "TA": {
+      "login": "dmseed-ta",
+      "id": 403
+    },
+    "SEEDSP": {
+      "login": "dmseed-seedsp",
+      "id": 404
+    },
+    "HP1": {
+      "login": "dmseed-hp1",
+      "id": 405
+    },
+    "HP2": {
+      "login": "dmseed-hp2",
+      "id": 406
+    },
+    "HP3": {
+      "login": "dmseed-hp3",
+      "id": 407
+    },
+    "HP4": {
+      "login": "dmseed-hp4",
+      "id": 408
+    },
+    "HP5": {
+      "login": "dmseed-hp5",
+      "id": 409
+    },
+    "HP6": {
+      "login": "dmseed-hp6",
+      "id": 410
+    },
+    "HP7": {
+      "login": "dmseed-hp7",
+      "id": 411
+    },
+    "HP8": {
+      "login": "dmseed-hp8",
+      "id": 412
+    },
+    "HP9": {
+      "login": "dmseed-hp9",
+      "id": 413
+    }
+  },
+  "days": {
+    "D1": "2026-11-10",
+    "D2": "2026-11-12",
+    "D2M1": "2026-11-11",
+    "D3": "2026-11-09",
+    "DW": "2026-11-17",
+    "DW1": "2026-11-18",
+    "M1A": "2026-12-03",
+    "M1B": "2026-12-04",
+    "RM1": "R-1"
+  },
+  "config": {
+    "GA_NODE": "<ga_node>",
+    "GA_NAME": "<ga_name>",
+    "GA_STATION": "<ga_station>",
+    "GB_NODE": "<gb_node>",
+    "GB_STATION": "<gb_station>",
+    "POOL_PA": "<pool_pa>",
+    "POOL_PB": "<pool_pb>",
+    "DEF_EARLY": "<def_early>",
+    "DEF_NIGHT": "<def_night>",
+    "DEF_IP_JA": "<def_ip_ja>",
+    "DEF_IP_NEIN": "<def_ip_nein>",
+    "DEF_IMMER": "<def_immer>",
+    "DEF_WUNSCH_JA": "<def_wunsch_ja>",
+    "DEF_WUNSCH_NEIN": "<def_wunsch_nein>",
+    "M1": "<m1>",
+    "BUNDLE_LINE": "<bundle_line>",
+    "PORTAL_PROFILE": "<portal_profile>"
+  },
+  "_comment": "Sample run config for gen-prompts.py --group planner (offline test fixture of agent I3a, 2026-10-23). Every <...> and every config value is a placeholder: fill employees from R1 claims / employees.md, days from the seed allocation, config from rules.json PLACEHOLDERS. Test: gen-prompts.py <this file> --group planner --out <scratch dir> with run_dir and tenant set to real values; no leftover {{ expected."
+}

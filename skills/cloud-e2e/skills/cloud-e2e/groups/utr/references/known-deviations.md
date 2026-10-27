@@ -1,0 +1,3 @@
+# UTR known deviations — pointer
+
+UTR keeps its KNOWN-FAIL signatures where v0.5.0 had them (content unchanged): `references/scenarios.md` — the **Known product defects** table (KD-1..KD-7, D3), the **1801-bundle defect** table (F-ids, N-X-1, N-D-4 …) and the per-scenario **Bundle-aware expectations** (columns `pre-1801` / `1801`, selected by the run's bundle class). `group.json` `known_deviations` points there; the runner maps a FAIL to KNOWN-FAIL only when the worker's `findings_confirmed` id and signature match that table for the run's bundle class (`references/runbook.md` Phase 2, per-worker step 3).

@@ -1,0 +1,55 @@
+{
+  "ROLES": {
+    "ANTBE": "shared",
+    "MSUSER": "shared",
+    "MSCTRL": "shared",
+    "OLDHP1": "shared",
+    "OLDHP2": "shared",
+    "BEEHP": "shared"
+  },
+  "DAY_TOKENS": { "OLD_DAY": "absolute" },
+  "WRITES": {
+    "SH-OLD": [
+      ["OLDHP1", "OLD_DAY"],
+      ["OLDHP2", "OLD_DAY"]
+    ]
+  },
+  "PARTS": {},
+  "NEEDS": {
+    "PTN-10": ["SH-G1", "P-PTN-10", "W-SH-ANTBE", "operator types antbe's password"],
+    "PTN-11": ["PTN-10"],
+    "PTN-18": ["PTN-11"],
+    "AUT-12": ["SH-G1", "AUT-G4", "W-SH-MSTENANT", "operator: provider edits + Microsoft sign-in"],
+    "AUT-13": ["AUT-12 steps 4 or 5 active"],
+    "HPN-26": ["PolyID ops session (read)"],
+    "HPN-24": ["SH-G4"],
+    "SWP-20": ["SH-G1", "SH-G3"]
+  },
+  "BY_DESIGN": [],
+  "SCEN_ID": "\\b(?:PTN|AUT|HPN|SWP)-\\d{2}\\b",
+  "DAY_RULES": {
+    "relations": {
+      "OLD_DAY": "a future weekday on which OLDHP1 has a swappable presence on the < 26 box and OLDHP2 can be a candidate"
+    },
+    "never_other_family_fixture_day": true
+  },
+  "PLACEHOLDERS": {
+    "PIDOPS_PROFILE": "absolute path of the runner's PolyID ops browser profile for the family's stage (outside results/)",
+    "PORTAL_PROFILE": "absolute path of the runner's PolyPortal ops browser profile (outside results/; HPN-26 flag read)",
+    "STAGE": { "doc": "stage of the family's shared tenant: ct or preview", "value": "ct" },
+    "MS_PROVIDER_ID": "PolyID provider id of <MS_TENANT> (AUT-G4)",
+    "MS_DOMAIN": "e-mail domain of <MS_TENANT> users (AUT-G4)",
+    "CRED_FILE": {
+      "doc": "absolute path of the runner's 0600 cred file for the family's shared-tenant users (outside results/), or 'none'",
+      "value": "none"
+    },
+    "BEE_DECISION": {
+      "doc": "'approved' only when the user decided the Beekeeper partner-token source (OQ-28) and the runner prepared the token-entry profile; else 'pending'",
+      "value": "pending"
+    },
+    "OLD_POMA_API": {
+      "doc": "poma-api URL of the < 26 box's stage when it is Preview (the harness has no Preview default), or 'none'",
+      "value": "none"
+    }
+  }
+}

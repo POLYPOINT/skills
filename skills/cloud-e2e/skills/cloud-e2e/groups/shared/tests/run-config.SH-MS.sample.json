@@ -1,0 +1,32 @@
+{
+  "run": "sample01",
+  "run_dir": "/ABSOLUTE/PATH/results/sample01",
+  "group": "shared",
+  "mode": "multi",
+  "tenant": "<ms_tenant>",
+  "runner": "<runner name>",
+  "dashboard_url": "https://claude.ai/artifact/<dashboard id>",
+  "coordination": "artifact-db",
+  "bundle": "n/a",
+  "bundle_class": "n/a",
+  "run_date": "2026-11-03",
+  "employees": {
+    "MSUSER": {
+      "login": "<msuser_login>",
+      "id": "n/a"
+    },
+    "MSCTRL": {
+      "login": "<msctrl_login>",
+      "id": "n/a"
+    }
+  },
+  "config": {
+    "STAGE": "ct",
+    "MS_PROVIDER_ID": "<ms_provider_id>",
+    "MS_DOMAIN": "ms-tenant.example.invalid",
+    "CRED_FILE": "<cred_file>",
+    "PIDOPS_PROFILE": "<pidops_profile>",
+    "PORTAL_PROFILE": "<portal_profile>"
+  },
+  "_comment": "Sample run config for gen-prompts.py --group shared --families SH-MS (the Microsoft tenant the user names, review fix F-05, 2026-10-27). One config per shared family: the engine has one tenant per config, and each family runs on another shared tenant (group.json env.tenants). Run sample01 and the paths are fakes. Named by the user in gate AUT-G4 (OQ-22), fake here: tenant (<MS_TENANT>), STAGE (ct or preview), MS_PROVIDER_ID, MS_DOMAIN (e-mail domain of that tenant's users), MSUSER (the PEP user whose e-mail is the Microsoft test account) and MSCTRL (the control user the owners name). Supplied by the runner, fake here: CRED_FILE (the runner's 0600 file for MSCTRL, outside results/), PIDOPS_PROFILE and PORTAL_PROFILE (headed ops sign-ins for this stage, outside results/). bundle / bundle_class n/a unless known. Without AUT-G4 the family is BLOCKED: do not generate it. Test: gen-prompts.py <this file> --group shared --families SH-MS --dry-run (exit 0, no NEEDS CONFIG line)."
+}

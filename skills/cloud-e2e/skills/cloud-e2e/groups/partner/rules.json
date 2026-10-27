@@ -1,0 +1,117 @@
+{
+  "ROLES": {
+    "PH1": "emp",
+    "PH2": "emp",
+    "PH3": "emp",
+    "PH4": "emp",
+    "PH5": "emp",
+    "SPX": "emp",
+    "SPN": "emp",
+    "ERX": "emp"
+  },
+  "DAY_TOKENS": {
+    "ST_DAY": "seeded-future-weekday",
+    "SR_DAY": "absolute",
+    "CM_DAY": "absolute",
+    "NM_DAY": "absolute",
+    "RRX_DAY": "painted",
+    "XD1": "absolute",
+    "XD2": "absolute",
+    "XD3": "absolute",
+    "XD4": "absolute",
+    "XD5": "absolute",
+    "XD6": "absolute",
+    "XD7": "absolute",
+    "XD8": "absolute",
+    "XD7N": "absolute",
+    "XD9": "absolute",
+    "XD10": "absolute",
+    "LEAD_DAY": { "rule": "R-relative", "offset": 1 }
+  },
+  "WRITES": {
+    "PAPI": [
+      ["PH1", "ST_DAY"],
+      ["PH2", "ST_DAY"],
+      ["PH3", "ST_DAY"],
+      ["PH4", "SR_DAY"],
+      ["PH5", "RRX_DAY"],
+      ["ERX", "RRX_DAY"]
+    ],
+    "PE": [
+      ["PH5", "CM_DAY"],
+      ["PH5", "NM_DAY"]
+    ]
+  },
+  "PARTS": {},
+  "NEEDS": {
+    "PTN-01": ["portal ops ADMIN session (Debug tab, Show secret, partner CRUD)"],
+    "PTN-02": ["POMA ops ADMIN session (conflict-checker Partner publish)"],
+    "PTN-03": ["G-PTN-1", "PTN-G2"],
+    "PTN-04": ["G-PTN-1"],
+    "PTN-05": ["G-PTN-1"],
+    "PTN-06": ["G-PTN-1"],
+    "PTN-07": ["G-PTN-1", "PTN-G3"],
+    "PTN-19": ["G-PTN-1", "P-PTN-9b"],
+    "PTN-08": ["PTN-07"],
+    "PTN-09": ["G-PTN-1", "PEP lock"],
+    "PTN-12": ["P-PTN-3", "P-PTN-4", "PTN-G1"],
+    "PTN-17": ["PTN-12"],
+    "PTN-13": ["PTN-12"],
+    "PTN-14": ["PTN-13"],
+    "PTN-15": ["PTN-13"],
+    "PTN-16": ["PTN-G1", "PTN-G5"],
+    "PTN-20": ["S-CT-GWMOCK", "PTN-13"]
+  },
+  "BY_DESIGN": [],
+  "SCEN_ID": "\\bPTN-\\d{2}\\b",
+  "DAY_RULES": {
+    "seeded": ["ST_DAY"],
+    "painted": ["RRX_DAY"],
+    "weekday_only": [
+      "ST_DAY",
+      "SR_DAY",
+      "CM_DAY",
+      "NM_DAY",
+      "RRX_DAY",
+      "XD1",
+      "XD2",
+      "XD3",
+      "XD4",
+      "XD5",
+      "XD6",
+      "XD7",
+      "XD8"
+    ],
+    "min_offset_days": 2,
+    "max_offset_days": 89,
+    "distinct": ["XD1", "XD2", "XD3", "XD4", "XD5", "XD6", "XD7", "XD8"],
+    "relations": {
+      "ST_DAY": "a seed presence day (111/112/113) of PH1, >= R+2, inside the seeded roster window",
+      "SR_DAY": ">= R+3, PH4 has no planning on it",
+      "CM_DAY": "a future day of the CURRENT month, >= R+2, PH5 free (run PTN-09 after a month change if the month ends within 2 days)",
+      "NM_DAY": "a weekday of the NEXT month, PH5 free, no Sollplan saved for that month",
+      "RRX_DAY": ">= R+3, ERX painted presence (seed P-PTN-9b), PH5 free",
+      "XD1..XD8": "eight consecutive weekdays >= R+7 and after the seeded roster end (outside the booking lead time PT48H)",
+      "XD7N": "the calendar day after XD7 (may equal XD8: another external HP)",
+      "XD9": "XD8 + 1 day",
+      "XD10": "XD8 + 2 days",
+      "LEAD_DAY": "R + 1 (inside the 48 h booking lead time)"
+    },
+    "exceptions": { "LEAD_DAY": "intentionally inside the booking lead time (PTN-14 step 4)" },
+    "never_other_family_fixture_day": true
+  },
+  "PLACEHOLDERS": {
+    "PARTNER_ID": "id of the steward's run partner e2e-ptn-<run> (stage/run-partner doc); read-only for every worker",
+    "GLN": "the run GLN the steward wrote for DM-X today (stage/gln; 13 digits, run-unique, never the simulator default 7601001996908)",
+    "FOREIGN_GLN": {
+      "doc": "a 13-digit test GLN that no CT tenant carries (PTN-17 negative row)",
+      "value": "7601009999999"
+    },
+    "PROVIDER_CODE": "provider code of the stage partner-simulator provider (gate P-PTN-3, stage/provider-gate), e.g. EWPS",
+    "RUN_TAG": "8 lowercase letters / digits for run-unique names: throw-away partners e2e-ptn-x|l|g-<tag>, external HPs 'E2E PTN <tag> A|B|C' with e-mails e2e-ptn-<tag>-a|b|c@zinc.ch, pools e2e-ptn-<tag>-a|b",
+    "PH_NODE": "Gruppe node of Notfallzentrum on DM-X (PH1..PH5): KNOTEN_ID and name",
+    "SPX_NODE": "Planblatt (Gruppe) node of Intensivpflege on DM-X used as BADI group-node-id by SPX: KNOTEN_ID",
+    "PORTAL_PROFILE": "absolute path of the runner's PolyPortal ops browser profile (ADMIN; outside results/)",
+    "POMA_OPS_PROFILE": "absolute path of the runner's POMA ops browser profile (ADMIN; outside results/; conflict-checker 'Partner' publish)"
+  }
+}

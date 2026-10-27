@@ -1,0 +1,398 @@
+{
+  "key": "auth",
+  "title": "Login / PolyID: invalid user, password reset, 2FA, lockout, logout, impersonation, user management",
+  "env": {
+    "kind": "deploymate",
+    "preferred": "Y",
+    "track": "master",
+    "pep_desktop_min": 45,
+    "ssh": true,
+    "service_token": false,
+    "stage_objects": [],
+    "tunnel": "box Keycloak admin (8383) through scripts/tunnels.sh for seed A3 / A5 / A6 and the password restores"
+  },
+  "requires": ["DM", "OP", "SSH", "TUNNEL", "PEP", "PO", "PID", "MSG", "OPERATOR-PRESENT"],
+  "families": [
+    {
+      "id": "NAV",
+      "name": "Invalid-user pages (planner app and myPOLYPOINT)",
+      "brief": "assets/family-briefs/NAV.md",
+      "scenarios": ["AUT-01", "AUT-02"],
+      "lane": "A"
+    },
+    {
+      "id": "LOGIN",
+      "name": "First login, onboarding errors, password form",
+      "brief": "assets/family-briefs/LOGIN.md",
+      "scenarios": ["AUT-18", "AUT-03", "AUT-04"],
+      "lane": "A",
+      "note": "first family of the group: AUT-18 needs NEWU never logged in"
+    },
+    {
+      "id": "LOCK",
+      "name": "Brute-force lockout, incident, steward unlock",
+      "brief": "assets/family-briefs/LOCK.md",
+      "scenarios": ["AUT-05"],
+      "window": "W-Y-LOCKOUT",
+      "parts": ["1", "2"],
+      "note": "part 1 (steps 1–8) inside W-Y-LOCKOUT; part 2 (step 9 ≥ 31 min after the lock, then the steward's unlock and step 10) later, outside the window"
+    },
+    {
+      "id": "PWD",
+      "name": "Forgot / reset password (messaging window)",
+      "brief": "assets/family-briefs/PWD.md",
+      "scenarios": ["AUT-06", "AUT-07", "AUT-08"],
+      "window": "W-Y-MSG",
+      "parts": ["1", "2"],
+      "note": "both parts inside W-Y-MSG: part 1 = AUT-06 while Send Messages is still OFF; the steward switches Send Messages ON; part 2 = AUT-07, AUT-08 (operator reads the team mailbox)"
+    },
+    {
+      "id": "2FA",
+      "name": "Per-user TOTP codes",
+      "brief": "assets/family-briefs/2FA.md",
+      "scenarios": ["AUT-09"],
+      "lane": "A",
+      "note": "AUT-11 dropped (decision 2026-10-27, review F-01): never a MOBILE_OR_EMAIL override"
+    },
+    {
+      "id": "X10",
+      "name": "Tenant-wide TOTP (login window)",
+      "brief": "assets/family-briefs/X10.md",
+      "scenarios": ["AUT-10"],
+      "window": "W-Y-TENANT2FA"
+    },
+    {
+      "id": "LOGOUT",
+      "name": "Logout chains (web; part 2 after a token refresh)",
+      "brief": "assets/family-briefs/LOGOUT.md",
+      "scenarios": ["AUT-14"],
+      "lane": "B",
+      "parts": ["1", "2"],
+      "note": "part 1 at the start of the group (also logs in the part-2 profile); part 2 ≥ 65 min later"
+    },
+    {
+      "id": "UM",
+      "name": "Customer-portal user management, second employment",
+      "brief": "assets/family-briefs/UM.md",
+      "scenarios": ["AUT-16", "AUT-20"],
+      "lane": "B",
+      "note": "AUT-20 holds the PEP lock (new / delete employment)"
+    },
+    {
+      "id": "IMP",
+      "name": "Support impersonation in the browser",
+      "brief": "assets/family-briefs/IMP.md",
+      "scenarios": ["AUT-17"],
+      "lane": "A",
+      "note": "attended: the operator signs in on the ops-realm Keycloak page"
+    }
+  ],
+  "roles": [
+    {
+      "token": "HPA",
+      "count": 1,
+      "kit_group": "E2E:HP-PLAIN",
+      "partition": "P1",
+      "mode": "plain-hp",
+      "rule": "plain HP (no planner role): AUT-01, 03, 04, 05 control, 14, 17 target"
+    },
+    {
+      "token": "SEEDSP",
+      "count": 1,
+      "kit_group": null,
+      "partition": "P1",
+      "mode": "seed-planner",
+      "rule": "stays in DMSEED:Planner: AUT-14 (planner logout), AUT-17 target"
+    },
+    {
+      "token": "NOHP",
+      "count": 1,
+      "kit_group": null,
+      "partition": "P1",
+      "mode": "seed-planner",
+      "rule": "stays in DMSEED:Planner; client role ROLE_HEALTH_PROFESSIONAL removed in the box Keycloak (seed A3): AUT-02"
+    },
+    {
+      "token": "LOCKU",
+      "count": 1,
+      "kit_group": "E2E:HP-PLAIN",
+      "partition": "P1",
+      "mode": "plain-hp",
+      "rule": "lockout victim, used nowhere else: AUT-05"
+    },
+    {
+      "token": "PWU",
+      "count": 1,
+      "kit_group": "E2E:HP-PLAIN",
+      "partition": "P1",
+      "mode": "plain-hp",
+      "rule": "box Keycloak e-mail = the team mailbox (seed A5): AUT-06, 07, 08"
+    },
+    {
+      "token": "OTPU",
+      "count": 1,
+      "kit_group": "E2E:HP-PLAIN",
+      "partition": "P1",
+      "mode": "plain-hp",
+      "rule": "per-user TOTP override: AUT-09"
+    },
+    {
+      "token": "T2FU",
+      "count": 1,
+      "kit_group": "E2E:HP-PLAIN",
+      "partition": "P1",
+      "mode": "plain-hp",
+      "rule": "never enrolled, override Default: AUT-10"
+    },
+    {
+      "token": "OFFU",
+      "count": 1,
+      "kit_group": "E2E:HP-PLAIN",
+      "partition": "P1",
+      "mode": "plain-hp",
+      "rule": "running myPP session before the tenant 2FA switch: AUT-10"
+    },
+    {
+      "token": "BLKU",
+      "count": 1,
+      "kit_group": "E2E:HP-PLAIN",
+      "partition": "P1",
+      "mode": "plain-hp",
+      "rule": "customer-portal managed (block / unblock / reset 2FA): AUT-16"
+    },
+    {
+      "token": "NEWU",
+      "count": 1,
+      "kit_group": "E2E:HP-PLAIN",
+      "partition": "P1",
+      "mode": "never-logged-in",
+      "rule": "no login by anyone before AUT-18 (no gate, no G-ROLES)"
+    },
+    {
+      "token": "EMPU",
+      "count": 1,
+      "kit_group": "E2E:HP-PLAIN",
+      "partition": "P1",
+      "mode": "one-employment",
+      "rule": "exactly one employment: AUT-20"
+    },
+    {
+      "token": "IMPBLK",
+      "count": 1,
+      "kit_group": "E2E:HP-PLAIN",
+      "partition": "P1",
+      "mode": "optional",
+      "rule": "BLOCKED impersonation target (AUT-17 step 6)"
+    },
+    {
+      "token": "DISU",
+      "count": 1,
+      "kit_group": "E2E:HP-PLAIN",
+      "partition": "P1",
+      "mode": "optional",
+      "rule": "disabled in the box Keycloak (seed A8): AUT-04 step 6"
+    },
+    {
+      "token": "NOEMP",
+      "count": 0,
+      "kit_group": null,
+      "partition": null,
+      "mode": "optional-runner-created",
+      "rule": "box Keycloak user without a PEP employee (seed A8, deleted in cleanup): AUT-04 step 6"
+    },
+    {
+      "token": "TA",
+      "count": 0,
+      "kit_group": "E2E:TA",
+      "partition": null,
+      "mode": "borrowed",
+      "rule": "steward kit actor (planner partition), read-only here except the AUT-16 actions on BLKU"
+    }
+  ],
+  "partition": [
+    {
+      "id": "P1",
+      "people": 16,
+      "one_gruppe": false,
+      "same_category": false,
+      "exclusive_nodes": false,
+      "preferred": "Geriatrie + Notfall + IPS",
+      "note": "13 actors + optional DISU / IMPBLK + 1 spare; plain-HP actors move into E2E:HP-PLAIN; no gate may log in NEWU"
+    }
+  ],
+  "baseline_flags": {
+    "polyid.flows.allowPasswordResetForNonADUsers": false,
+    "poma.msTeams.notifications": false,
+    "poma.internalPool.sendEmailConfirmation": false
+  },
+  "windows": [
+    {
+      "id": "W-Y-LOCKOUT",
+      "class": "LOGIN",
+      "scenarios": ["AUT-05"],
+      "changes": [
+        {
+          "polyid_lock": "LOCKU locked by 13 wrong passwords (+ 1 correct, 1 wrong)",
+          "restore": "steward unlock of exactly LOCKU (polyid-admin.mjs unlock --subject <LOCKU>) in part 2"
+        }
+      ],
+      "est_min": 10,
+      "pauses": [
+        "utr",
+        "planner",
+        "ops:TEN",
+        "ops:MON",
+        "ops:MISC",
+        "ops:X08",
+        "ops:X13",
+        "ops:X18",
+        "ops:X19",
+        "auth:NAV",
+        "auth:LOGIN",
+        "auth:PWD",
+        "auth:2FA",
+        "auth:X10",
+        "auth:LOGOUT",
+        "auth:UM",
+        "auth:IMP"
+      ],
+      "note": "no fresh PolyID password login on DM-Y during LOCK part 1 steps 1–6; running sessions continue"
+    },
+    {
+      "id": "W-Y-TENANT2FA",
+      "class": "LOGIN",
+      "scenarios": ["AUT-10"],
+      "changes": [
+        { "polyid_provider": "capabilities.twoFactorType", "value": "TOTP", "restore": "DISABLED (read back)" }
+      ],
+      "est_min": 20,
+      "pauses": [
+        "utr",
+        "planner",
+        "ops:TEN",
+        "ops:MON",
+        "ops:MISC",
+        "ops:X08",
+        "ops:X13",
+        "ops:X18",
+        "ops:X19",
+        "auth:NAV",
+        "auth:LOGIN",
+        "auth:LOCK",
+        "auth:PWD",
+        "auth:2FA",
+        "auth:LOGOUT",
+        "auth:UM",
+        "auth:IMP"
+      ],
+      "note": "every fresh login on DM-Y would be forced into TOTP enrolment; provider-2fa needs --window W-Y-TENANT2FA"
+    },
+    {
+      "id": "W-Y-MSG",
+      "class": "HARD",
+      "shared_with": ["ops", "manual"],
+      "scenarios": ["AUT-06", "AUT-07", "AUT-08"],
+      "changes": [
+        {
+          "portal_tenant_setting": "Send Messages",
+          "value": true,
+          "restore": false,
+          "by": "steward (the window requester): ON after the OFF-phase items (AUT-06, OPS-13 part A), OFF and verified after the last mail"
+        }
+      ],
+      "est_min": 120,
+      "pauses": [
+        "utr",
+        "planner",
+        "ops:TEN",
+        "ops:MON",
+        "ops:MISC",
+        "ops:X08",
+        "ops:X18",
+        "ops:X19",
+        "auth:NAV",
+        "auth:LOGIN",
+        "auth:LOCK",
+        "auth:2FA",
+        "auth:X10",
+        "auth:LOGOUT",
+        "auth:UM",
+        "auth:IMP"
+      ],
+      "exempt": ["ops:LIFE", "ops:X16"],
+      "note": "order AUT-06 (OFF) → OPS-13 part A (OFF) → Send Messages ON → AUT-07 → AUT-08 → OPS-13 part B → manual AUT-19 → OFF; ops LIFE and X16 run on the CT portal only (activeWorkers under env ct) and may continue: `exempt` (env-plan §7.2)"
+    }
+  ],
+  "gates": [
+    {
+      "id": "AUT-G1",
+      "check": "PolyID ops session; provider-read of the tenant: type API_GATEWAY_VALIDATION, twoFactorType DISABLED, domain <env>.ch; applied-policies without a locked subject; portal tenant Send Messages OFF (portal-ops tenant read)"
+    },
+    {
+      "id": "AUT-G2",
+      "check": "every actor except NEWU logged in once (≤ 1 password submission each); roles: HPA ROLE_HEALTH_PROFESSIONAL without ROLE_SHIFT_PLANNER, SEEDSP both, NOHP without ROLE_HEALTH_PROFESSIONAL, TA ROLE_TENANT_ADMIN; user-read state ACTIVE; NEWU absent in PolyID"
+    },
+    {
+      "id": "AUT-G3",
+      "check": "before AUT-07, AUT-08: the operator confirms the team mailbox is reachable and team-owned; else AUT-07 / AUT-08 run only with the operator reading the mailbox"
+    }
+  ],
+  "seed": [
+    {
+      "id": "A1",
+      "who": "runner",
+      "pep": false,
+      "doc": "seed/A-seed.md",
+      "script": "../../scripts/seed/common/kit-member.sql",
+      "note": "plain-HP actors into E2E:HP-PLAIN (leave DMSEED:Planner); then gate AUT-G2 (not NEWU)"
+    },
+    {
+      "id": "A2",
+      "who": "runner",
+      "pep": false,
+      "doc": "seed/A-seed.md",
+      "note": "PolyID ops + portal ops headed sign-in; provider id, gate AUT-G1"
+    },
+    {
+      "id": "A3",
+      "who": "runner",
+      "pep": false,
+      "doc": "seed/A-seed.md",
+      "note": "NOHP: remove client role ROLE_HEALTH_PROFESSIONAL in the box Keycloak (tunnel 8383)"
+    },
+    {
+      "id": "A5",
+      "who": "runner",
+      "pep": false,
+      "doc": "seed/A-seed.md",
+      "note": "PWU e-mail = the team mailbox in the box Keycloak (and UsrAdmin for AUT-08)"
+    },
+    {
+      "id": "A8",
+      "who": "runner",
+      "pep": false,
+      "doc": "seed/A-seed.md",
+      "note": "optional DISU (disabled) / NOEMP (no PEP employee)"
+    }
+  ],
+  "schedule": {
+    "workers": 2,
+    "first": ["AUT-18"],
+    "lanes": [
+      ["AUT-18", "AUT-03", "AUT-04", "AUT-01", "AUT-02", "AUT-09", "AUT-17"],
+      ["AUT-14", "AUT-16", "AUT-20"]
+    ],
+    "after_fanout": [],
+    "exclusive_order": ["AUT-05", "AUT-10", "AUT-06", "AUT-07", "AUT-08"],
+    "doc": "assets/schedule.md"
+  },
+  "version_gate": null,
+  "known_deviations": "references/known-deviations.md",
+  "cleanup": [
+    "every actor ACTIVE, 2FA override DEFAULT, OTP reset; LOCKU unlocked by the steward",
+    "PWU password = manifest password (runner, box Keycloak admin) and e-mail = manifest; NOHP role restored; DISU enabled / NOEMP deleted",
+    "password-reset flag back to the baseline false (set, not delete); Send Messages OFF verified (steward)",
+    "provider twoFactorType DISABLED read back; applied-policies empty for the provider",
+    "EMPU second employment deleted in PEP; plain-HP memberships restored only if the env is reused"
+  ]
+}

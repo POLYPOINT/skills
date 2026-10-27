@@ -1,0 +1,200 @@
+{
+  "key": "shared",
+  "title": "Agent scenarios on shared tenants (ct-zinc-master, a Microsoft tenant, a Preview box below on-prem 26)",
+  "env": {
+    "kind": "shared",
+    "preferred": null,
+    "track": null,
+    "pep_desktop_min": 0,
+    "ssh": false,
+    "service_token": false,
+    "stage_objects": [],
+    "tenants": {
+      "SH-PW": "ct-zinc-master (CT)",
+      "SH-TEAMS": "ct-zinc-master (CT, read-only)",
+      "SH-MS": "<MS_TENANT> (CT or Preview, named by the user)",
+      "SH-BEE": "beekeeper-integration-tenant-test (CT)",
+      "SH-OLD": "a box below on-prem 26 on Preview (pre-dev-main24) or CT (CT-zinc-main24)"
+    },
+    "note": "no DeployMate env: one run config per family (tenant = that family's shared tenant), generated with --families <F>"
+  },
+  "requires": ["PID", "CONS", "MS-ACCOUNT", "PREVIEW-VPN", "OPERATOR-PRESENT"],
+  "families": [
+    {
+      "id": "SH-PW",
+      "name": "Partner PWA embedding on ct-zinc-master",
+      "brief": "assets/family-briefs/SH-PW.md",
+      "scenarios": ["PTN-10", "PTN-11", "PTN-18"],
+      "window": "W-SH-ANTBE",
+      "note": "sequential (one link state of antbe); owners' consent; attended (the operator types antbe's password in the iframe)"
+    },
+    {
+      "id": "SH-MS",
+      "name": "Microsoft ADFS / Entra logins on a registered tenant",
+      "brief": "assets/family-briefs/SH-MS.md",
+      "scenarios": ["AUT-12", "AUT-13"],
+      "window": "W-SH-MSTENANT",
+      "note": "attended: the operator edits the provider (secrets from the secret store) and signs in to Microsoft; BLOCKED until the user names the tenant (OQ-22)"
+    },
+    {
+      "id": "SH-TEAMS",
+      "name": "MS Teams pre-flight on ct-zinc-master (read-only)",
+      "brief": "assets/family-briefs/SH-TEAMS.md",
+      "scenarios": ["HPN-26"],
+      "lane": "L1",
+      "note": "GO / NO-GO for the manual Teams session"
+    },
+    {
+      "id": "SH-BEE",
+      "name": "Beekeeper-mode simulation on CT (partner token + bridge shim)",
+      "brief": "assets/family-briefs/SH-BEE.md",
+      "scenarios": ["HPN-24"],
+      "lane": "L1",
+      "note": "BLOCKED until the partner-token source is decided (OQ-28)"
+    },
+    {
+      "id": "SH-OLD",
+      "name": "Swap below on-prem 26 (second box)",
+      "brief": "assets/family-briefs/SH-OLD.md",
+      "scenarios": ["SWP-20"],
+      "lane": "L2",
+      "note": "owners' consent; Preview VPN; BLOCKED without a < 26 box"
+    }
+  ],
+  "roles": [
+    {
+      "token": "ANTBE",
+      "count": 1,
+      "kit_group": null,
+      "partition": null,
+      "mode": "shared",
+      "rule": "ct-zinc-master user antbe (embedding mock user, code_challenge_3); login name only"
+    },
+    {
+      "token": "MSUSER",
+      "count": 1,
+      "kit_group": null,
+      "partition": null,
+      "mode": "shared",
+      "rule": "the PEP user of <MS_TENANT> whose e-mail equals the Microsoft test account (operator signs in to Microsoft)"
+    },
+    {
+      "token": "MSCTRL",
+      "count": 1,
+      "kit_group": null,
+      "partition": null,
+      "mode": "shared",
+      "rule": "a control password user of <MS_TENANT> for the restore check (runner's 0600 cred file)"
+    },
+    {
+      "token": "OLDHP1",
+      "count": 1,
+      "kit_group": null,
+      "partition": null,
+      "mode": "shared",
+      "rule": "swap owner on the < 26 box (runner's 0600 cred file)"
+    },
+    {
+      "token": "OLDHP2",
+      "count": 1,
+      "kit_group": null,
+      "partition": null,
+      "mode": "shared",
+      "rule": "swap candidate on the < 26 box, same personnel category as OLDHP1"
+    },
+    {
+      "token": "BEEHP",
+      "count": 1,
+      "kit_group": null,
+      "partition": null,
+      "mode": "shared",
+      "rule": "HP of beekeeper-integration-tenant-test reached through a partner token (only after the decision)"
+    }
+  ],
+  "partition": [],
+  "baseline_flags": {},
+  "windows": [
+    {
+      "id": "W-SH-ANTBE",
+      "class": "SHARED",
+      "scenarios": ["PTN-10", "PTN-11", "PTN-18"],
+      "changes": [
+        {
+          "polyid_user_link": "antbe's partner link on ct-zinc-master reset (PTN-10, PTN-11)",
+          "restore": "relinked by the scenario itself (state after PTN-11), or reset — as agreed with the owners"
+        }
+      ],
+      "est_min": 60,
+      "pauses": [],
+      "note": "doc windows/ct~W-SH-ANTBE with the owners' consent in reason; announced; nobody else uses the embedding mock with antbe meanwhile"
+    },
+    {
+      "id": "W-SH-MSTENANT",
+      "class": "SHARED",
+      "scenarios": ["AUT-12", "AUT-13"],
+      "changes": [
+        {
+          "polyid_provider": "OAuth2 Provider Type of <MS_TENANT>",
+          "value": "ADFS + API-Gateway password → ADFS → Entra",
+          "restore": "the recorded type and settings (provider-read before / after)"
+        }
+      ],
+      "est_min": 75,
+      "pauses": [],
+      "note": "doc windows/ct~W-SH-MSTENANT with the owners' consent; everyone logging in to that tenant is affected; announced"
+    }
+  ],
+  "gates": [
+    {
+      "id": "SH-G1",
+      "check": "consents recorded in env-facts.md: owners of ct-zinc-master (antbe link reset, Teams read), of <MS_TENANT> (provider type window), of the < 26 box (swap writes); missing → that family BLOCKED 'no consent'"
+    },
+    {
+      "id": "P-PTN-10",
+      "check": "PWA prerequisites: POST <polyid-login>/api/auth/partner-sessions for challenge 3 / tenant ct-zinc-master answers 200 (LINKED or AUTHENTICATION_REQUIRED; the token is discarded); 404 → PolyID partner missing, 403 → no UI_EMBEDDING → SH-PW BLOCKED (never edit the shared partner)"
+    },
+    {
+      "id": "AUT-G4",
+      "check": "the user named <MS_TENANT>, its provider id, the Microsoft test account (secret store) and the PEP user with the same e-mail, and confirmed the Azure app registration lists /api/accept-login/<provider id>; else SH-MS BLOCKED 'no Microsoft test tenant'"
+    },
+    {
+      "id": "SH-G3",
+      "check": "the < 26 box: version read (< 26) on a Preview / CT host (never polypointservices.ch), VPN up if Preview, two HP logins in the runner's 0600 cred file; else SH-OLD BLOCKED 'no < 26 box'"
+    },
+    {
+      "id": "SH-G4",
+      "check": "Beekeeper token source decided (OQ-28) and the runner holds the entry URL; else SH-BEE BLOCKED"
+    }
+  ],
+  "seed": [
+    {
+      "id": "SH1",
+      "who": "runner",
+      "pep": false,
+      "doc": "seed/SH-seed.md",
+      "note": "consents, gates, cred files, per-family run configs; no data is seeded on a shared tenant"
+    }
+  ],
+  "schedule": {
+    "workers": 2,
+    "lanes": [
+      ["HPN-26", "PTN-10", "PTN-11", "PTN-18", "HPN-24"],
+      ["SWP-20", "AUT-12", "AUT-13"]
+    ],
+    "after_fanout": [],
+    "exclusive_order": ["PTN-10", "PTN-11", "PTN-18", "AUT-12", "AUT-13"],
+    "doc": "assets/schedule.md"
+  },
+  "version_gate": {
+    "family": "SH-OLD",
+    "requires": "on-prem < 26 (capability GET_SHIFT_TRADE_CANDIDATES_WITH_TARGET_EMPLOYMENT_IDS absent)",
+    "else": "BLOCKED 'no < 26 box' (DeployMate provisions only master and main-26)"
+  },
+  "known_deviations": "references/known-deviations.md",
+  "cleanup": [
+    "antbe left linked (state after PTN-11) or reset — as agreed with the ct-zinc-master owners",
+    "<MS_TENANT> provider type and settings restored (provider-read after = before)",
+    "the SWP-20 swap on the < 26 box cancelled",
+    "nothing changed by HPN-26 (read-only)"
+  ]
+}

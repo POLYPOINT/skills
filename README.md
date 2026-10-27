@@ -32,6 +32,8 @@ Skills can:
 | **pep-verify**                   | Drives and verifies PEP (the Delphi/VCL planning client) on a tenant box at the element level over SSH/WinRM — preflight + bootstrap of the companion `pep-driver` toolchain, then selector-based UI commands and flows.                                                                                         | `/pep-verify on ct-zinc-master`               |
 | **dev-ticket**                   | End-to-end Jira ticket workflow — fetches the ticket, deep analysis with approval checkpoint, reproduces the bug, implements in an isolated git worktree, verifies live with the user, grouped commits + push, PR creation, then hands off to `babysit-pr`. Learns each project's context once and remembers it. | `/dev-ticket ABC-1234` or `/dev-ticket setup` |
 | **cloud-release**                | Plans, runs and reviews cloud production release nights (PCRs) with the `pcr-companion` release board — scope from the release page and the branch diff, a plan with deploy groups (preview or maintenance, existing or new release), downtime estimate, next-step guidance and diagnosis on the night, retro.   | `/cloud-release plan PCR-2643`                |
+| **deploymate**                   | Provisions and operates POLYPOINT on-prem test environments through the DeployMate API — master/PR-pinned/release/dump envs wired to a CT, REVIEW or PREVIEW tenant, shared envs (OPERATOR/VIEWER), credential reveals, SSH/Oracle/RDP access, lifecycle and the manual DM-213 repair.                           | `/deploymate create --pr 12910`               |
+| **cloud-e2e**                    | Multi-group end-to-end regression of the cloud (myPP, POMA planner, PolyPortal, PolyID, partner API) on shared DeployMate envs — a steward provisions and seeds, each person claims a group and fans out Sonnet workers, a shared dashboard coordinates claims, locks and windows; 11 groups incl. UTR.          | `/cloud-e2e run <run> --group swap`           |
 
 ## Repository Structure
 
@@ -83,6 +85,8 @@ Works the same in the terminal CLI, VS Code extension, and JetBrains plugin.
 /plugin install pep-verify
 /plugin install dev-ticket
 /plugin install cloud-release
+/plugin install deploymate
+/plugin install cloud-e2e
 ```
 
 **Update to latest version:**
@@ -107,6 +111,9 @@ Once installed, invoke with `/skill-name`:
 /pep-verify on ct-zinc-master
 /dev-ticket ABC-1234
 /cloud-release plan PCR-2643
+/deploymate create --pr 12910
+/cloud-e2e run e2e-1 --group swap
+/cloud-e2e run utr-1 --group utr --solo --agents 2
 ```
 
 <details>

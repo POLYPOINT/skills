@@ -1,0 +1,292 @@
+{
+  "key": "ops",
+  "title": "PolyPortal ops, customer portal, monitoring, jobs, Config Generator",
+  "env": {
+    "kind": "deploymate",
+    "preferred": "Y",
+    "track": "master",
+    "pep_desktop_min": 0,
+    "ssh": false,
+    "service_token": false,
+    "stage_objects": [],
+    "stage": "CT portal (stage-wide): throw-away organisation e2e-ops-<tag>, Monitor, jobs, tenant access, data plugins, master features, POMA ops"
+  },
+  "requires": ["DM-VIEWER", "PO-ADMIN", "POMA-ADMIN", "PLAYWRIGHT-ENGINES", "CFG-MASTER-PW", "OPERATOR-PRESENT"],
+  "families": [
+    {
+      "id": "LIFE",
+      "name": "Throw-away organisation and tenant lifecycle (CT portal only)",
+      "brief": "assets/family-briefs/LIFE.md",
+      "scenarios": ["OPS-02", "OPS-03", "OPS-04", "OPS-05", "OPS-06"],
+      "lane": "L1",
+      "note": "never touches DM-Y: count it under activeWorkers.ct; may run during DM-Y windows incl. W-Y-MSG (env-plan §7.2); OPS-06 always runs"
+    },
+    {
+      "id": "TEN",
+      "name": "DeployMate tenant sections (monitoring, licence, api-gw, logs, diagnostics)",
+      "brief": "assets/family-briefs/TEN.md",
+      "scenarios": ["OPS-07", "OPS-10", "OPS-11", "OPS-12", "OPS-09"],
+      "lane": "L2",
+      "note": "OPS-09 holds the PEP lock of DM-Y (the licence is read by PEP)"
+    },
+    {
+      "id": "MON",
+      "name": "Ops dashboard, versions, tenant access",
+      "brief": "assets/family-briefs/MON.md",
+      "scenarios": ["OPS-01", "OPS-15", "OPS-17"],
+      "lane": "L3"
+    },
+    {
+      "id": "MISC",
+      "name": "Feature flags, customer portal, incidents, role matrix, Config Generator, POMA ops, recording",
+      "brief": "assets/family-briefs/MISC.md",
+      "scenarios": ["OPS-14", "OPS-20", "OPS-21", "OPS-22", "OPS-24", "OPS-25", "OPS-23"],
+      "lane": "L1 after LIFE",
+      "note": "OPS-23 attended (operator runs the suite with their own credentials and types the master password)"
+    },
+    {
+      "id": "X08",
+      "name": "Deephealthcheck ignore list (window)",
+      "brief": "assets/family-briefs/X08.md",
+      "scenarios": ["OPS-08"],
+      "window": "W-Y-HEALTH"
+    },
+    {
+      "id": "X13",
+      "name": "Send test SMS (messaging window, two parts)",
+      "brief": "assets/family-briefs/X13.md",
+      "scenarios": ["OPS-13"],
+      "window": "W-Y-MSG",
+      "parts": ["1", "2"],
+      "note": "part 1 (403 path) while Send Messages is still OFF; the steward switches it ON; part 2 (one SMS to the owned test number)"
+    },
+    {
+      "id": "X16",
+      "name": "Cloud monitoring incl. logger level change (stage window)",
+      "brief": "assets/family-briefs/X16.md",
+      "scenarios": ["OPS-16"],
+      "window": "S-CT-LOGLEVEL",
+      "note": "CT pods only: count it under activeWorkers.ct"
+    },
+    {
+      "id": "X18",
+      "name": "Job management with metrics oracle (job windows)",
+      "brief": "assets/family-briefs/X18.md",
+      "scenarios": ["OPS-18"],
+      "window": "J-Y-JOBS",
+      "note": "also inside S-CT-JOBS (Tier A on the stage): both window docs active"
+    },
+    {
+      "id": "X19",
+      "name": "Data plugins with one unchanged tenant save (window)",
+      "brief": "assets/family-briefs/X19.md",
+      "scenarios": ["OPS-19"],
+      "window": "T-Y-TENANTFORM"
+    }
+  ],
+  "roles": [
+    {
+      "token": "CPU",
+      "count": 1,
+      "kit_group": null,
+      "partition": "P1",
+      "mode": "any",
+      "rule": "seed login reserved for customer-portal reads and the employee check (HP role, read-only)"
+    },
+    {
+      "token": "TA",
+      "count": 0,
+      "kit_group": "E2E:TA",
+      "partition": null,
+      "mode": "borrowed",
+      "rule": "steward kit tenant admin, read-only (OPS-21 customer view, optional)"
+    }
+  ],
+  "partition": [
+    {
+      "id": "P1",
+      "people": 1,
+      "one_gruppe": true,
+      "same_category": false,
+      "exclusive_nodes": false,
+      "preferred": "Geburtshilfe",
+      "note": "CPU only; the Gruppe is shared with planner G-B (people claims are exclusive, the node is not)"
+    }
+  ],
+  "baseline_flags": {
+    "poma.msTeams.notifications": false,
+    "poma.internalPool.sendEmailConfirmation": false
+  },
+  "windows": [
+    {
+      "id": "W-Y-HEALTH",
+      "class": "FLAG",
+      "scenarios": ["OPS-08"],
+      "changes": [
+        {
+          "flag": "portal.onPrem.deephealthcheckIgnores",
+          "value": "poly-time-connect (without the onprem- prefix)",
+          "restore": "the value recorded in step 1 (delete when there was no tenant override)"
+        }
+      ],
+      "est_min": 20,
+      "pauses": ["ops:TEN", "ops:MON", "ops:MISC"],
+      "note": "no tenant-health reader on DM-Y meanwhile (OPS-07, OPS-17, OPS-20; customer-portal health reads of any group)"
+    },
+    {
+      "id": "W-Y-MSG",
+      "class": "HARD",
+      "shared_with": ["auth", "manual"],
+      "scenarios": ["OPS-13"],
+      "changes": [
+        {
+          "portal_tenant_setting": "Send Messages",
+          "value": true,
+          "restore": false,
+          "by": "steward (the window requester): ON after the OFF-phase items (AUT-06, OPS-13 part A), OFF and verified after the last send"
+        }
+      ],
+      "est_min": 120,
+      "pauses": [
+        "utr",
+        "planner",
+        "ops:TEN",
+        "ops:MON",
+        "ops:MISC",
+        "ops:X08",
+        "ops:X18",
+        "ops:X19",
+        "auth:NAV",
+        "auth:LOGIN",
+        "auth:LOCK",
+        "auth:2FA",
+        "auth:X10",
+        "auth:LOGOUT",
+        "auth:UM",
+        "auth:IMP"
+      ],
+      "exempt": ["ops:LIFE", "ops:X16"],
+      "note": "same window as auth's (one doc windows/<env>~W-Y-MSG); ops LIFE and X16 (CT only) may continue: `exempt`"
+    },
+    {
+      "id": "J-Y-JOBS",
+      "class": "JOBS",
+      "shared_with": ["planner"],
+      "scenarios": ["OPS-18"],
+      "changes": [{ "job": "poma-core ResyncEmployeesWithNoEmploymentsJob", "tenantIds": "<DM-Y>" }],
+      "est_min": 30,
+      "pauses": [],
+      "note": "one tenant-job runner on DM-Y at a time (planner PSP-18 / 19 use the same slot)"
+    },
+    {
+      "id": "S-CT-JOBS",
+      "class": "STAGE",
+      "scenarios": ["OPS-18"],
+      "changes": [
+        {
+          "jobs": "Tier A allow-list only (references/data-plan.md §6): LoadTenantVersions, TenantHealthEventJob, PluginTableMaintenanceCronJob, DeleteExpiredTwoFactorAuthCodesJob (polyid-login), RefreshJsonWebKeysJob, FindAbandonedSyncJobs"
+        }
+      ],
+      "est_min": 30,
+      "pauses": [],
+      "note": "doc windows/ct~S-CT-JOBS, steward-requested with the user's OK"
+    },
+    {
+      "id": "S-CT-LOGLEVEL",
+      "class": "STAGE",
+      "scenarios": ["OPS-16"],
+      "changes": [
+        {
+          "logger": "poma-core org.springframework.boot.actuate.endpoint.jmx (all pods)",
+          "value": "TRACE",
+          "restore": "the recorded level, verified on every pod"
+        }
+      ],
+      "est_min": 5,
+      "pauses": [],
+      "note": "doc windows/ct~S-CT-LOGLEVEL, steward-requested with the user's OK; ≤ 5 min at TRACE"
+    },
+    {
+      "id": "T-Y-TENANTFORM",
+      "class": "FLAG",
+      "scenarios": ["OPS-19"],
+      "changes": [
+        { "tenant_form": "one unchanged 'Save Tenant' of DM-Y (audit-only write; the PUT sends the whole form)" }
+      ],
+      "est_min": 20,
+      "pauses": [],
+      "note": "never while W-Y-MSG or W-Y-HEALTH is draining / active (a stale form would revert them): the one-non-INTERNAL-window-per-env rule guarantees it"
+    }
+  ],
+  "gates": [
+    {
+      "id": "OPS-G1",
+      "check": "portal ops session is ADMIN: /ops/features does not redirect to /forbidden; else OPS-06 org delete, OPS-09 save, OPS-14 master page, OPS-19 BLOCKED 'no ADMIN session'"
+    },
+    {
+      "id": "OPS-G2",
+      "check": "DM-Y tenant facts in env-facts.md: cloud_connected true, send_messages false, test_tenant, state; deephealthcheckIgnores value (exact, contains onprem-poly-time-connect); bundle 26.99.0; licence ≥ 1 application + history length; health VPN / PING UP; on-prem services list"
+    },
+    {
+      "id": "OPS-G3",
+      "check": "throw-away names free: GET /organizations/e2e-ops-<tag> → 404, no tenant e2e-ops-<tag>-*; older e2e-ops-* leftovers reported to the operator, never deleted silently"
+    },
+    {
+      "id": "OPS-G4",
+      "check": "CPU logged in once (≤ 1 submission), role names recorded; TA readiness from kits/<env>"
+    },
+    {
+      "id": "OPS-G5",
+      "check": "before X13 part 2: the operator confirms the sms-logger test number is POLYPOINT-owned and which host is live"
+    }
+  ],
+  "seed": [
+    {
+      "id": "O1",
+      "who": "runner",
+      "pep": false,
+      "doc": "seed/O-seed.md",
+      "note": "tenant facts (OPS-G2), names (OPS-G3), CPU login (OPS-G4), ops sessions (OPS-G1)"
+    },
+    {
+      "id": "O2",
+      "who": "runner",
+      "pep": false,
+      "doc": "seed/O-seed.md",
+      "note": "firefox / webkit engines, Config Generator suite copy (read-only git archive), optional single-role ops profiles"
+    }
+  ],
+  "schedule": {
+    "workers": 3,
+    "lanes": [
+      [
+        "OPS-02",
+        "OPS-03",
+        "OPS-04",
+        "OPS-05",
+        "OPS-06",
+        "OPS-14",
+        "OPS-20",
+        "OPS-21",
+        "OPS-22",
+        "OPS-24",
+        "OPS-25",
+        "OPS-23"
+      ],
+      ["OPS-07", "OPS-10", "OPS-11", "OPS-12", "OPS-09"],
+      ["OPS-01", "OPS-15", "OPS-17"]
+    ],
+    "after_fanout": [],
+    "exclusive_order": ["OPS-13", "OPS-08", "OPS-18", "OPS-16", "OPS-19"],
+    "doc": "assets/schedule.md"
+  },
+  "version_gate": null,
+  "known_deviations": "references/known-deviations.md",
+  "cleanup": [
+    "OPS-06 always runs: organisation e2e-ops-<tag>, tenants T1 / T2 and their services gone (404s), leftovers reported",
+    "deephealthcheckIgnores back to the recorded value (W-Y-HEALTH restore proof); general.logs.skip override deleted",
+    "every E2E-OPS-<tag> incident RESOLVED, the tenant ignore rule deleted; plugin e2e-ops-p<tag> deleted; inert master flag e2e.ops.f<tag> deleted",
+    "poma-core logger level restored on every pod; recording session stopped; config version 99.* removed by the suite",
+    "Send Messages OFF (steward, W-Y-MSG)"
+  ]
+}
