@@ -114,7 +114,18 @@ Ask about every mismatch:
   review. Keep secrets out of every plan file.
 - CORE ids encode the phase: 1xx pre · 2xx staging · 3xx prep · 4xx window · 5xx post · 9xx rollback (on demand). Keep
   gaps so a forgotten step fits in on release day (`rb plan` allocates ids between the neighbours by itself).
-- New steps start from `tools/release-board/templates/step.sh`. A step:
+- **Catalogue copies.** `rb add`, `--core` and deploy groups stamp `# @from <catalogue path or group:…> <hash>` — never
+  edit that line. A copy that needs a change for this release is edited in the plan (Claude: the file in
+  `~/.release-board/<release>/plan/steps/`; the user: `rb plan task edit <id>` or `⏎` → script on the board), never in
+  the catalogue: the board runs the copy, the operator reviews it in `rb pull`. Nothing is committed while planning.
+  Write each change on the "Catalogue candidates" list in `RELEASE.md` G (id · origin · what changed and why), and
+  each new step worth reusing too. `rb -r X plan diff-catalogue` shows where the plan stands at any time (read-only);
+  at the retro it is the list to work through (release rule 15). What a step loads from the engine (`lib/`, `tools/`,
+  a catalogue script it calls) does not travel with the plan: when a fix sits there, ask the user — inline it in the
+  copy, or an engine PR + `rb-v…` tag before the window.
+- **New steps:** `rb -r X plan task add <section> "<title>" --script [--target …] [--depends …]` writes a step from
+  `tools/release-board/templates/step.sh` under the right id; it fails until written (a `die` line names it). Write the
+  body in that file and remove the `die` line. A step:
   - is a gate: it passes or exits non-zero, with no "warn and continue" on something that matters;
   - names its target. prod/staging steps get the typed confirmation from `release.sh`; never bypass it;
   - announces every write on stdout before doing it, and logs it with `tl ACTION`;

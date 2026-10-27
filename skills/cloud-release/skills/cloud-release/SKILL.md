@@ -1,8 +1,8 @@
 ---
 name: cloud-release
-description: Use when preparing, planning, running or reviewing a POLYPOINT cloud production release night (a PCR such as PCR-2643) with the release board in the pcr-companion repo — deciding the scope from the Confluence release page AND the release/maintenance..release/preview diff, choosing catalogue steps and writing new ones, ordering the window and estimating downtimes, building the plan with sections, tasks and deploy groups (rb plan, the board's plan mode — a component deployed from release/preview or release/maintenance, an existing Azure DevOps release or a new one), then on release night saying which board step comes next, reading the board state and step logs, diagnosing a failed step and preparing the fix, and afterwards running the retro and archiving the evidence. Triggers on "prepare / plan the release", "plan a hotfix release", "deploy POMA from maintenance", "PCR-xxxx", "release night", "rb plan", "start the board", "which step next", "step 4xx failed", "release retro", "rb board", "rb take", "rb watch", "gs://ppcloud-releases", "cloud-release-dashboard". Do NOT use for ordinary CT/preview deploys, single-ticket work (dev-ticket), or the nightly release-branch merge (release-branch-merge).
+description: Use when preparing, planning, running or reviewing a POLYPOINT cloud production release night (a PCR such as PCR-2643) with the release board in the pcr-companion repo — deciding the scope from the Confluence release page AND the release/maintenance..release/preview diff, choosing catalogue steps and writing new ones, ordering the window and estimating downtimes, building the plan with sections, tasks and deploy groups (rb plan, the board's plan mode — a component deployed from release/preview or release/maintenance, an existing Azure DevOps release or a new one), then on release night saying which board step comes next, reading the board state and step logs, diagnosing a failed step and preparing the fix, and afterwards running the retro — bringing the steps changed or written in the plan back into the catalogue (rb plan diff-catalogue, one PR) — and archiving the evidence. Triggers on "prepare / plan the release", "plan a hotfix release", "deploy POMA from maintenance", "PCR-xxxx", "release night", "rb plan", "start the board", "which step next", "step 4xx failed", "release retro", "catalogue candidates", "diff-catalogue", "rb board", "rb take", "rb watch", "gs://ppcloud-releases", "cloud-release-dashboard". Do NOT use for ordinary CT/preview deploys, single-ticket work (dev-ticket), or the nightly release-branch merge (release-branch-merge).
 metadata:
-  version: 0.3.0
+  version: 0.4.0
 ---
 
 # Cloud release
@@ -15,7 +15,7 @@ bucket `gs://ppcloud-releases/<release>/` (one folder per release). Three modes:
 | --------------- | ------------------------ | ------------------------------------------------------------------------------------------ |
 | **Plan**        | days before the window   | a discussion with the user: scope, steps, order, estimate → a plan pushed to the bucket    |
 | **Orchestrate** | release week + the night | next step on request, progress, failure diagnosis and fixes — the operator runs every step |
-| **Retro**       | after the night          | what went wrong → catalogue / engine fixes with test steps, evidence archived              |
+| **Retro**       | after the night          | what went wrong → tested fixes; plan changes back into the catalogue (one PR); evidence    |
 
 Pick the mode from the request; ask when it is unclear. A release can be planned by one person and run by another:
 the plan travels through the bucket (`rb push` / `rb pull`, no PR — every pulled change is shown as a diff and becomes
@@ -49,6 +49,11 @@ their board syncs state, logs and artifacts (masked) to `<release>/run/`; everyo
 - **Shared writes only when asked:** `rb new` and `rb push` (the plan in the bucket, read by the whole team), and
   commit / push / PRs in `pcr-companion` (engine, catalogue, docs), only when the user asks. Never push `main`
   directly. Never touch bucket or project IAM (the team manages access to `gs://ppcloud-releases`).
+- **The catalogue changes only at the retro** (release rule 15). While planning and on the night a catalogue step is
+  changed in the plan's copy and a new step is written in the plan — both go on the "Catalogue candidates" list in
+  `RELEASE.md` G; no commit, branch or PR in pcr-companion for them before the retro. The one exception: a fix in what
+  steps load from the engine (`lib/`, `tools/`) that the night needs — ask the user: write it into the plan's copy, or
+  an engine PR + `rb-v…` tag before the window.
 - **Release rules** of the team (`docs/release-rules.md` in the repo) apply to every plan: no prod change before the
   window, downtimes grouped and short, maintenance page across the downtimes, late fixes only through a
   regeneration step.
@@ -99,7 +104,11 @@ preview|maintenance [--release <id|URL|create>] [--staging <section>] [--prod <s
    definition to `RELEASE_DEFS` (+ `RELEASE_ID_<def>` for an existing release) and the app syncs; elsewhere it adds the
    whole chain (release → stages → checks → test on staging → Prod stage → syncs → prod check). Then sections and
    free tasks for the rest (`rb plan section add`, `rb plan task add <section> "<title>" --desc … [--command …]`),
-   catalogue steps (`rb -r X add <group/file> [id] [slug]`), and new steps from `templates/step.sh`. Details:
+   catalogue steps (`rb -r X add <group/file> [id] [slug]`), and new steps (`rb -r X plan task add <section>
+"<title>" --script` → a step from `templates/step.sh` with its id; Claude writes its body in the plan's file with its
+   own tools — `rb plan task edit` opens `$EDITOR` and needs the user's terminal). A catalogue step that needs a change
+   for this release → edit the plan's copy, never the catalogue; every changed copy and every new reusable step goes on
+   the "Catalogue candidates" list in `RELEASE.md` G (id, origin, what and why) for the retro. Details:
    [references/planning.md](references/planning.md) §3. Each new step:
    header complete (`@phase @target @kind @depends`, downtime headers), gates not warnings, verify + rollback in its
    comment, no secrets, `bash -n` clean, `rb -r X list` and `dry-run` readable. **STOP** — step list agreed.
@@ -111,9 +120,9 @@ preview|maintenance [--release <id|URL|create>] [--staging <section>] [--prod <s
    step that calls the real step or lib functions (patterns in `catalogue/tests/`: CT 181–183; the prod rehearsals
    521–526 only after a window), run by the operator; fix until green. Steps that cannot be rehearsed are
    marked as such in `RELEASE.md` E.
-6. **Hand over.** The plan is pushed (`rb -r X push`); `rb selftest` is green after any engine change (engine and
-   catalogue changes go through a PR in pcr-companion, when the user asks). No PR for the plan — the bucket replaces
-   it: the incoming operator reviews it (`rb -r X pull` shows the diff, they type `accept`; a `dry-run` walk through
+6. **Hand over.** The plan is pushed (`rb -r X push`). Catalogue candidates wait for the retro; only an engine fix
+   the night needs goes through a PR and an `rb-v…` tag before the window (`rb selftest` green, when the user asks).
+   No PR for the plan — the bucket replaces it: the incoming operator reviews it (`rb -r X pull` shows the diff, they type `accept`; a `dry-run` walk through
    the steps), then `rb -r X take` and `rb -r X board`. Name the **backup operator** in `RELEASE.md` (release rule 14:
    set up, bucket access, own prod access and credentials, plan pulled and accepted, `rb watch` open in the window)
    and decide `RB_LEASE_STALE_MIN` for the window (e.g. `5` in `config.sh`).
@@ -130,9 +139,9 @@ Commands, state-file format and the triage flow: [references/orchestration.md](r
   ongoing downtimes. Keep `RELEASE.md` section F (log) current with what happened, in one line per event (in the
   operator's plan cache the board's sync pushes it; elsewhere `rb push` when the user says so).
 - **A step failed** → read its log tail, the step script and the libs it sources; match the symptom against
-  `docs/release-recipes.md`; then propose ONE of: a fix to the step script (edit it, show the diff, the operator
-  reruns), a manual action as exact commands for the operator, or a decision for the release manager (skip /
-  postpone / rollback step). The operator records outcomes (`rb -r X mark <id> done "<note>"` — give them the
+  `docs/release-recipes.md`; then propose ONE of: a fix to the step script (edit the plan's copy, show the diff, the
+  operator reruns; then add it to the catalogue candidates in `RELEASE.md` G), a manual action as exact commands for
+  the operator, or a decision for the release manager (skip / postpone / rollback step). The operator records outcomes (`rb -r X mark <id> done "<note>"` — give them the
   command). After a fix, say exactly what to rerun and what to check.
 - **Late change after the freeze** (a critical PR) → a release-regeneration step (catalogue `releases/`), never an
   ad-hoc deploy.
@@ -152,10 +161,18 @@ Workflow and file conventions: [references/retro.md](references/retro.md).
 2. Go item by item with the user: **close** (no action), **park** (with an owner), or **fix**. A fix is a catalogue
    step, an engine change or a release rule — written now, with a thin TEST step (post phase, 521+) the operator runs
    on CT or prod; after the test the wrapper leaves the board and the result goes to section F.
-3. Write the retro into `RELEASE.md` first — the plan freezes with the evidence. Then the operator runs
+3. **Back into the catalogue** — the only moment it changes. `rb -r X plan diff-catalogue` (read-only) lists the
+   copies changed in the plan, the new tasks, the filled-in templates and the deploy-group tasks changed in the plan;
+   with `--catalogue <worktree on origin/main>/tools/release-board/catalogue --diff` it compares with the PR's base.
+   Merge it with the "Catalogue candidates" list of `RELEASE.md` G and decide each with the user: **port**,
+   **release-only** or **drop**. Port in a pcr-companion worktree on `origin/main` (catalogue layout, not the plan's:
+   no `@from`, the catalogue's id and `@depends`; `CORE` when every release needs it; a CT test step when behaviour
+   changes), `rb selftest` green, release notes for the next tag — then, with the user's OK, one commit and one PR
+   (with the retro's other catalogue / engine / doc fixes). After the merge the user pushes the `rb-v…` tag: the
+   catalogue ships inside the engine. Details: [references/retro.md](references/retro.md) §4.
+4. Write the retro into `RELEASE.md` first — the plan freezes with the evidence. Then the operator runs
    `rb -r X archive` after the forget-credentials step: evidence → `gs://ppcloud-releases/<release>/evidence/` +
-   `FROZEN`, secrets refused, lease released, no git commit. The catalogue / engine / doc fixes go in a PR in
-   pcr-companion (when the user asks).
+   `FROZEN`, secrets refused, lease released, no git commit.
 
 ## Memory
 

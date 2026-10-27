@@ -75,7 +75,8 @@ Exit codes: 0 done · 3 skip · 4 blocked · anything else failed · 130 interru
    - **A decision for the release manager:** skip, postpone, or an on-demand rollback step (9xx). Its `dry-run`
      shows the live plan without changing anything; the operator runs it.
 7. Note it in `RELEASE.md` section F: time, step, what happened, the fix. Fixes made on the night are in the bucket's
-   plan already (the board's sync); a fix worth keeping for later releases goes to the catalogue in the retro.
+   plan already (the board's sync); a fix worth keeping for later releases goes on the "Catalogue candidates" list in
+   `RELEASE.md` G — the catalogue itself changes at the retro (release rule 15), never on the night.
 
 ## Things to know on the night
 
