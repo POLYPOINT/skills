@@ -1,8 +1,8 @@
 ---
 name: cloud-release
-description: Use when preparing, planning, running or reviewing a POLYPOINT cloud production release night (a PCR such as PCR-2643) with the release board in the pcr-companion repo — deciding the scope from the Confluence release page AND the release/maintenance..release/preview diff, choosing catalogue steps and writing new ones, ordering the window and estimating downtimes, then on release night saying which board step comes next, reading the board state and step logs, diagnosing a failed step and preparing the fix, and afterwards running the retro and archiving the evidence. Triggers on "prepare / plan the release", "PCR-xxxx", "release night", "start the board", "which step next", "step 4xx failed", "release retro", "rb board", "rb take", "rb watch", "gs://ppcloud-releases", "cloud-release-dashboard". Do NOT use for ordinary CT/preview deploys, single-ticket work (dev-ticket), or the nightly release-branch merge (release-branch-merge).
+description: Use when preparing, planning, running or reviewing a POLYPOINT cloud production release night (a PCR such as PCR-2643) with the release board in the pcr-companion repo — deciding the scope from the Confluence release page AND the release/maintenance..release/preview diff, choosing catalogue steps and writing new ones, ordering the window and estimating downtimes, building the plan with sections, tasks and deploy groups (rb plan, the board's plan mode — a component deployed from release/preview or release/maintenance, an existing Azure DevOps release or a new one), then on release night saying which board step comes next, reading the board state and step logs, diagnosing a failed step and preparing the fix, and afterwards running the retro and archiving the evidence. Triggers on "prepare / plan the release", "plan a hotfix release", "deploy POMA from maintenance", "PCR-xxxx", "release night", "rb plan", "start the board", "which step next", "step 4xx failed", "release retro", "rb board", "rb take", "rb watch", "gs://ppcloud-releases", "cloud-release-dashboard". Do NOT use for ordinary CT/preview deploys, single-ticket work (dev-ticket), or the nightly release-branch merge (release-branch-merge).
 metadata:
-  version: 0.2.0
+  version: 0.3.0
 ---
 
 # Cloud release
@@ -29,8 +29,11 @@ their board syncs state, logs and artifacts (masked) to `<release>/run/`; everyo
   `attach`, `window`, `forget`, `archive`, `take`, `handover`, `sync`, nor press board keys for the user — not even
   local or "harmless" steps; never hold the lease. Hand over the exact command instead (`rb -r PCR-xxxx run 412`).
   Read-only commands are fine: `rb releases`, `rb watch PCR-xxxx --once`, `rb -r X list`, `next --show`, `where`,
-  `log <id>` (no `-f`), `timeline`, `board --once --no-color`, `pull` (without `--force`), and `dry-run` of a step
-  **without** `@plan yes` (an `@plan` step's dry-run runs its live read-only plan against the target).
+  `log <id>` (no `-f`), `timeline`, `board --once --no-color`, `pull` (without `--force`), `plan show`,
+  `plan components`, `plan releases <component> --from preview|maintenance` (reads Azure DevOps), and `dry-run` of a
+  step **without** `@plan yes` (an `@plan` step's dry-run runs its live read-only plan against the target).
+  `rb -r X plan section|task|group …` edit the local plan only — run them for what the user agreed in the discussion;
+  sharing it is `rb push` (below).
 - **The operator accepts plan changes, never Claude.** `rb pull` / `rb take` print the change and stop at the typed
   `accept` (Claude has no terminal for it — never work around that). Claude may read the diff and summarise it: what
   changed in `config.sh`, `steps/`, `probes/`, `lib/`, anything surprising (a `\xNN` control-character warning, a
@@ -52,11 +55,14 @@ their board syncs state, logs and artifacts (masked) to `<release>/run/`; everyo
 
 ## Setup — find the board
 
-1. Engine: `$PP_RELEASE_HOME` (the pcr-companion clone), else ask. Check it is current:
-   `git -C "$PP_RELEASE_HOME" fetch -q && git -C "$PP_RELEASE_HOME" status -sb`. Behind → tell the user `rb update`.
-2. Entry point: `$PP_RELEASE_HOME/tools/release-board/rb` (alias `rb`). Missing setup → the user runs
-   `tools/release-board/install.sh` (checks tools and access to `gs://ppcloud-releases` — a 403 means asking the
-   team for access —, creates `~/.release-board/operator.sh`, prints the shell lines).
+1. Engine: `rb` on PATH — installed with `curl -fsSL https://get-rb.polypoint.dev | bash` (updates itself, never while
+   this Mac operates a release; `rb version` shows it, `rb update` updates by hand). Not installed → the user runs that
+   line; `rb doctor` then checks tools, logins and access to `gs://ppcloud-releases` (a 403 means asking the team for
+   access) and creates `~/.release-board/operator.sh`. A pcr-companion checkout (`$PP_RELEASE_HOME`) is dev mode: `rb`
+   via its alias, `rb update` = git pull — needed only to change the engine, the catalogue or the docs.
+2. Docs and catalogue: in the pcr-companion repo (`$PP_RELEASE_HOME` when cloned, else Azure DevOps `pcr-companion`).
+   The installed engine carries the catalogue too: `rb version` prints the engine directory
+   (`~/.release-board/engine/versions/<v>`), the catalogue is its `catalogue/`.
 3. Release: `-r PCR-xxxx` on every command or `$PP_RELEASE`. `rb releases` lists the releases in the bucket (lease
    holder, `FROZEN`), `rb -r X where` shows the places: engine · plan cache `~/.release-board/<release>/plan/` of
    `gs://ppcloud-releases/<release>/plan/` · run data `~/.release-board/<release>/` · bucket paths · lease. Legacy
@@ -73,20 +79,28 @@ Details, commands and tables: [references/planning.md](references/planning.md).
 1. **Identify the release.** PCR id, window date/time, operator and release manager, rotation mode
    (`maintenance-only` or `maintenance-and-preview`). The Confluence **release page** is a subpage of the PCR page —
    read it with the Atlassian connector (ask for the link if the search fails). Create the plan when it does not
-   exist: the user runs `rb new PCR-xxxx --window "YYYY-MM-DD 22:00" --core` (or ask before running it yourself — it
-   builds the plan in `~/.release-board/<release>/plan/` and pushes it to the bucket). When it exists:
-   `rb -r X pull`. Edit the plan in that cache; `rb -r X push` after each agreed change (when the user says so).
+   exist — a feature release from CORE: `rb new PCR-xxxx --window "YYYY-MM-DD 22:00" --core`; a hotfix or small
+   release: `rb new PCR-xxxx` (empty; it opens the board in plan mode on the user's terminal). The user runs it, or
+   ask before running it yourself (with `--no-board`) — it builds the plan in `~/.release-board/<release>/plan/` and
+   pushes it to the bucket. When it exists: `rb -r X pull`. Edit the plan in that cache (`rb plan …`, files);
+   `rb -r X push` after each agreed change (when the user says so). The user may plan in the board instead (`rb plan`,
+   key `p`: sections `a`, tasks `t`, deploy groups `g`) — it pushes by itself.
 2. **Scope — both sources, always.** The release page lists the planned stories; the repo diff shows what really
    ships. Diff every shipping repo on origin refs only (`origin/release/maintenance..origin/release/preview` for the
    cloud repo; polypoint-ci and gitops as relevant) and classify each change by the step it needs (Flyway, Vault /
    Keycloak bootstrapping, manifests, new apps, infra, toggles, on-prem contracts). Delegate big diffs to parallel
    subagents per area. Reconcile into the scope table of `RELEASE.md` section A; list every mismatch (change without
    story, story without change) as a question. **STOP** — scope agreed.
-3. **Steps.** Start from `catalogue/CORE` (already copied by `--core`), add catalogue steps for what the scope needs
-   (`rb -r X add <group/file> [id] [slug]`), and write new steps from `templates/step.sh` for the rest. Prod app
-   syncs: one copy of the template per app or family (`rb -r X add window/415-prod-sync-app.sh 422 sync-poma-core`,
-   then its `SYNC_RE`, `@title`, `@depends`, `@downtime`; the README lists the regexes; step 344 checks coverage
-   before the window). Each new step:
+3. **Steps.** Every component that ships is a **deploy group**: `rb -r X plan group add <component> --from
+preview|maintenance [--release <id|URL|create>] [--staging <section>] [--prod <section>]` (components:
+   `rb plan components`). Ask for each: which line, and whether its Azure DevOps release exists already — show the
+   newest ones with `rb -r X plan releases <component> --from <line>` (CI creates a maintenance release every morning)
+   and let the user pick; no answer = the release task asks when it runs. In a CORE plan a preview group only adds the
+   definition to `RELEASE_DEFS` (+ `RELEASE_ID_<def>` for an existing release) and the app syncs; elsewhere it adds the
+   whole chain (release → stages → checks → test on staging → Prod stage → syncs → prod check). Then sections and
+   free tasks for the rest (`rb plan section add`, `rb plan task add <section> "<title>" --desc … [--command …]`),
+   catalogue steps (`rb -r X add <group/file> [id] [slug]`), and new steps from `templates/step.sh`. Details:
+   [references/planning.md](references/planning.md) §3. Each new step:
    header complete (`@phase @target @kind @depends`, downtime headers), gates not warnings, verify + rollback in its
    comment, no secrets, `bash -n` clean, `rb -r X list` and `dry-run` readable. **STOP** — step list agreed.
 4. **Order and window.** Apply the release rules: everything that can run before the window runs before it without
