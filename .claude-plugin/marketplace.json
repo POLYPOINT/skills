@@ -82,7 +82,7 @@
     {
       "name": "cloud-release",
       "source": "./skills/cloud-release",
-      "description": "Plan, orchestrate and review POLYPOINT cloud production release nights with the release board of the pcr-companion repo — scope from the Confluence release page plus the release-branch diff, catalogue and new board steps, window order and downtime estimate, next-step guidance and failure diagnosis on the night (the operator runs every step), retro with tested fixes and archived evidence.",
+      "description": "Plan, orchestrate and review POLYPOINT cloud production release nights with the release board of the pcr-companion repo — scope from the Confluence release page plus the release-branch diff, the plan built with sections, tasks and deploy groups (a component from release/preview or release/maintenance, an existing Azure DevOps release or a new one), window order and downtime estimate, next-step guidance and failure diagnosis on the night (the operator runs every step), retro with tested fixes and archived evidence.",
       "category": "development"
     },
     {
