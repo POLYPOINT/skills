@@ -1,6 +1,6 @@
 # Group brief — auth
 
-Runner notes (the part above the `---` line is not sent to workers): fills the `{{GROUP_BRIEF}}` slot of `assets/agent-brief.md`. Values come from `auth-allocation.md` (seed A1), `env-facts.md` (gates AUT-G1..G3) and `kits/<env>`. Families LOCK, PWD, X10 are window families: launch each part only when its window doc is `active` (LOCK part 2 runs later, outside the window). PWD part 2 starts after the steward switched Send Messages ON (the runner tells the steward when part 1 and ops X13 part 1 reported). Attended families (PWD part 2, 2FA for AUT-11, IMP) need the operator at the machine: tell them before the launch. Renew the PolyID ops profile `{{PIDOPS_PROFILE}}` (≈ 1.5 h) before LOCK, 2FA, X10, UM.
+Runner notes (the part above the `---` line is not sent to workers): fills the `{{GROUP_BRIEF}}` slot of `assets/agent-brief.md`. Values come from `auth-allocation.md` (seed A1), `env-facts.md` (gates AUT-G1..G3) and `kits/<env>`. Families LOCK, PWD, X10 are window families: launch each part only when its window doc is `active` (LOCK part 2 runs later, outside the window). PWD part 2 starts after the steward switched Send Messages ON (the runner tells the steward when part 1 and ops X13 part 1 reported). Attended families (PWD part 2, IMP) need the operator at the machine: tell them before the launch. Renew the PolyID ops profile `{{PIDOPS_PROFILE}}` (≈ 1.5 h) before LOCK, 2FA, X10, UM.
 
 ---
 
@@ -19,7 +19,6 @@ You test the login and identity flows of myPOLYPOINT, the planner app and the cu
 | PWU          | `{{PWU_LOGIN}}`                      | password-reset user, e-mail = the team mailbox `{{AUTH_MAILBOX}}` (seed A5)                                                          |
 | OTPU         | `{{OTPU_LOGIN}}`                     | per-user TOTP                                                                                                                        |
 | T2FU, OFFU   | `{{T2FU_LOGIN}}`, `{{OFFU_LOGIN}}`   | tenant-wide TOTP (X10)                                                                                                               |
-| SMSU         | `{{SMSU_LOGIN}}`                     | SMS code, mobile = the sms-logger test number (seed A6)                                                                              |
 | BLKU         | `{{BLKU_LOGIN}}`                     | customer-portal managed user                                                                                                         |
 | NEWU         | `{{NEWU_LOGIN}}`                     | never logged in before AUT-18                                                                                                        |
 | EMPU         | `{{EMPU_LOGIN}}` ({{EMPU_ID}})       | one employment (AUT-20)                                                                                                              |

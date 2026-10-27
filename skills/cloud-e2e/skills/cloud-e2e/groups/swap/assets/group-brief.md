@@ -49,7 +49,7 @@ Use the selector list of `{{GROUP_DIR}}/references/scenarios.md` "Conventions" (
 
 ### Logins
 
-- Each worker uses its own profile folder (`MYPP_PROFILES` above). **Group exception to common hard rule 5** (group design: three lanes on disjoint (person, day) cells, `data-plan.md` §2.3; locks are per user and day): a T / U login may be driven by two workers of this group at the same time, but only on **different days** and only for the cells your family owns; SP acts only on your own opportunity ids. Never two harness calls for the same login inside your own worker at once; never a person of another group.
+- Each worker uses its own profile folder (`MYPP_PROFILES` above). **Group exception to common hard rule 5** (group design: three lanes on disjoint (person, day) cells, `data-plan.md` §2.3, enforced by `gen-prompts.py`, which refuses concurrent families that write the same (person, day); locks are per user and day): a T / U login may be driven by two workers of this group at the same time, but only on **different days** and only for the cells your family owns; SP acts only on your own opportunity ids. Never two harness calls for the same login inside your own worker at once; never a person of another group.
 - At most 2 password submissions per login per harness call; a failed login → retry once, then BLOCKED `PolyID lockout (USER_OR_IP_LOCKED) <login>` with the login-failed screenshot. Never unlock PolyID yourself (steward only).
 
 ### PEP and paints

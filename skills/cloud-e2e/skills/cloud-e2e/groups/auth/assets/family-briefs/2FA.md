@@ -1,15 +1,14 @@
-# Family 2FA — Per-user TOTP and SMS codes (AUT-09, AUT-11) · OTPU, SMSU
+# Family 2FA — Per-user TOTP codes (AUT-09) · OTPU
 
 |                           |                                                                                                                                                                                                |
 | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Scenarios (in this order) | AUT-09, AUT-11                                                                                                                                                                                 |
-| Actors                    | OTPU `{{OTPU_LOGIN}}`, SMSU `{{SMSU_LOGIN}}` (mobile = the sms-logger test number, seed A6); PolyID ops profile `{{PIDOPS_PROFILE}}`                                                           |
-| Scope                     | **per-user overrides only** — never the tenant provider (tenant 2FA is family X10)                                                                                                             |
-| Attended                  | AUT-11: the operator reads the sms-logger page `{{SMS_LOGGER_URL}}` (the harness never opens it) and types each code into the headed window                                                    |
-| Budget                    | ≤ 2 password submissions per run (AUT-09: 2 runs; AUT-11: 2 runs + optional 1)                                                                                                                 |
+| Scenarios (in this order) | AUT-09                                                                                                                                                                                         |
+| Actors                    | OTPU `{{OTPU_LOGIN}}`; PolyID ops profile `{{PIDOPS_PROFILE}}`                                                                                                                                 |
+| Scope                     | **per-user overrides only** — never the tenant provider (tenant 2FA is family X10); never a `MOBILE_OR_EMAIL` override (AUT-11 dropped, decision 2026-10-27, review F-01)                      |
+| Budget                    | ≤ 2 password submissions per run (AUT-09: 2 runs)                                                                                                                                              |
 | Window-sensitive          | fresh logins: before each run read `windows/` (dashboard {{DASHBOARD_URL}}); a `draining` / `active` LOGIN or HARD window on `{{TENANT}}` → stop, BLOCKED "paused by window <id>" for the rest |
 | Profiles / results        | `MYPP_PROFILES={{RUN_DIR}}/.profiles/2FA` · `{{RUN_DIR}}/2FA/<scenario>/` · `created/2FA.jsonl`                                                                                                |
-| Read first                | the group part above; scenarios.md AUT-09, AUT-11                                                                                                                                              |
+| Read first                | the group part above; scenarios.md AUT-09                                                                                                                                                      |
 
 Admin calls: `node {{SKILL_DIR}}/scripts/harness/polyid-admin.mjs {{PIDOPS_PROFILE}} {{RUN_DIR}}/2FA/<scenario>/admin-<n> {{TENANT}} <cmd>`. TOTP secrets and codes live only in the memory of one script run (`polyid.readOtpSecret()`, `polyid.totp()`); record only `secretChanged: true|false`.
 
@@ -28,21 +27,9 @@ Admin calls: `node {{SKILL_DIR}}/scripts/harness/polyid-admin.mjs {{PIDOPS_PROFI
 
 Expect: as stated; codes accepted within the 30-s window.
 
-## AUT-11 — SMS one-time code (MOBILE_OR_EMAIL) through the CT sms-logger
-
-Pre: `env-facts.md` AUT-G3 = owned test number + live host confirmed, and `auth-allocation.md` says seed A6 done; else BLOCKED "AUT-G3 / A6" (no login). At most 3 SMS in this scenario; at most 5 code verifications per 10 min.
-
-1. `user-2fa "{{SMSU_LOGIN}}" MOBILE_OR_EMAIL` (read back).
-2. Run A (`polyid-flow.mjs {{TENANT}} "{{SMSU_LOGIN}}" <script> <out> --app mypp --fresh --headed`): onboard + SEED → `/ui/2fa-form` (`#form-2fa`, `#code`) — shot `02-2fa-form.png`; log the line `WAITING FOR OPERATOR: SMS 1`. Submit `000000` yourself first → "Code ist nicht gültig.". Then wait (≤ 5 min) until the operator has typed the real code in the headed window and the app reaches `/tabs/` → record the timestamps. The operator notes in `notes.md`: SMS arrival time, recipient = the test number, text pattern ("Please use this code for security verification: **\*\***") — never the digits.
-3. Run B (new login, SEED): on the 2FA page wait until `#resend-code` is enabled (≥ 30 s), click it; log `WAITING FOR OPERATOR: old code, then new code`. The operator first types the **old** code → refused (record the text), then the new one → success.
-4. Optional run C (3rd SMS): new login, wait > 3 min, the operator types the code → "TwoFactorAuthCodeTimeout" text.
-5. Restore: `user-2fa "{{SMSU_LOGIN}}" DEFAULT` (read back).
-
-Expect: SMS delivered to the logger within 60 s; wrong code refused; resend replaces the code; restore done.
-
 ## Cleanup checklist
 
-- OTPU and SMSU: override DEFAULT, OTP reset (`user-read` saved).
+- OTPU: override DEFAULT, OTP reset (`user-read` saved).
 - No secret, code or QR anywhere in the evidence (open every PNG once).
 
 **Classifier or permission block (hard rule 9): stop that action and report it as a blocker. Never retry it renamed, wrapped or through another tool.**

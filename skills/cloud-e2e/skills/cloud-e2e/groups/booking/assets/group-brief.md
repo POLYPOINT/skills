@@ -55,7 +55,7 @@ Stable ids: planner `#find-hp-btn`, `#search-clear-filters`, `#shift-definition-
 
 ### Logins
 
-Own profile folder per worker. **Group exception to common hard rule 5** (planner logins only): SP may be driven by two workers at once (family AV and family FH or BD), each in its own profile and only on its own HPs' availabilities and assignments (by id); every HP, ER and PM is driven by one worker at a time. ≤ 2 password submissions per login per harness call; a failed login → retry once, then BLOCKED `PolyID lockout (USER_OR_IP_LOCKED) <login>` with the screenshot. Never unlock PolyID yourself.
+Own profile folder per worker. **Group exception to common hard rule 5** (planner logins only): SP may be driven by two workers at once (family AV and family FH or BD), each in its own profile and only on its own HPs' availabilities and assignments (by id); every HP, ER and PM is driven by one worker at a time. The (person, day) cells the families write (rules.json `WRITES`) are checked by `gen-prompts.py`, which refuses two concurrent families on the same cell. ≤ 2 password submissions per login per harness call; a failed login → retry once, then BLOCKED `PolyID lockout (USER_OR_IP_LOCKED) <login>` with the screenshot. Never unlock PolyID yourself.
 
 ### PEP and paints
 

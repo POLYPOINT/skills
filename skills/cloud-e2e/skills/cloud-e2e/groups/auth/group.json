@@ -48,11 +48,11 @@
     },
     {
       "id": "2FA",
-      "name": "Per-user TOTP and SMS codes",
+      "name": "Per-user TOTP codes",
       "brief": "assets/family-briefs/2FA.md",
-      "scenarios": ["AUT-09", "AUT-11"],
+      "scenarios": ["AUT-09"],
       "lane": "A",
-      "note": "AUT-11 attended (operator reads the sms-logger)"
+      "note": "AUT-11 dropped (decision 2026-10-27, review F-01): never a MOBILE_OR_EMAIL override"
     },
     {
       "id": "X10",
@@ -151,14 +151,6 @@
       "partition": "P1",
       "mode": "plain-hp",
       "rule": "running myPP session before the tenant 2FA switch: AUT-10"
-    },
-    {
-      "token": "SMSU",
-      "count": 1,
-      "kit_group": "E2E:HP-PLAIN",
-      "partition": "P1",
-      "mode": "plain-hp",
-      "rule": "on-prem mobile number = the sms-logger test number (seed A6): AUT-11"
     },
     {
       "token": "BLKU",
@@ -327,7 +319,8 @@
         "auth:UM",
         "auth:IMP"
       ],
-      "note": "order AUT-06 (OFF) → OPS-13 part A (OFF) → Send Messages ON → AUT-07 → AUT-08 → OPS-13 part B → manual AUT-19 → OFF; ops LIFE and X16 run on the CT portal only (activeWorkers under env ct) and may continue (env-plan §7.2)"
+      "exempt": ["ops:LIFE", "ops:X16"],
+      "note": "order AUT-06 (OFF) → OPS-13 part A (OFF) → Send Messages ON → AUT-07 → AUT-08 → OPS-13 part B → manual AUT-19 → OFF; ops LIFE and X16 run on the CT portal only (activeWorkers under env ct) and may continue: `exempt` (env-plan §7.2)"
     }
   ],
   "gates": [
@@ -341,7 +334,7 @@
     },
     {
       "id": "AUT-G3",
-      "check": "before AUT-07, AUT-08, AUT-11: the operator confirms the team mailbox is reachable and team-owned, the sms-logger test number is POLYPOINT-owned and which sms-logger host is live; else AUT-11 BLOCKED and AUT-07 / AUT-08 run only with the operator reading the mailbox"
+      "check": "before AUT-07, AUT-08: the operator confirms the team mailbox is reachable and team-owned; else AUT-07 / AUT-08 run only with the operator reading the mailbox"
     }
   ],
   "seed": [
@@ -375,13 +368,6 @@
       "note": "PWU e-mail = the team mailbox in the box Keycloak (and UsrAdmin for AUT-08)"
     },
     {
-      "id": "A6",
-      "who": "runner",
-      "pep": false,
-      "doc": "seed/A-seed.md",
-      "note": "SMSU mobile number = the sms-logger test number (only after AUT-G3)"
-    },
-    {
       "id": "A8",
       "who": "runner",
       "pep": false,
@@ -393,7 +379,7 @@
     "workers": 2,
     "first": ["AUT-18"],
     "lanes": [
-      ["AUT-18", "AUT-03", "AUT-04", "AUT-01", "AUT-02", "AUT-09", "AUT-11", "AUT-17"],
+      ["AUT-18", "AUT-03", "AUT-04", "AUT-01", "AUT-02", "AUT-09", "AUT-17"],
       ["AUT-14", "AUT-16", "AUT-20"]
     ],
     "after_fanout": [],
@@ -404,7 +390,7 @@
   "known_deviations": "references/known-deviations.md",
   "cleanup": [
     "every actor ACTIVE, 2FA override DEFAULT, OTP reset; LOCKU unlocked by the steward",
-    "PWU password = manifest password (runner, box Keycloak admin) and e-mail = manifest; SMSU mobile removed; NOHP role restored; DISU enabled / NOEMP deleted",
+    "PWU password = manifest password (runner, box Keycloak admin) and e-mail = manifest; NOHP role restored; DISU enabled / NOEMP deleted",
     "password-reset flag back to the baseline false (set, not delete); Send Messages OFF verified (steward)",
     "provider twoFactorType DISABLED read back; applied-policies empty for the provider",
     "EMPU second employment deleted in PEP; plain-HP memberships restored only if the env is reused"

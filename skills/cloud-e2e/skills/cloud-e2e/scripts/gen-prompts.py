@@ -5,7 +5,7 @@
                                       [--run-date YYYY-MM-DD] [--out <dir>] [--families A,B] [--allow-violations]
                                       [--print-day-map]
     python3 -I scripts/gen-prompts.py [<run-config.json>] --group <key> --dry-run      # every check, nothing written
-    python3 -I scripts/gen-prompts.py --check-catalogue <synthesis/catalogue.json>      # every id in exactly one family
+    python3 -I scripts/gen-prompts.py --check-catalogue <synthesis/catalogue.json>      # every id in exactly one family (merged / dropped rows: in none)
 
 Group package (frozen schemas, skill-design.md 4.1 / 4.2): groups/<key>/group.json (families with brief + scenarios, windows,
 roles ...) and groups/<key>/rules.json (ROLES, DAY_TOKENS, WRITES, PARTS, NEEDS, BY_DESIGN, SCEN_ID, DAY_RULES, PLACEHOLDERS).
@@ -22,7 +22,8 @@ Prompt = header (guardrails, day map, notes, day-rule warnings) + common part + 
 A family with `parts` (rules PARTS) gives one prompt per part (C-part1.md, C-part2.md). Families without a brief (UTR X) and
 families without scenarios (re-check RE) are written by the runner, never generated. Never patch a generated prompt: change the
 config or the brief and regenerate. Exit 1 on a leftover `{{`, an unknown placeholder, a day-rule / ownership violation (unless
---allow-violations: then printed into the header and on stderr) or an unclaimed actor (--claims; never bypassed).
+--allow-violations: then printed into the header and on stderr), an unclaimed actor (--claims) or two concurrent families
+writing the same (actor, day) (actor_day_check, multi-group only); the last two are never bypassed.
 
 Run directory: --solo (or config.mode "solo") -> RUN_DIR = config.run_dir (results/<run>, v0.5.0); multi-group -> RUN_DIR =
 config.run_dir/<group> unless run_dir already ends with /<group>. Results never mix groups.
@@ -38,6 +39,11 @@ the family value (briefs use them on every employee line; an override the brief 
 Coordination (config.coordination, references/coordination.md): "artifact-db" (default: ArtifactData on the run dashboard),
 "gcs" (fallback F1, config.gcs_bucket), "degraded" (F2: the steward grants PEP slots, config.pep_slot) or "local-file"
 (solo on one machine: the v0.5.0 lock file). It fills {{PEP_LOCK_DOC}} and {{PEP_LOCK_STEPS}}.
+
+Windows ({{WINDOWS}}, references/coordination.md 4): every group's `windows` merged by id (owners, scenarios, pauses, exempt
+united; class and env must agree, else a schema error). A window's env: STAGE = every env, SHARED = the shared group only, an id
+`W-X-` / `J-Y-` / `T-Y-`... = X / Y, else the declaring group's env.preferred. The worker's env: SH for the shared group, else
+config.env_role, else the group's env.preferred. One entry per window of that env: "runs inside", "exempt" (HARD only) or "pauses".
 
 Config (JSON; ids / logins / urls, never credentials):
 { "run": "...", "run_dir": "<abs results/<run>>", "group": "utr", "mode": "solo|multi", "tenant": "<env id>",
@@ -155,11 +161,19 @@ def validate(G):
         if len(fs) > 1:
             errs.append(f"scenario {s} is in families {', '.join(fs)} (one owner only)")
     for w in g.get("windows", []):
+        if not w.get("id"):
+            errs.append(f"window without id: {w}")
         if w.get("class") not in WINDOW_CLASSES:
             errs.append(f"window {w.get('id')}: class {w.get('class')} not in {sorted(WINDOW_CLASSES)}")
         for p in w.get("pauses", []):
             if not re.fullmatch(r"[a-z]+(:[A-Za-z0-9*-]+)?", p):
                 errs.append(f"window {w.get('id')}: pause `{p}` is not group:family")
+        if w.get("exempt") and w.get("class") != "HARD":
+            errs.append(f"window {w.get('id')}: `exempt` is for HARD windows only (a {w.get('class')} window pauses only its `pauses`)")
+        for p in w.get("exempt", []):
+            if not re.fullmatch(r"[a-z]+(:[A-Za-z0-9*-]+)?", p):
+                errs.append(f"window {w.get('id')}: exempt `{p}` is not group:family")
+    errs += merge_windows()[1]  # windows declared by several groups (merged by id): class / env must agree
     for fam, ws in G.writes.items():
         if fam not in G.fams:
             notes.append(f"rules WRITES: family {fam} not in group.json")
@@ -275,31 +289,88 @@ def lock_tokens(cfg, env, run_dir, fam="<family>"):
     return mode, doc, steps
 
 
-def windows_text(G, fam, all_windows):
-    out, fs = [], set(G.fam.get(fam, {}).get("scenarios", []))
-    own = G.fam.get(fam, {}).get("window")
-    for owner, w in all_windows:
-        pauses = set(w.get("pauses", []))
-        hit_pause = f"{G.key}:{fam}" in pauses or G.key in pauses or f"{G.key}:*" in pauses
-        hit_own = owner == G.key and (w.get("id") == own or fs & set(w.get("scenarios", [])))
-        if hit_own:
-            out.append(f"`{w['id']}` ({w.get('class')}, ~{w.get('est_min', '?')} min): this family runs inside it (owner group {owner})")
-        elif hit_pause or w.get("class") == "HARD":
-            out.append(f"`{w['id']}` ({w.get('class')}, ~{w.get('est_min', '?')} min, group {owner}): pauses this family")
-    return "; ".join(out) or "none"
+def window_env(w, preferred):
+    """env a window applies to: "*" = every env (STAGE), "SH" = the shared group only (SHARED), X / Y from an id
+    `<letter>-X-...` / `<letter>-Y-...` (W-X-WRITE-OFF, J-Y-JOBS, T-Y-TENANTFORM), else the declaring group's env.preferred (UTR-P)"""
+    if w.get("class") == "STAGE":
+        return "*"
+    if w.get("class") == "SHARED":
+        return "SH"
+    m = re.match(r"[A-Z]-([XY])-", str(w.get("id", "")))
+    return m.group(1) if m else str(preferred or "-")
+
+
+def worker_env(cfg, G):
+    """env of the worker, for the window filter: SH for a group of env kind "shared", else config.env_role (X / Y), else the
+    group's env.preferred (synthetic dry-run and solo configs carry no env_role)"""
+    e = G.g.get("env") or {}
+    if e.get("kind") == "shared":
+        return "SH"
+    return str(cfg.get("env_role") or e.get("preferred") or "-")
+
+
+def merge_windows():
+    """every group's windows merged by id (W-Y-MSG is declared by auth and ops, W-X-WRITE-OFF by swap and booking):
+    ([{id, class, env, est_min, owners [], scenarios [], pauses [], exempt []}], errors). scenarios / pauses / exempt are the
+    union of the declarations; class and env must agree; a family may not be both paused and exempt."""
+    merged, errs = {}, []
+    gd = SKILL / "groups"
+    for p in sorted(gd.iterdir()) if gd.is_dir() else []:
+        if not (p / "group.json").is_file():
+            continue
+        try:
+            g = json.loads((p / "group.json").read_text())
+        except ValueError:
+            continue
+        pref = (g.get("env") or {}).get("preferred")
+        for w in g.get("windows", []):
+            if not w.get("id"):
+                continue
+            env, m = window_env(w, pref), merged.get(w["id"])
+            if m is None:
+                m = merged[w["id"]] = {"id": w["id"], "class": w.get("class"), "env": env, "est_min": w.get("est_min"),
+                                       "owners": [], "scenarios": [], "pauses": [], "exempt": []}
+            else:
+                if w.get("class") != m["class"]:
+                    errs.append(f"window {w['id']}: class {w.get('class')} in group {p.name} but {m['class']} in group "
+                                f"{m['owners'][0]} (one id = one window: every declaration must name the same class)")
+                if env != m["env"]:
+                    errs.append(f"window {w['id']}: env {env} in group {p.name} but {m['env']} in group {m['owners'][0]}")
+                if isinstance(w.get("est_min"), (int, float)) and (not isinstance(m["est_min"], (int, float)) or w["est_min"] > m["est_min"]):
+                    m["est_min"] = w["est_min"]
+            m["owners"].append(p.name)
+            for k in ("scenarios", "pauses", "exempt"):
+                m[k] += [x for x in w.get(k, []) if x not in m[k]]
+    for m in merged.values():
+        both = sorted(set(m["pauses"]) & set(m["exempt"]))
+        if both:
+            errs.append(f"window {m['id']}: {', '.join(both)} in both `pauses` and `exempt`")
+    return list(merged.values()), errs
 
 
 def all_windows():
-    out = []
-    gd = SKILL / "groups"
-    for p in sorted(gd.iterdir()) if gd.is_dir() else []:
-        if (p / "group.json").is_file():
-            try:
-                for w in json.loads((p / "group.json").read_text()).get("windows", []):
-                    out.append((p.name, w))
-            except ValueError:
-                pass
-    return out
+    return merge_windows()[0]
+
+
+def windows_text(G, fam, wins, env):
+    """{{WINDOWS}}: one entry per window of the worker's env that touches the family (wins = all_windows(), merged by id):
+    runs inside (one of its scenarios, or the family's `window`) > exempt (HARD only) > pauses (listed in `pauses`, or HARD)"""
+    out, fs = [], set(G.fam.get(fam, {}).get("scenarios", []))
+    own = G.fam.get(fam, {}).get("window")
+    me = {f"{G.key}:{fam}", G.key, f"{G.key}:*"}
+    for w in wins:
+        if w["env"] not in ("*", env):
+            continue
+        hard, o = w.get("class") == "HARD", w["owners"]
+        what = (f"`{w['id']}` ({w.get('class')}, ~{'?' if w.get('est_min') is None else w['est_min']} min, "
+                f"group{'s' if len(o) > 1 else ''} {', '.join(o)})")
+        if w["id"] == own or fs & set(w["scenarios"]):
+            out.append(f"{what}: this family runs inside it")
+        elif hard and me & set(w["exempt"]):
+            out.append(f"{what}: this family is exempt (keeps running)")
+        elif hard or me & set(w["pauses"]):
+            out.append(f"{what}: pauses this family")
+    return "; ".join(out) or "none"
 
 
 def run_dir_of(cfg, G, solo):
@@ -327,7 +398,7 @@ def tokens_for(cfg, fam, R, G, solo, wins):
               "FAMILY": fam, "AGENT_NAME": f"worker-{fam}",
               "GROUP": G.key, "GROUP_DIR": str(G.dir), "GROUP_TITLE": G.g.get("title", G.key),
               "RUNNER": cfg.get("runner", "solo" if solo else "<runner>"), "ENV": env, "ENV_ROLE": cfg.get("env_role", "-"),
-              "DASHBOARD_URL": cfg.get("dashboard_url", "<dashboard url>"), "WINDOWS": windows_text(G, fam, wins)})
+              "DASHBOARD_URL": cfg.get("dashboard_url", "<dashboard url>"), "WINDOWS": windows_text(G, fam, wins, worker_env(cfg, G))})
     for k, v in G.ph_values.items():
         t.setdefault(k, str(v))
     for r, e in cfg["employees"].items():
@@ -621,6 +692,134 @@ def claim_check(cfg, G, claims):
     return bad
 
 
+def actor_day_check(cfg, G, R, fams):
+    """Hard rule 5 exception: inside one group families may share actors on disjoint days, so two families of `fams` that can
+    run at the same time must never write the same (actor, day). Returns (violations, notes); fewer than two lanes = nothing.
+    Concurrent: entries in different `schedule.lanes` (an entry is a scenario id, a family id or `<family>-part<n>`; one lane
+    runs its families one after the other). Outside the lanes (group schedule.md): `first` runs before them (never
+    concurrent); a family with a `window` and no parts runs only inside it (swap X03, UTR P): concurrent with every family
+    its windows do not pause; any other (after_fanout: swap F starts after B / D only; booking X25 part 1 runs before its
+    window): concurrent with all. Writes = rules WRITES + per-employee overrides, dated as in the prompt (tokens_for); actor =
+    the role's employee id or login in this config (two roles with one id or login are one person). A family that enters
+    the lanes with only some of its parts (UTR C part 1) gives NOTEs, not violations: WRITES are per family."""
+    sch = G.g.get("schedule") or {}
+    lanes_raw = [x for x in (sch.get("lanes") or []) if isinstance(x, list)]
+    if len(lanes_raw) < 2:
+        return [], []
+    owner = {s: f["id"] for f in G.g.get("families", []) for s in f.get("scenarios", [])}
+
+    def fam_of(x):
+        m = re.fullmatch(r"(.+)-part(\w+)", str(x))
+        if str(x) in G.fam:
+            return str(x), None
+        if m and m.group(1) in G.fam:
+            return m.group(1), m.group(2)
+        return owner.get(x), None
+
+    lane, parts_in = {}, {}
+    for i, entries in enumerate(lanes_raw):
+        for x in entries:
+            f, p = fam_of(x)
+            if f:
+                lane.setdefault(f, set()).add(i)
+                if p:
+                    parts_in.setdefault(f, set()).add(p)
+    partial = {f for f, ps in parts_in.items() if set(G.parts.get(f, [])) - ps}
+    first = {fam_of(x)[0] for x in sch.get("first") or []} - set(lane)
+    wins = all_windows()
+
+    def own_windows(f):  # the windows an outside family runs only inside: its `window` / windows holding its scenarios
+        if f in lane or G.parts.get(f):
+            return []
+        fd, sc = G.fam.get(f, {}), set(G.fam.get(f, {}).get("scenarios", []))
+        return [w for w in wins if w["id"] == fd.get("window") or sc & set(w["scenarios"])]
+
+    def pauses(w, f):
+        me, sc = {G.key, f"{G.key}:*", f"{G.key}:{f}"}, set(G.fam.get(f, {}).get("scenarios", []))
+        if w.get("class") == "HARD":
+            return not (me & set(w["exempt"])) and not (sc & set(w["scenarios"]))
+        return bool(me & set(w["pauses"]))
+
+    def slot(f):
+        if f in lane:
+            return "lane" + ("s " if len(lane[f]) > 1 else " ") + ", ".join(str(i + 1) for i in sorted(lane[f]))
+        ws = own_windows(f)
+        return "first" if f in first else "outside the lanes" + (f" (window {', '.join(w['id'] for w in ws)})" if ws else "")
+
+    def concurrent(fa, fb):
+        if fa in lane and fb in lane:
+            return any(i != j for i in lane[fa] for j in lane[fb])
+        if fa in first or fb in first:
+            return False
+        return not (any(pauses(w, fb) for w in own_windows(fa)) or any(pauses(w, fa) for w in own_windows(fb)))
+
+    def ident(role, e):
+        keys = {f"role {role}"}
+        for k in ("id", "login"):
+            v = str(e.get(k, "")).strip()
+            if v and v != "0" and "<" not in v:
+                keys.add(f"{k} " + (v.lower().removeprefix("dmseed-") if k == "login" else v))
+        return keys
+
+    bad, notes, cache = [], [], {}
+
+    def writes_of(f):
+        if f in cache:
+            return cache[f]
+        cache[f] = out = []
+        try:
+            t, ed = tokens_for(cfg, f, R, G, False, []), emp_days(cfg, f, R, G)
+        except (SystemExit, KeyError, ValueError, TypeError) as e:
+            notes.append(f"actor-day: family {f}: day tokens not resolvable ({e}); its writes are not checked")
+            return out
+        wr, miss = G.writes.get(f, []), []
+        ws = [(r, k, ed.get(r, {}).get(k, t.get(k))) for r, k in wr]
+        ws += [(r, k, v) for r, m in ed.items() for k, v in m.items() if (r, k) not in wr]
+        for role, tk, v in ws:
+            e = cfg["employees"].get(role)
+            try:
+                day = d(str(v)).isoformat() if v is not None else None
+            except ValueError:
+                day = None
+            if not isinstance(e, dict):
+                miss.append(f"{role} (not in employees)")
+            elif day is None:
+                miss.append(f"{role} {tk} (no date)")
+            else:
+                out.append((role, tk, day, ident(role, e)))
+        if miss:
+            notes.append(f"actor-day: family {f}: cannot resolve {', '.join(dict.fromkeys(miss))}; those writes are not checked")
+        return out
+
+    def writes_any(f):
+        try:
+            return bool(G.writes.get(f) or emp_days(cfg, f, R, G))
+        except (SystemExit, ValueError, TypeError):
+            return True  # writes_of() reports it as a NOTE
+
+    seen = set()
+    cand = [f for f in dict.fromkeys(fams) if writes_any(f)]
+    for i, fa in enumerate(cand):
+        for fb in cand[i + 1:]:
+            if fa == fb or not concurrent(fa, fb):
+                continue
+            for ra, ta, da, ia in writes_of(fa):
+                for rb, tb, db, ib in writes_of(fb):
+                    if da != db or not ia & ib or (fa, fb, ra, rb, da) in seen:
+                        continue
+                    seen.add((fa, fb, ra, rb, da))
+                    who = role_label(cfg, ra) + ("" if ra == rb else f" = {role_label(cfg, rb)}")
+                    msg = (f"families {fa} ({slot(fa)}) and {fb} ({slot(fb)}) can run at the same time and both write {who} "
+                           f"on {da} ({fa}: {ra} {ta}; {fb}: {rb} {tb})")
+                    if fa in partial or fb in partial:
+                        p = fa if fa in partial else fb
+                        notes.append(f"actor-day: {msg}; {p} enters the lanes only with part(s) {', '.join(sorted(parts_in[p]))} "
+                                     f"and WRITES are per family: the part that writes this day must run outside the lanes")
+                    else:
+                        bad.append(msg + ": move one of them to another day (config days / per-employee override) or into one lane")
+    return bad, notes
+
+
 # ---------------------------------------------------------------- catalogue
 def check_catalogue(path):
     cat = jload(path)
@@ -645,6 +844,10 @@ def check_catalogue(path):
                 bad.append(f"{sid} (merged into {row['merged_into']}) is in {', '.join(hits)}")
             elif hits:
                 notes.append(f"{sid} is merged into {row['merged_into']} but still listed in {hits[0]}")
+            continue
+        if row.get("dropped"):
+            if hits:
+                bad.append(f"{sid} is dropped ({row['dropped']}) but listed in {', '.join(hits)}")
             continue
         if len(hits) != 1:
             bad.append(f"{sid} ({row.get('group')}) is in {len(hits)} families: {', '.join(hits) or 'none'}")
@@ -726,6 +929,14 @@ def main():
             print("CLAIMS:", w, file=sys.stderr)
         if cb:
             sys.exit("refused: actors not claimed by this group (skill-design 5.3); claim them (R1) and export claims.json again")
+    # hard rule 5 exception: concurrent families never write the same (actor, day); solo (v0.5.0 UTR) and synthetic skip it
+    ad_bad, ad_notes = ([], []) if synthetic or solo else actor_day_check(cfg, G, R, fams)
+    for w in ad_bad:
+        print("ACTOR-DAY:", w, file=sys.stderr)
+    for n in ad_notes:
+        print("NOTE:", n, file=sys.stderr)
+    if ad_bad and not a.dry_run:
+        sys.exit("refused: concurrent families write the same (actor, day) (SKILL.md hard rule 5); change the days or the lanes")
     rd = run_dir_of(cfg, G, solo)
     outdir = pathlib.Path(a.out or f"{rd}/prompts")
     if not a.dry_run:
@@ -795,8 +1006,9 @@ def main():
         layout = "standalone" if G.standalone else "slot"
         print(f"dry-run {G.key} ({layout} layout, {'solo' if solo else 'multi-group'}): {', '.join(summary) or 'nothing'}; "
               f"schema {'OK' if not errs else str(len(errs)) + ' error(s)'}; ownership {'OK' if not own_bad else 'violations'}"
+              + ("" if synthetic or solo else f"; actor-day {'OK' if not ad_bad else str(len(ad_bad)) + ' violation(s)'}")
               + ("; synthetic config (day rules skipped)" if synthetic else ""))
-        sys.exit(1 if errs or own_bad or (bad and not synthetic) else 0)
+        sys.exit(1 if errs or own_bad or ad_bad or (bad and not synthetic) else 0)
     print("written:", ", ".join(summary) or "nothing", "->", outdir)
     sys.exit(bad)
 

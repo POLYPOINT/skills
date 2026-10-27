@@ -30,7 +30,6 @@ Source: `areas/auth/data-plan.md` (A-auth, 2026-10-23) with the S1 reconciliatio
 | OTPU                       | plain HP                                                              | AUT-09                                          | per-user 2FA override, OTP                                             |
 | T2FU                       | plain HP, override Default, never enrolled                            | AUT-10                                          | OTP                                                                    |
 | OFFU                       | plain HP with a running myPP session                                  | AUT-10                                          | OTP                                                                    |
-| SMSU                       | plain HP, on-prem mobile = sms-logger test number (A6)                | AUT-11                                          | override MOBILE_OR_EMAIL, mobile number                                |
 | BLKU                       | plain HP                                                              | AUT-16                                          | state BLOCKED → ACTIVE, OTP, sessions                                  |
 | NEWU                       | plain HP, never logged in                                             | AUT-18                                          | consent + PolyID user (irreversible for the env)                       |
 | EMPU                       | plain HP, exactly one employment                                      | AUT-20                                          | second employment created and deleted in PEP                           |
@@ -48,7 +47,6 @@ Rules: ASCII kürzel only; logins from `POLYUSER.KUERZEL`; actors are claimed wi
 | A2   | PolyID ops + portal ops headed sign-in; provider id; gate AUT-G1                                                                                              | 10 min |
 | A3   | NOHP: remove `polypoint-poolmanagement/ROLE_HEALTH_PROFESSIONAL` in the box Keycloak (tunnel 8383, realm `POLYP01`)                                           | 10 min |
 | A5   | PWU: e-mail = `{{AUTH_MAILBOX}}` in the box Keycloak (and in UsrAdmin for AUT-08, under the PEP lock)                                                         | 10 min |
-| A6   | SMSU: on-prem mobile number = the sms-logger test number (only after AUT-G3)                                                                                  | 10 min |
 | A8   | optional DISU (Keycloak "Enabled" off) / NOEMP (Keycloak user without POLYUSER link)                                                                          | 15 min |
 | A9   | (AUT-20, on request) employee PSC enqueue if the new employment does not show after re-login — check the PSC types on the box first; `scripts/psc-enqueue.sh` | 5 min  |
 
@@ -57,9 +55,9 @@ The password-reset flag is set and reset by AUT-06 / AUT-08 themselves (baseline
 ## 4. Owned recipients (hard rule 4)
 
 - `{{AUTH_MAILBOX}}`: a team-owned mailbox the operator can read; only PWU points at it (A5). Never a seeded address, never a personal address of someone not running the test.
-- The sms-logger test number: the number the "Test Send Messages" panel pre-fills; only SMSU gets it, and only after the operator confirmed it is POLYPOINT-owned (AUT-G3). The sms-logger page is read by the operator (the harness host guard refuses non-`ct-*` hosts).
+- No auth actor gets the sms-logger test number: AUT-11 is dropped (decision 2026-10-27, review F-01) and no `MOBILE_OR_EMAIL` override is ever set. The sms-logger page is read by the operator (the harness host guard refuses non-`ct-*` hosts).
 - Send Messages ON opens the on-prem → cloud SMS / e-mail relay for **every** on-prem sender of the tenant: only inside W-Y-MSG, switched by the steward, verified OFF before and after.
-- Messaging silently drops > 30 sends per IP per 30 s; this group sends ≤ 3 SMS (AUT-11) and ≤ 3 mails (AUT-07 / 08) per run.
+- Messaging silently drops > 30 sends per IP per 30 s; this group sends no SMS and ≤ 3 mails (AUT-07 / 08) per run.
 
 ## 5. Concurrency
 
@@ -82,7 +80,7 @@ Within the group: AUT-18 first (NEWU); LOGOUT part 1 early (its part-2 profile n
 
 - every actor `state ACTIVE`, 2FA override DEFAULT, OTP reset; LOCKU unlocked (steward);
 - PWU password = manifest password, e-mail = manifest (box Keycloak; UsrAdmin if changed);
-- SMSU mobile removed; NOHP role restored; DISU enabled / NOEMP deleted;
+- NOHP role restored; DISU enabled / NOEMP deleted;
 - flag `polyid.flows.allowPasswordResetForNonADUsers` = false (read back); Send Messages OFF (steward, read back);
 - `polyid-admin.mjs … applied-policies` empty for the provider;
 - EMPU one employment; kit memberships restored only if the env is reused.

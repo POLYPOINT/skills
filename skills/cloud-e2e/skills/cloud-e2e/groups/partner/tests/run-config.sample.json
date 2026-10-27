@@ -1,0 +1,79 @@
+{
+  "run": "sample01",
+  "run_dir": "/ABSOLUTE/PATH/results/sample01",
+  "group": "partner",
+  "mode": "multi",
+  "tenant": "e2e-x-sample01",
+  "env_role": "X",
+  "runner": "<runner name>",
+  "dashboard_url": "https://claude.ai/artifact/<dashboard id>",
+  "coordination": "artifact-db",
+  "bundle": "0.0.1829",
+  "bundle_class": "1801",
+  "run_date": "2026-11-03",
+  "roster_end": "2026-11-12",
+  "painted_days": ["2026-11-09"],
+  "employees": {
+    "PH1": {
+      "login": "dmseed-ph1",
+      "id": 460
+    },
+    "PH2": {
+      "login": "dmseed-ph2",
+      "id": 461
+    },
+    "PH3": {
+      "login": "dmseed-ph3",
+      "id": 462
+    },
+    "PH4": {
+      "login": "dmseed-ph4",
+      "id": 463
+    },
+    "PH5": {
+      "login": "dmseed-ph5",
+      "id": 464
+    },
+    "SPX": {
+      "login": "dmseed-spx",
+      "id": 465
+    },
+    "SPN": {
+      "login": "dmseed-spn",
+      "id": 466
+    },
+    "ERX": {
+      "login": "dmseed-erx",
+      "id": 467
+    }
+  },
+  "days": {
+    "ST_DAY": "2026-11-05",
+    "SR_DAY": "2026-11-06",
+    "RRX_DAY": "2026-11-09",
+    "CM_DAY": "2026-11-10",
+    "NM_DAY": "2026-12-02",
+    "XD1": "2026-11-16",
+    "XD2": "2026-11-17",
+    "XD3": "2026-11-18",
+    "XD4": "2026-11-19",
+    "XD5": "2026-11-20",
+    "XD6": "2026-11-23",
+    "XD7": "2026-11-24",
+    "XD7N": "2026-11-25",
+    "XD8": "2026-11-25",
+    "XD9": "2026-11-26",
+    "XD10": "2026-11-27"
+  },
+  "config": {
+    "PARTNER_ID": "<partner_id>",
+    "GLN": "<gln>",
+    "PROVIDER_CODE": "<provider_code>",
+    "RUN_TAG": "sample01",
+    "PH_NODE": "<ph_node>",
+    "SPX_NODE": "<spx_node>",
+    "PORTAL_PROFILE": "<portal_profile>",
+    "POMA_OPS_PROFILE": "<poma_ops_profile>"
+  },
+  "_comment": "Sample run config for gen-prompts.py --group partner (DM-X, review fix F-05, 2026-10-27). Run sample01, env e2e-x-sample01, logins dmseed-<role> and ids are fakes: fill employees from the R1 claims / partner-allocation.md (seed P-PTN-7; ERX optional = a claimed spare). Days follow rules.json DAY_RULES for R = 2026-11-03 (seed P-PTN-9): ST_DAY a seeded weekday >= R+2 inside roster_end, SR_DAY >= R+3, RRX_DAY >= R+3 and listed in painted_days (ERX painted, P-PTN-9b), CM_DAY in the current month, NM_DAY in the next month, XD1..XD8 eight consecutive weekdays >= R+7 after roster_end, XD7N = XD7 + 1, XD9 / XD10 = XD8 + 1 / + 2; LEAD_DAY is computed. Supplied by the steward or the user, fake here: PARTNER_ID (stage/run-partner), GLN (stage/gln, 13 digits, run-unique), PROVIDER_CODE (stage/provider-gate), PH_NODE and SPX_NODE (KNOTEN_ID of Notfallzentrum / Intensivpflege), PORTAL_PROFILE and POMA_OPS_PROFILE (headed ops sign-ins, outside results/); RUN_TAG = 8 characters [a-z0-9]. Test: gen-prompts.py <this file> --group partner --dry-run (exit 0, no NEEDS CONFIG line); a real run adds --claims."
+}

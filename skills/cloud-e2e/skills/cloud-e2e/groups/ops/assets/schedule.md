@@ -23,8 +23,8 @@ Env DM-Y + CT portal. 25 scenarios, ≈ 436 worker-minutes, group seed ≈ 30 mi
 | W-Y-HEALTH                         | FLAG  | OPS-08 (X08)        | `portal.onPrem.deephealthcheckIgnores` → `poly-time-connect` → restored | 20 min     | ops TEN / MON / MISC (tenant-health readers) | ops runner       |
 | W-Y-MSG (shared with auth, manual) | HARD  | OPS-13 part 2 (X13) | Send Messages ON → OFF (steward)                                        | 90–150 min | every Y group except ops LIFE / X16          | steward          |
 | J-Y-JOBS (shared with planner)     | JOBS  | OPS-18 (X18)        | `ResyncEmployeesWithNoEmploymentsJob` `tenantIds=<DM-Y>`                | 30 min     | other job triggers on DM-Y                   | ops runner       |
-| S-CT-JOBS                          | STAGE | OPS-18 (X18)        | Tier A jobs on CT                                                       | 30 min     | — (announce)                                 | steward, user OK |
-| S-CT-LOGLEVEL                      | STAGE | OPS-16 (X16)        | poma-core logger TRACE → restored on all pods                           | ≤ 5 min    | — (announce)                                 | steward, user OK |
+| S-CT-JOBS                          | STAGE | OPS-18 (X18)        | Tier A jobs on CT                                                       | 30 min     | —                                            | steward, user OK |
+| S-CT-LOGLEVEL                      | STAGE | OPS-16 (X16)        | poma-core logger TRACE → restored on all pods                           | ≤ 5 min    | —                                            | steward, user OK |
 | T-Y-TENANTFORM                     | FLAG  | OPS-19 step 4 (X19) | one unchanged "Save Tenant"                                             | 20 min     | none (FIFO keeps W-Y-MSG / W-Y-HEALTH out)   | ops runner       |
 
 Restore rules: X08 sets the recorded value back (delete only if there was no tenant override) and proves it with a health read; X16 proves the level on every pod; X13 never touches Send Messages (steward). Every restore proof goes into the window doc before the release.

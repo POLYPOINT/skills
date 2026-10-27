@@ -62,7 +62,7 @@
       "brief": "assets/family-briefs/X20.md",
       "scenarios": ["PTN-20"],
       "window": "S-CT-GWMOCK",
-      "note": "after EW; launched only when windows/ct~S-CT-GWMOCK is active (steward, user OK, announced to all CT teams)"
+      "note": "after EW; launched only when windows/ct~S-CT-GWMOCK is active (steward, user OK)"
     }
   ],
   "roles": [
@@ -178,7 +178,7 @@
       ],
       "est_min": 30,
       "pauses": ["partner:EW"],
-      "note": "doc windows/ct~S-CT-GWMOCK, requested by the steward with the user's OK and announced to every CT team; the X20 worker holds locks/ct~gwmock for every strategy change; one gateway-mock pod serves all teams"
+      "note": "doc windows/ct~S-CT-GWMOCK, requested by the steward with the user's OK; the X20 worker holds locks/ct~gwmock for every strategy change; one gateway-mock pod serves all teams"
     }
   ],
   "gates": [

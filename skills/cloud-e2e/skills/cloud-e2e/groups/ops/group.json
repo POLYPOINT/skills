@@ -165,7 +165,8 @@
         "auth:UM",
         "auth:IMP"
       ],
-      "note": "same window as auth's (one doc windows/<env>~W-Y-MSG); ops LIFE and X16 (CT only) may continue"
+      "exempt": ["ops:LIFE", "ops:X16"],
+      "note": "same window as auth's (one doc windows/<env>~W-Y-MSG); ops LIFE and X16 (CT only) may continue: `exempt`"
     },
     {
       "id": "J-Y-JOBS",
@@ -188,7 +189,7 @@
       ],
       "est_min": 30,
       "pauses": [],
-      "note": "doc windows/ct~S-CT-JOBS, steward-requested with the user's OK, announced"
+      "note": "doc windows/ct~S-CT-JOBS, steward-requested with the user's OK"
     },
     {
       "id": "S-CT-LOGLEVEL",
@@ -203,7 +204,7 @@
       ],
       "est_min": 5,
       "pauses": [],
-      "note": "doc windows/ct~S-CT-LOGLEVEL, steward-requested, announced; ≤ 5 min at TRACE"
+      "note": "doc windows/ct~S-CT-LOGLEVEL, steward-requested with the user's OK; ≤ 5 min at TRACE"
     },
     {
       "id": "T-Y-TENANTFORM",
@@ -236,7 +237,7 @@
     },
     {
       "id": "OPS-G5",
-      "check": "before X13 part 2: the operator confirms the sms-logger test number is POLYPOINT-owned and which host is live (shared with auth AUT-G3)"
+      "check": "before X13 part 2: the operator confirms the sms-logger test number is POLYPOINT-owned and which host is live"
     }
   ],
   "seed": [

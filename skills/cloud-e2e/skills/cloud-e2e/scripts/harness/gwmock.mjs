@@ -6,7 +6,7 @@
 // The mock's own API lives under /test/: these three paths are the ONLY /test/ paths any cloud-e2e helper may call (exception
 // to hard rule 2, read-only except `strategy set`). Never DELETE the inbox, never restart the mock, never call other /test/ paths.
 // `strategy set` changes every CT team's external-workforce tests: only by the holder of the db lock locks/ct~gwmock inside the
-// announced stage window, and the restore (SUCCESS) is GET-verified in the same window. The script cannot read the db: --lock
+// stage window, and the restore (SUCCESS) is GET-verified in the same window. The script cannot read the db: --lock
 // records the lock document version the caller holds; without --lock and --window S-CT-GWMOCK it refuses.
 // Output: received-bookings.json (filtered), strategies.json, strategy-set.json (before / after). Host guard: CT (Preview: --stage).
 // Exit: 0 ok, 2 usage, 4 strategy not applied (re-read differs), 5 guard refusal, 6 HTTP error.
@@ -62,7 +62,7 @@ if (cmd === 'strategy' && a1 === 'set') {
   const ALLOWED = { booking: ['SUCCESS', 'CONFLICT', 'GENERIC_ERROR', 'HTTP_500'], cancel: ['SUCCESS', 'DEADLINE_PASSED', 'GENERIC_ERROR', 'HTTP_500'] };
   if (!ALLOWED[kind] || !ALLOWED[kind].includes(value)) die(2, `strategy set booking <${ALLOWED.booking.join('|')}> | cancel <${ALLOWED.cancel.join('|')}>`);
   if (!flags['--lock'] || flags['--lock'] === true) die(5, 'GUARD: strategy set needs --lock <version of the locks/ct~gwmock document you hold>');
-  if (flags['--window'] !== 'S-CT-GWMOCK') die(5, 'GUARD: strategy set only inside the announced stage window: --window S-CT-GWMOCK');
+  if (flags['--window'] !== 'S-CT-GWMOCK') die(5, 'GUARD: strategy set only inside the stage window: --window S-CT-GWMOCK');
   const before = await req('GET', kind);
   const w = await req('PUT', kind, { strategy: value });
   const after = await req('GET', kind);

@@ -53,7 +53,7 @@ Your family's windows: {{WINDOWS}}. Before a window step read `windows/{{ENV}}~<
 
 ### Logins
 
-Own profile folder per worker. **Group exception to common hard rule 5** (planner logins only): PLANALL, SPA, PMA and TA may be driven by two workers at once in separate profiles (each acts on its scenario's own objects, by id); every HP by one worker at a time. ≤ 2 password submissions per login per harness call; a failed login → retry once, then BLOCKED `PolyID lockout (USER_OR_IP_LOCKED) <login>` with the screenshot. Never unlock PolyID yourself.
+Own profile folder per worker. **Group exception to common hard rule 5** (planner logins only): PLANALL, SPA, PMA and TA may be driven by two workers at once in separate profiles (each acts on its scenario's own objects, by id); every HP by one worker at a time. The (person, day) cells the families write (rules.json `WRITES`) are checked by `gen-prompts.py`, which refuses two concurrent families on the same cell. ≤ 2 password submissions per login per harness call; a failed login → retry once, then BLOCKED `PolyID lockout (USER_OR_IP_LOCKED) <login>` with the screenshot. Never unlock PolyID yourself.
 
 ### Evidence and report
 

@@ -22,11 +22,11 @@ Families (worker steps: `../assets/family-briefs/<F>.md`; this file is the refer
 ## Conventions used by every scenario
 
 - **Environment.** DM-Y cloud tenant `{{TENANT}}`, users `<login>@{{TENANT}}.ch`. CT hosts: myPP `https://ct-poma-webapp.dev.k8s.polypoint-dev.com/health-professional-app`, planner app `…/shift-planner`, poma-api `https://ct-poma-api.dev.k8s.polypoint-dev.com`, PolyID login and PolyID ops `https://ct-polyid-login.dev.k8s.polypoint-dev.com` (`/ops/`), Hydra `https://ct-polyid.dev.k8s.polypoint-dev.com`, portal `https://ct-portal-webapp.dev.k8s.polypoint-dev.com` (`/ops` PolyPortal ops, `/portal` customer portal).
-- **Actors** (seed logins mapped in seed A1; tokens of `rules.json`): HPA (plain HP), SEEDSP (seed planner), NOHP (no health-professional client role), LOCKU, PWU, OTPU, T2FU, OFFU, SMSU, BLKU, NEWU, EMPU, optional IMPBLK / DISU / NOEMP, TA (borrowed), OPS (the runner's PolyID / portal ops sessions), OPS-IMP (the operator's ops-realm account for impersonation, typed by the operator).
+- **Actors** (seed logins mapped in seed A1; tokens of `rules.json`): HPA (plain HP), SEEDSP (seed planner), NOHP (no health-professional client role), LOCKU, PWU, OTPU, T2FU, OFFU, BLKU, NEWU, EMPU, optional IMPBLK / DISU / NOEMP, TA (borrowed), OPS (the runner's PolyID / portal ops sessions), OPS-IMP (the operator's ops-realm account for impersonation, typed by the operator).
 - **Secrets.** Seed passwords come from the DeployMate manifest through the harness; wrong passwords are random strings in memory. TOTP secrets, OTP / SMS codes and set-password links are never written to files, logs, notes, rows or screenshots (shots mask `.otp-img`, `.qr_code`, `#otp_secret`, `.copy-secret-container`, `.otp-setup-container`); record only "secret present / changed". JWTs are decoded in memory; only role lists and claim **names** are saved.
 - **Password budget.** Every submission counts towards the PolyID lock (user 13 / IP 18 per provider, no expiry). At most 2 submissions per harness call; more only in AUT-05 inside its window. Every wrong password is followed by a success from the same IP.
 - **Messaging.** CT sends real SMS and e-mail. Only owned recipients: the team mailbox `{{AUTH_MAILBOX}}` and the sms-logger test number. Nothing is ever sent to a seeded `…@{{TENANT}}.ch` address.
-- **Gates** (runner, before the families): **AUT-G1** PolyID ops session + `provider-read` (type `API_GATEWAY_VALIDATION`, `twoFactorType DISABLED`, domain `{{TENANT}}.ch`), `applied-policies` without a locked subject, portal tenant Send Messages OFF; **AUT-G2** every actor except NEWU logged in once (≤ 1 submission), role lists (HPA HP without SP, SEEDSP both, NOHP without HP, TA tenant admin), `user-read` ACTIVE, NEWU absent; **AUT-G3** (before AUT-07 / 08 / 11) the operator confirms the team mailbox and the POLYPOINT-owned sms-logger number and its live host.
+- **Gates** (runner, before the families): **AUT-G1** PolyID ops session + `provider-read` (type `API_GATEWAY_VALIDATION`, `twoFactorType DISABLED`, domain `{{TENANT}}.ch`), `applied-policies` without a locked subject, portal tenant Send Messages OFF; **AUT-G2** every actor except NEWU logged in once (≤ 1 submission), role lists (HPA HP without SP, SEEDSP both, NOHP without HP, TA tenant admin), `user-read` ACTIVE, NEWU absent; **AUT-G3** (before AUT-07 / 08) the operator confirms the team mailbox.
 - **Oracles.** PolyID page state (URL path, `errors=` / `warnings=`, `.login-error` / `.login-warning`, element ids of `polyid-login` templates); PolyID admin (`user-read`, `applied-policies`, `audit`); customer-portal API (`/api/private/business/portal/incidents`, `…/health/usermanagement/users`); myPP (`current-user/sync`, `pep-employments/valid-on-date`); box DB for PEP data. Screenshots are evidence, never the oracle.
 - **Expected values.** `PASS`, or `SUSPECT-FAIL AUT-S<n>` where the code suggests a defect; a matching signature is reported as `KNOWN-FAIL AUT-S<n>`, a suspicion that does not reproduce as PASS with "AUT-S<n> not reproduced".
 - **Ownership.** Each scenario owns its actors. "Exclusive" in the text below = the named window: no other worker on `{{TENANT}}` starts a fresh PolyID login (LOGIN) or anything at all (HARD).
@@ -207,22 +207,11 @@ Families (worker steps: `../assets/family-briefs/<F>.md`; this file is the refer
 >     Evidence: masked shots, user-\*.json (no secret fields), audit.json, notes.md.
 >     Source: 13223362757#2–#6 (per-user variant), 11993579561#3; PID-2FA-02, PID-2FA-03, PID-OPS-04; `PL/service/twofactor/TwoFactorOTPStrategy.java:70-153`, `OF/pages/provider/users-form/users-form.component.html:160-183`.
 
-### AUT-11 SMS one-time code (MOBILE_OR_EMAIL) through the CT sms-logger
+### AUT-11 SMS one-time code (MOBILE_OR_EMAIL) — DROPPED
 
-> Data prerequisite: actor `SMSU` whose on-prem `mobile_number` is the sms-logger test number (seed A6, guess on the attribute; owner confirmed in gate AUT-G3). Per-user override only. At most 3 SMS per run and at most 5 code verifications per 10 min per user (`TwoFactorAuthService.java:79-83`). BLOCKED → manual-only when gate AUT-G3 fails; substitute AUT-09.
-> Pre: `polyid-flow.mjs {{TENANT}} <SMSU> aut11.mjs out/AUT-11 --fresh`; the sms-logger page in a second tab.
-> Steps:
->
-> 1. `polyid-admin user-2fa {{TENANT}} <SMSU> MOBILE_OR_EMAIL`.
-> 2. Onboard + password → `/ui/2fa-form` (`#form-2fa`, `#code`). Within 60 s the sms-logger shows a new message for the test number. Its text follows `PR/sms/messages/messages_<lang>.properties` key 1, e.g. "Please use this code for security verification: NNNNNN". Read the 6 digits in memory.
-> 3. Submit a wrong code → "Code ist nicht gültig." Then the real code → `/tabs/`.
-> 4. New login: on the 2FA page wait until `#resend-code` is enabled (≥ 30 s), click it, read the new SMS. Submit the **old** code: refused (the code was replaced on resend). Submit the new one: success.
-> 5. _(optional, 3 min)_ New login; wait > 3 min; submit the code → "TwoFactorAuthCodeTimeout" text.
-> 6. Restore: `user-2fa <SMSU> DEFAULT`.
->    Expect: SMS delivered to the logger; codes behave as stated.
->    Oracle: sms-logger entry (time, recipient = test number, 6-digit code), page states.
->    Evidence: 02-2fa-form.png, sms-logger-entries.txt (codes replaced by `******`), 03-04 shots.
->    Source: 11993579561#1; gap G11 (PID-2FA-01); `PL/service/twofactor/TwoFactorPolyIdStrategy.java:57-66`, `PL/domain/model/TwoFactorAuthCode.java:59-67`.
+> Not run (decision 2026-10-27, review F-01). PolyID chooses the 2FA recipient on the server: on-prem `mobile_number` → token claim `mobile_number` → the user's **e-mail** (`PL/service/twofactor/TwoFactorPolyIdStrategy.java:57-66`), and the tenant's Send Messages switch does not gate this path. With an unverified mobile attribute the code would go to the seeded `first.last@<env>.ch` address. Never set a `MOBILE_OR_EMAIL` override in this group.
+> Re-enabling needs: (a) the actor's e-mail = the team mailbox; (b) a gate that decodes the actor's token and asserts the `mobile_number` claim equals the sms-logger number before any send; (c) `polyid-admin.mjs user-2fa … MOBILE_OR_EMAIL` refused without that gate's proof; (d) hard rule 4 naming the 2FA path.
+> Source: 11993579561#1; gap G11 (PID-2FA-01).
 
 ### AUT-10 Tenant-wide TOTP: enforcement, running sessions, "2FA config missing" incident
 

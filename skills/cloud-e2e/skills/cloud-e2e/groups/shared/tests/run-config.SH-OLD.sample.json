@@ -1,0 +1,34 @@
+{
+  "run": "sample01",
+  "run_dir": "/ABSOLUTE/PATH/results/sample01",
+  "group": "shared",
+  "mode": "multi",
+  "tenant": "<tenant_below_26>",
+  "runner": "<runner name>",
+  "dashboard_url": "https://claude.ai/artifact/<dashboard id>",
+  "coordination": "artifact-db",
+  "bundle": "n/a",
+  "bundle_class": "n/a",
+  "run_date": "2026-11-03",
+  "employees": {
+    "OLDHP1": {
+      "login": "<oldhp1_login>",
+      "id": "n/a"
+    },
+    "OLDHP2": {
+      "login": "<oldhp2_login>",
+      "id": "n/a"
+    }
+  },
+  "days": {
+    "OLD_DAY": "2026-11-05"
+  },
+  "config": {
+    "STAGE": "preview",
+    "OLD_POMA_API": "<old_poma_api>",
+    "CRED_FILE": "<cred_file>",
+    "PIDOPS_PROFILE": "<pidops_profile>",
+    "PORTAL_PROFILE": "<portal_profile>"
+  },
+  "_comment": "Sample run config for gen-prompts.py --group shared --families SH-OLD (a box below on-prem 26, here on Preview, review fix F-05, 2026-10-27). One config per shared family: the engine has one tenant per config, and each family runs on another shared tenant (group.json env.tenants). Run sample01 and the paths are fakes. Named by the user / the box owners in gate SH-G3, fake here: tenant (the < 26 box, Preview or CT host, never polypointservices.ch), OLDHP1 / OLDHP2 logins (same personnel category), OLD_POMA_API (poma-api URL of that Preview stage; none on CT, with STAGE ct). Supplied by the runner, fake here: CRED_FILE (the runner's 0600 file for OLDHP1 / OLDHP2, outside results/), PIDOPS_PROFILE and PORTAL_PROFILE (headed ops sign-ins, outside results/). OLD_DAY = a future weekday with a swappable presence of OLDHP1 (seed SH1 step 5). bundle / bundle_class n/a unless known. Test: gen-prompts.py <this file> --group shared --families SH-OLD --dry-run (exit 0, no NEEDS CONFIG line)."
+}

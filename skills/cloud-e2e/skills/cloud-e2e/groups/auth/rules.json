@@ -8,7 +8,6 @@
     "OTPU": "emp+login",
     "T2FU": "emp+login",
     "OFFU": "emp+login",
-    "SMSU": "emp+login",
     "BLKU": "emp+login",
     "NEWU": "emp+login",
     "EMPU": "emp+login",
@@ -31,7 +30,6 @@
     "AUT-08": ["A5", "AUT-G3", "W-Y-MSG (ON phase)", "PEP lock", "operator reads the team mailbox"],
     "AUT-09": ["AUT-G1"],
     "AUT-10": ["W-Y-TENANT2FA", "TA (kit)"],
-    "AUT-11": ["A6", "AUT-G3", "operator reads the sms-logger"],
     "AUT-14": ["AUT-G2", "part 2 >= 65 min after part 1"],
     "AUT-16": ["TA (kit)"],
     "AUT-17": ["TA (kit)", "operator ops-realm sign-in"],
@@ -52,7 +50,6 @@
     "PORTAL_PROFILE": "absolute path of the runner's PolyPortal ops browser profile (outside results/; tenant read)",
     "PROVIDER_ID": "PolyID provider id of the env's tenant (gate AUT-G1 provider-read)",
     "AUTH_MAILBOX": "address of the team-owned mailbox the operator reads (seed A5); an address, never its password",
-    "SMS_LOGGER_URL": "the sms-logger page the operator confirmed live in AUT-G3 (read by the operator, never by the harness)",
     "PORTAL_HOST": {
       "doc": "customer portal / PolyPortal web host of the stage",
       "value": "https://ct-portal-webapp.dev.k8s.polypoint-dev.com"

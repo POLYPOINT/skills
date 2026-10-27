@@ -7,7 +7,7 @@ Paths relative to the cloud-e2e skill folder; `<env>` = DM-Y env id; results in 
 1. Pick the actors inside the claimed partition (Geriatrie + Notfall + IPS) by the rules of `../references/data-plan.md` §2 (ASCII kürzel, one employment for EMPU, NEWU never logged in — check `polyid-admin.mjs … user-read <NEWU>` → exit 2 after A2). Write `results/<run>/auth/auth-allocation.md` (token, login, MITARBEITER_ID, Station).
 2. Plain-HP actors into the kit group (one call, own claimed ids only):
    ```
-   scripts/sql.sh <env> -f scripts/seed/common/kit-member.sql -D ma_ids=<HPA,LOCKU,PWU,OTPU,T2FU,OFFU,SMSU,BLKU,NEWU,EMPU[,IMPBLK,DISU]> -D kit="E2E:HP-PLAIN" -D leave="DMSEED:Planner"
+   scripts/sql.sh <env> -f scripts/seed/common/kit-member.sql -D ma_ids=<HPA,LOCKU,PWU,OTPU,T2FU,OFFU,BLKU,NEWU,EMPU[,IMPBLK,DISU]> -D kit="E2E:HP-PLAIN" -D leave="DMSEED:Planner"
    ```
    Log the `BEFORE|` / `AFTER|` lines (restore record). SEEDSP and NOHP stay in `DMSEED:Planner`.
 3. **AUT-G2**: every actor except NEWU logs in once (`node scripts/harness/app.mjs <env> "<login>" <script> <out> --app mypp`, one call per login, ≤ 1 password submission); the script saves `roles(api)` (names only) and, in memory, the tenant-subject claim value → `auth-allocation.md`. Expected: HPA (and every plain HP) `ROLE_HEALTH_PROFESSIONAL` without `ROLE_SHIFT_PLANNER`; SEEDSP both; TA `ROLE_TENANT_ADMIN` (TA logs in with `--app customer-portal`). A plain HP still showing `ROLE_SHIFT_PLANNER` → the seed trap of `scripts/seed/common/README.md`: move it again with `-D leave="PEP - Leitbediener"`, log in once more. NOHP is checked after A3.
@@ -25,9 +25,9 @@ Box Keycloak admin console through the tunnel (`scripts/tunnels.sh <env> - <digi
 
 Box Keycloak admin → user PWU → e-mail = the team mailbox (run config `AUTH_MAILBOX`, verified). For AUT-08 also check the UsrAdmin e-mail of PWU (pep-verify read under the PEP lock, or the operator over RDP holding the lock); set it if it differs. Restore: the manifest e-mail in both places.
 
-## A6 — SMSU mobile → the sms-logger test number (only after AUT-G3)
+## A6 — retired (AUT-11 dropped, decision 2026-10-27, review F-01)
 
-Set the on-prem attribute that api-gw returns as `mobile_number` (guess: Keycloak user attribute `mobile_number` in realm `POLYP01`, or the PEP employee's mobile field synced to Keycloak) to the test number the "Test Send Messages" panel pre-fills. Verify with nothing but the AUT-11 run itself (no extra login). Restore: remove it.
+Not run. No actor gets a mobile number and no `MOBILE_OR_EMAIL` override is set: the 2FA code would fall back to the seeded e-mail.
 
 ## A8 — optional DISU / NOEMP
 

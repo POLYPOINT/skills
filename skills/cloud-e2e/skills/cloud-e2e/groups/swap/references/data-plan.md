@@ -106,7 +106,7 @@ Estimated ≈ 90 min with `pp-plan.sh`, ≈ 180 min with PEP paints.
 | Run partner (stage-wide)               | steward only                                                        | SWP-31, BKG-27, partner                                                                  | read only; any save wipes the Debug log                                    |
 | PEP desktop (one per box)              | family D, S5–S7 fallback, SWP-13/29 conflict step                   | every PEP user of DM-X                                                                   | `locks/<env>~pep` ≤ 20 min holds; prefer `pp-plan.sh`                      |
 
-**Inside the group.** Three lanes on disjoint (person, day) cells: L1 = B → D, L2 = A → C, L3 = E; F after the lanes; X03 / X07 / X14 in their windows. A T person may be driven by two workers at the same time only on different days and in different browser profiles (cell-level ownership; see group brief "Logins"). SWP-01 runs first: the other lanes start when SWP-01 is PASS.
+**Inside the group.** Three lanes on disjoint (person, day) cells: L1 = B → D, L2 = A → C, L3 = E; F after the lanes; X03 / X07 / X14 in their windows. A T person may be driven by two workers at the same time only on different days and in different browser profiles (cell-level ownership; see group brief "Logins"); `gen-prompts.py` refuses a run config in which two families that can run at the same time write the same (person, day) (rules.json `WRITES`). SWP-01 runs first: the other lanes start when SWP-01 is PASS.
 
 ## 5. Cleanup after the run
 

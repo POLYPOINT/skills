@@ -17,7 +17,7 @@ Env DM-X + CT stage registries. 18 scenarios, ≈ 405 worker-minutes, group seed
 | ---- | ---------------------------------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | 0    | R2 group seed P-PTN-6 → P-PTN-7 → P-PTN-9 → (P-PTN-9b) → P-PTN-11 + gates                | runner  | `seed/README.md`                                                                                                                       |
 | 1    | Lanes in parallel: **L1** = PA → PWAPI → EB, **L2** = PAPI → PE, **L3** = EW             | 3       | disjoint actors and days; PE only after PAPI reported PTN-07 (PTN-08 reads its opportunity); PE takes the PEP lock ≈ 15 min for PTN-09 |
-| W    | **X20** in S-CT-GWMOCK (Day 2 ≈ 11:00–11:30)                                             | 1       | after EW; the steward requests the window with the user's OK and announces it to every CT team; the worker holds `locks/ct~gwmock`     |
+| W    | **X20** in S-CT-GWMOCK (Day 2 ≈ 11:00–11:30)                                             | 1       | after EW; the steward requests the window (user OK); the worker holds `locks/ct~gwmock`                                                |
 | 2    | runner: unregister the external HPs `E2E PTN <tag> A`, `B`, `C`; summary; release claims | runner  | then tell the steward that partner PE / PAPI are done (run partner may be deleted after swap F and booking NT)                         |
 
 ## Windows touching this group

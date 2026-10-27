@@ -228,7 +228,7 @@ async function runCommand(s) {
       if (!real.arguments.some((x) => x.name === 'tenantIds')) throw new PortalExit(5, `${real.name} offers no tenantIds argument: refusing (it would act on all tenants)`);
       segment = `${real.name}?tenantIds=${t}`;
     } else {
-      if (flags['--window'] !== 'S-CT-JOBS') throw new PortalExit(5, 'Tier A jobs run only inside the announced stage window: pass --window S-CT-JOBS');
+      if (flags['--window'] !== 'S-CT-JOBS') throw new PortalExit(5, 'Tier A jobs run only inside the stage window: pass --window S-CT-JOBS');
       segment = `${real.name}?`;
     }
     const r = await s.call('POST', actuatorPath(service, 'polypointjobs', { segment }));
