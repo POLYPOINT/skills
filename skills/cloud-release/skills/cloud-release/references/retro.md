@@ -66,10 +66,11 @@ Porting, in the worktree:
   catalogue numbers them. A new step also gets its row in `catalogue/README.md` (the lesson column: this release and
   why) and a line in `CORE` when every release needs it.
 - A behaviour change gets a CT test step in `catalogue/tests/` when it can be rehearsed (§5 runs it).
-- `tools/release-board/selftest.sh` green, `bash -n` on every touched step; `release-notes/rb-v<next>.md` for the tag.
+- `tools/release-board/selftest.sh` green, `bash -n` on every touched step; `release-notes/rb-v<next>.md` — the file
+  name is the version (above the last tag of its channel; `rb-vX.Y.Z-preview.N` for the preview channel).
 - Then, with the user's explicit OK, one commit and one PR (with the retro's other catalogue / engine / doc fixes of
-  §3). After the merge the user pushes the tag `rb-v<next>` (pipeline 478 publishes it): the catalogue ships inside the
-  engine, so teammates get it with that release. Claude never tags.
+  §3). Its merge tags `rb-v<next>` and pipeline 478 publishes it after the approval: the catalogue ships inside the
+  engine, so teammates get it with that release. No tag by hand.
 
 ## 5. Test before closing
 
