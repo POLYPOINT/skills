@@ -123,7 +123,7 @@ Ask about every mismatch:
   each new step worth reusing too. `rb -r X plan diff-catalogue` shows where the plan stands at any time (read-only);
   at the retro it is the list to work through (release rule 15). What a step loads from the engine (`lib/`, `tools/`,
   a catalogue script it calls) does not travel with the plan: when a fix sits there, ask the user — inline it in the
-  copy, or an engine PR + `rb-v…` tag before the window.
+  copy, or an engine PR with release notes (its merge publishes a new rb) before the window.
 - **New steps:** `rb -r X plan task add <section> "<title>" --script [--target …] [--depends …]` writes a step from
   `tools/release-board/templates/step.sh` under the right id; it fails until written (a `die` line names it). Write the
   body in that file and remove the `die` line. A step:
