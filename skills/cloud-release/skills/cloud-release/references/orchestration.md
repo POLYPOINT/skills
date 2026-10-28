@@ -6,7 +6,7 @@ The operator runs every step from the board. Claude reads, explains, prepares fi
 
 | Command                                                                                   | Who runs it                                | What it does                                                                                |
 | ----------------------------------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| `rb releases` · `rb -r X where` · `rb -r X list`                                          | Claude or operator                         | read-only                                                                                   |
+| `rb releases [--active \| --archived]` · `rb -r X where` · `rb -r X list`                 | Claude or operator                         | read-only                                                                                   |
 | `rb watch X --once`                                                                       | Claude or anyone                           | read-only: pulls the bucket's plan + run data into `~/.release-board/<release>-watch/`      |
 | `rb -r X pull`                                                                            | Claude reads, operator accepts             | shows the bucket's plan change as a diff; only the operator's typed `accept` activates it   |
 | `rb -r X push`                                                                            | when the user asks                         | plan edits to the bucket (generation preconditions; a conflict names the file)              |

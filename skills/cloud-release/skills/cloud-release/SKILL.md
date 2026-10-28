@@ -2,7 +2,7 @@
 name: cloud-release
 description: Use when preparing, planning, running or reviewing a POLYPOINT cloud production release night (a PCR such as PCR-2643) with the release board in the pcr-companion repo — deciding the scope from the Confluence release page AND the release/maintenance..release/preview diff, choosing catalogue steps and writing new ones, ordering the window and estimating downtimes, building the plan with sections, tasks and deploy groups (rb plan, the board's plan mode — a component deployed from release/preview or release/maintenance, an existing Azure DevOps release or a new one), then on release night saying which board step comes next, reading the board state and step logs, diagnosing a failed step and preparing the fix, and afterwards running the retro — bringing the steps changed or written in the plan back into the catalogue (rb plan diff-catalogue, one PR) — and archiving the evidence. Triggers on "prepare / plan the release", "plan a hotfix release", "deploy POMA from maintenance", "PCR-xxxx", "release night", "rb plan", "start the board", "which step next", "step 4xx failed", "release retro", "catalogue candidates", "diff-catalogue", "rb board", "rb take", "rb watch", "gs://ppcloud-releases", "cloud-release-dashboard". Do NOT use for ordinary CT/preview deploys, single-ticket work (dev-ticket), or the nightly release-branch merge (release-branch-merge).
 metadata:
-  version: 0.4.0
+  version: 0.5.0
 ---
 
 # Cloud release
@@ -22,6 +22,8 @@ the plan travels through the bucket (`rb push` / `rb pull`, no PR — every pull
 active only once the operator types `accept`), the operator holds the release's lease (`rb take` … `rb handover`) and
 their board syncs state, logs and artifacts (masked) to `<release>/run/`; everyone else follows with
 `rb watch PCR-xxxx`. A backup operator is ready for every window and takes over if the operator's Mac dies.
+Several releases can be open at once (a hotfix the week after a feature release): each has its own plan, run data and
+lease, so always name the release (`-r PCR-xxxx`) and check the board's header shows the one meant.
 
 ## Ground rules (non-negotiable)
 
@@ -68,8 +70,9 @@ their board syncs state, logs and artifacts (masked) to `<release>/run/`; everyo
 2. Docs and catalogue: in the pcr-companion repo (`$PP_RELEASE_HOME` when cloned, else Azure DevOps `pcr-companion`).
    The installed engine carries the catalogue too: `rb version` prints the engine directory
    (`~/.release-board/engine/versions/<v>`), the catalogue is its `catalogue/`.
-3. Release: `-r PCR-xxxx` on every command or `$PP_RELEASE`. `rb releases` lists the releases in the bucket (lease
-   holder, `FROZEN`), `rb -r X where` shows the places: engine · plan cache `~/.release-board/<release>/plan/` of
+3. Release: `-r PCR-xxxx` on every command or `$PP_RELEASE`. `rb releases` lists them: ACTIVE (window, lease, what
+   this Mac has — operated here / plan on this Mac) and ARCHIVED (frozen); `--active` / `--archived` filter. `rb board`
+   or `rb watch` without a release ask which one (the user's terminal). `rb -r X where` shows the places: engine · plan cache `~/.release-board/<release>/plan/` of
    `gs://ppcloud-releases/<release>/plan/` · run data `~/.release-board/<release>/` · bucket paths · lease. Legacy
    `runs/<release>/` in git (PCR-2632) load read-only.
 4. Read once per session: `docs/release-board.md` (operator guide), `docs/release-rules.md`,
@@ -110,7 +113,7 @@ preview|maintenance [--release <id|URL|create>] [--staging <section>] [--prod <s
    for this release → edit the plan's copy, never the catalogue; every changed copy and every new reusable step goes on
    the "Catalogue candidates" list in `RELEASE.md` G (id, origin, what and why) for the retro. Details:
    [references/planning.md](references/planning.md) §3. Each new step:
-   header complete (`@phase @target @kind @depends`, downtime headers), gates not warnings, verify + rollback in its
+   header complete (`@phase @target @kind @depends @rerun`, downtime headers), gates not warnings, verify + rollback in its
    comment, no secrets, `bash -n` clean, `rb -r X list` and `dry-run` readable. **STOP** — step list agreed.
 4. **Order and window.** Apply the release rules: everything that can run before the window runs before it without
    touching prod workloads; in the window, group the downtimes so user impacts overlap, maintenance page on before the
@@ -138,6 +141,10 @@ Commands, state-file format and the triage flow: [references/orchestration.md](r
   from anywhere (a read-only copy in `~/.release-board/<release>-watch/`); summarise running / failed / blocked and the
   ongoing downtimes. Keep `RELEASE.md` section F (log) current with what happened, in one line per event (in the
   operator's plan cache the board's sync pushes it; elsewhere `rb push` when the user says so).
+- **A done step must run again** → if it runs once (`@rerun no`: `rb -r X dry-run <id>` says it), the board and
+  `rb run` refuse it on purpose: say what a second run would undo (a root token added after it was removed, a KC
+  admin recreated, a baseline overwritten) before giving the operator `rb -r X reset <id>` — the reset is their
+  decision. A step that may run again (`@rerun yes`) is simply rerun.
 - **A step failed** → read its log tail, the step script and the libs it sources; match the symptom against
   `docs/release-recipes.md`; then propose ONE of: a fix to the step script (edit the plan's copy, show the diff, the
   operator reruns; then add it to the catalogue candidates in `RELEASE.md` G), a manual action as exact commands for

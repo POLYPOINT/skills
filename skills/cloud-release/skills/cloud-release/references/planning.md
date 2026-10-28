@@ -84,8 +84,9 @@ Ask about every mismatch:
   `rb -r PCR-xxxx push` (when the user agrees — the bucket is shared). The board's plan mode pushes by itself.
 - **Sections** = the plan's phases (`rb plan section add "<name>" [--at "YYYY-MM-DD HH:MM"] [--on-demand]`; an
   on-demand section is a rollback, never offered as next). **Tasks** (`rb plan task add <section> "<title>" [--desc
-"…"] [--after <id>] [--command "…" --target …] [--depends <ids>]`): manual (the operator records the outcome) or one
-  shell command; ids are allocated between the neighbours (`task up|down|mv|rm` renumber and rewrite every
+"…"] [--after <id>] [--command "…" --target …] [--depends <ids>] [--rerun yes|no]`): manual (the operator records
+  the outcome) or one shell command; a task runs once unless `--rerun yes` (decide it with the user: is a second run,
+  after later steps, harmless?); ids are allocated between the neighbours (`task up|down|mv|rm` renumber and rewrite every
   `@depends`; a task with run state keeps its id). `rb plan show` prints the plan by section; a refused change leaves
   the plan as it was.
 - **Deploy groups** — `rb plan group add <component> --from preview|maintenance [--release …] [--staging <s>] [--prod
@@ -132,7 +133,12 @@ Ask about every mismatch:
   - says how it is verified and how it is rolled back, in the header comment;
   - carries `@downtime` / `@downstart` / `@downend` when users notice anything, and calls `dt_mark start|end` at the
     exact action;
-  - reads release-specific values from the plan's `config.sh`, never hard-coded.
+  - reads release-specific values from the plan's `config.sh`, never hard-coded;
+  - says whether it may run again once done: `@rerun yes` when a second run after later steps is harmless (a check, a
+    sync, a stage that skips what succeeded, a removal), `@rerun no` when it would undo them or move a baseline
+    (creates, adds, scales up, POSTs, dumps a baseline). Without the header a check may run again and anything else
+    runs once;
+  - names what must be done before it in `@depends` — the board shows `⧗ waits for …` and refuses to start it earlier.
 - Check every new step:
   - `bash -n` it;
   - `rb -r X list` shows it in the right phase with the right dependencies;
