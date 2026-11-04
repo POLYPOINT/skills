@@ -143,7 +143,7 @@ No heartbeat for 20 min → the steward contacts the person. After confirmation 
 | Portal ops / POMA ops / PolyID ops     | personal account, headed login into a profile outside `results/` (≈ 1.5 h)                                                                              | shared ops accounts unless the user names one   |
 | Mailbox links, SMS codes, TOTP secrets | read in memory; a mail link goes to `<outdir>/.mail-link` (0600), deleted after use                                                                     | any file, row, screenshot (shots mask OTP / QR) |
 | Partner client secret                  | `portal-ops.mjs partner secret-to-mem` (memory only, used by `partner-api.mjs`)                                                                         | saved JSON (`client_secret` → `[redacted]`)     |
-| DM-213 SYS login                       | the steward types it into their own terminal (deploymate skill §6a)                                                                                     | any Claude session                              |
+| DM-213 SYS login (fallback only)       | not needed: `dm-repair-dm213.sh` uses the owner's revealed DB login; on `INSTALLER_RESET_FAILED` the steward types SYS in their own terminal (§6a)      | any Claude session                              |
 
 ## 7. Fallbacks
 

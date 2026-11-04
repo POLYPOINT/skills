@@ -1,0 +1,32 @@
+{
+  "after": null,
+  "data_type": "PageableIntegrationPartner",
+  "next": null,
+  "partners": [
+    {
+      "id": "e2e-ptn-nosub",
+      "active": true,
+      "logging_config": { "enabled": false },
+      "subscription_config_list": [],
+      "tenant_access_list": [{ "tenant_id": "ext1", "access_rights": ["USERS", "PLANNED_SHIFTS"] }]
+    },
+    {
+      "id": "e2e-ptn-sub",
+      "active": true,
+      "logging_config": { "enabled": false },
+      "subscription_config_list": [
+        { "id": 1, "name": "ct-topic-e2e-ptn-sub-shifts", "event_subscription_filters": ["PLANNED_SHIFTS"] }
+      ],
+      "tenant_access_list": [{ "tenant_id": "ext1", "access_rights": ["PLANNED_SHIFTS"] }]
+    },
+    {
+      "id": "e2e-ptn-on",
+      "active": true,
+      "logging_config": { "enabled": true },
+      "subscription_config_list": [
+        { "id": 2, "name": "ct-topic-e2e-ptn-on-all", "event_subscription_filters": ["USERS"] }
+      ],
+      "tenant_access_list": [{ "tenant_id": "ext1", "access_rights": ["USERS"] }]
+    }
+  ]
+}

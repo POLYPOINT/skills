@@ -1,20 +1,24 @@
 #!/usr/bin/env bash
 # api-pp.sh — call api-pp (the on-prem personnel-planning API of one DeployMate box) with the box service token.
 #
-#   api-pp.sh <env> avail <emp> <from> <to>            POST /api/v2/poma-availability-info/employee-ids/range/<from>/<to>  body [<emp>]
+#   api-pp.sh <env> avail <emp> <from> <to>            POST /api/v2/poma-availability-info/employee-ids/range/<from>/<to>  body {"ids":[<emp>]}
 #   api-pp.sh <env> timesheet <employment> <YYYY-MM>   GET $APIPP_TIMESHEET_PATH ({employment}, {month} replaced; path not known yet:
 #                                                      find it with `paths timesheet` on the first run and export it)
 #   api-pp.sh <env> raw <METHOD> <path> [json|@file]   any /api/… path of api-pp (GET POST PUT DELETE)
 #   api-pp.sh <env> paths [filter]                     OpenAPI paths of api-pp (GET /v3/api-docs) containing <filter>
 #   api-pp.sh <env> token-check                        mint one token, print client id + expiry (never the token)
 #
-# <env> = DeployMate env id = CT tenant id. <emp> / <employment> = MITARBEITER_ID (= employment id on DeployMate seeds).
+# <env> = DeployMate env id = CT tenant id. avail <emp> = the EMPLOYEE id (person: MITARBEITER.MITARBEITER_GLOBAL_ID, audit.sql A1
+# EMP_ID, = POMA "user".pep_employee_id), never MITARBEITER.ID: api-pp caches per employee id, so an employment id reads an empty
+# month forever. <employment> (timesheet) = MITARBEITER_ID (MA_ID, the employment id; pp-plan.sh and plan-day.sh use it too).
 # Output: the response body on stdout; "HTTP <code> <METHOD> <path>" on stderr; with APIPP_OUT=<dir> a copy of every response
 # is saved as <dir>/NNN-<METHOD>-<path>.json (bodies of api-pp carry no secrets; the token is never written).
 # Service token: client polypoint-p4-api-personnelplanning (APIPP_CLIENT_ID), realm POLYP01 of the box Keycloak, 60 s lifetime,
 # minted per call. Secret (hard rule 7): each runner reads it from its own vault access into a 0600 file —
-# $APIPP_SECRET_FILE, else $DM_CONFIG_DIR/<env>.apipp-secret, else $DM_CONFIG_DIR/apipp-service-secret (first line). Never pass it
-# on a command line: the secret goes to curl on stdin and the token through a /dev/fd header file (not visible in `ps`).
+# $APIPP_SECRET_FILE, else $DM_CONFIG_DIR/<env>.apipp-secret, else $DM_CONFIG_DIR/apipp-service-secret (first line). Files must be
+# mode 600 / 400; APIPP_SECRET_FILE may also be a /dev/fd/N pipe (process substitution from a 0600 store: no second file; read once
+# per call, so one api-pp.sh call per pipe). Never pass it on a command line: the secret goes to curl on stdin (form-encoded, no
+# trailing newline) and the token through a /dev/fd header file (not visible in `ps`).
 # Endpoints: box Traefik http://<box>:9090/pp-api-personnel-planning and Keycloak https://<box>:8383 from an allowlisted IP
 # (<box> = .db.host of $DM_CONFIG_DIR/<env>.credentials.json or $DM_HOST), or through tunnels.sh with APIPP_TUNNEL=<digit>
 # (localhost <digit>9090 / <digit>8383). Overrides: APIPP_BASE, KC_BASE. Host guard: localhost / 127.0.0.1 /
@@ -60,6 +64,9 @@ secret_file() {
   [ -n "$f" ] || { [ -r "$cfg/$env.apipp-secret" ] && f="$cfg/$env.apipp-secret"; }
   [ -n "$f" ] || f="$cfg/apipp-service-secret"
   [ -r "$f" ] || die "no api-pp service secret file ($f): read it from your vault access into a 0600 file (never paste it into a prompt)" 4
+  # a /dev/fd/N pipe is no file on disk (macOS reports a FIFO as mode 440): only regular files need 600 / 400
+  case "$f" in /dev/fd/[0-9]*) [ -p "$f" ] || die "secret path $f is not a pipe (use a 0600 file or process substitution)" 4
+    printf '%s' "$f"; return 0;; esac
   local mode; mode=$(stat -f %Lp "$f" 2>/dev/null || stat -c %a "$f" 2>/dev/null)
   case "$mode" in 600|400) ;; *) die "secret file $f has mode $mode: chmod 600 it" 4;; esac
   printf '%s' "$f"
@@ -68,7 +75,8 @@ secret_file() {
 mint() { # prints the access token on stdout (captured by the caller, never echoed)
   local f resp tok
   f=$(secret_file) || exit $?
-  resp=$( { printf 'grant_type=client_credentials&client_id=%s&client_secret=' "$client"; head -n1 "$f" | tr -d '\r\n' | jq -sRr @uri; } \
+  # jq -j: no newline after the encoded secret (with -r the form value ends in "\n" and Keycloak answers invalid client credentials)
+  resp=$( { printf 'grant_type=client_credentials&client_id=%s&client_secret=' "$client"; head -n1 "$f" | tr -d '\r\n' | jq -sRj @uri; } \
     | curl -sk --max-time 30 -X POST "$KC/protocol/openid-connect/token" -H 'Content-Type: application/x-www-form-urlencoded' --data-binary @- )
   tok=$(printf '%s' "$resp" | jq -er '.access_token' 2>/dev/null) || die "token request failed: $(printf '%s' "$resp" | jq -r '.error_description // .error // "no JSON answer (Keycloak reachable? IP allowlisted?)"' 2>/dev/null)" 4
   printf '%s' "$tok"
@@ -103,8 +111,8 @@ date_ok() { [[ "$1" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || die "date must be YYYY
 case "$cmd" in
   avail)
     [ $# -eq 3 ] || die "avail <emp> <from> <to>"
-    [[ "$1" =~ ^[0-9]+$ ]] || die "emp must be numeric"; date_ok "$2"; date_ok "$3"
-    call POST "/api/v2/poma-availability-info/employee-ids/range/$2/$3" "[$1]"; exit $? ;;
+    [[ "$1" =~ ^[0-9]+$ ]] || die "emp must be the numeric employee id (MITARBEITER_GLOBAL_ID)"; date_ok "$2"; date_ok "$3"
+    call POST "/api/v2/poma-availability-info/employee-ids/range/$2/$3" "{\"ids\":[$1]}"; exit $? ;;
   timesheet)
     [ $# -eq 2 ] || die "timesheet <employment> <YYYY-MM>"
     [[ "$1" =~ ^[0-9]+$ ]] || die "employment must be numeric"; [[ "$2" =~ ^[0-9]{4}-[0-9]{2}$ ]] || die "month must be YYYY-MM"

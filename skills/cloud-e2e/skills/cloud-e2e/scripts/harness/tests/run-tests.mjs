@@ -12,7 +12,7 @@ import { checkUrl, guardUrl, stageUrls, blockedRequestReason, forbiddenPathReaso
 import { redactDeep, redactString, redactUrl, redactBodyString, redactHeaders, safeRecord, endpointRule, isSecretKey, sha256, REDACTED, REDACTED_JWT } from '../lib/redact.mjs';
 import { totp, base32Decode, decodeJwt, roleNames, asciiLocal, reencodeForm, parseArgs } from '../lib/util.mjs';
 import { issueName, byId, roles } from '../e2e-lib.mjs';
-import { jobTier, actuatorPath, serviceSelector, ACTUATOR_REFUSED, MESSAGING_FLAGS } from '../lib/portal.mjs';
+import { jobTier, actuatorPath, serviceSelector, ACTUATOR_REFUSED, MESSAGING_FLAGS, listOf, partnerLoggingCheck } from '../lib/portal.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const HARNESS = resolve(HERE, '..');
@@ -156,6 +156,19 @@ t('portal: actuator proxy path', () => {
   assert.ok(ACTUATOR_REFUSED.test('env') && ACTUATOR_REFUSED.test('heapdump') && !ACTUATOR_REFUSED.test('metrics'));
   assert.ok(MESSAGING_FLAGS.includes('poma.msTeams.notifications'));
 });
+t('portal: partner list answer {partners: [...]} is read (presence check of partner create / delete)', () => {
+  const ids = listOf(fx('partner-list.json')).map((p) => p.id);
+  assert.deepEqual(ids, ['e2e-ptn-nosub', 'e2e-ptn-sub', 'e2e-ptn-on']);
+  assert.deepEqual(listOf([{ id: 'a' }]).map((p) => p.id), ['a']); assert.deepEqual(listOf({ items: [1] }), [1]); assert.deepEqual(listOf(null), []);
+});
+t('portal: partner logging precondition', () => {
+  const p = Object.fromEntries(listOf(fx('partner-list.json')).map((x) => [x.id, x]));
+  assert.equal(partnerLoggingCheck(null, true).exit, 2);
+  const nosub = partnerLoggingCheck(p['e2e-ptn-nosub'], true); assert.equal(nosub.exit, 5); assert.match(nosub.msg, /subscription/);
+  assert.equal(partnerLoggingCheck(p['e2e-ptn-sub'], true), null);
+  assert.equal(partnerLoggingCheck(p['e2e-ptn-on'], true).exit, 0);
+  assert.equal(partnerLoggingCheck(p['e2e-ptn-nosub'], false), null); assert.equal(partnerLoggingCheck(p['e2e-ptn-on'], false), null);
+});
 
 // ---- 5. CLI refusals (exit before any browser / HTTP) + wrapper compatibility -------------------------------------------
 const node = (file, args, env) => run(process.execPath, [join(HARNESS, file), ...args], env);
@@ -247,9 +260,87 @@ expectExit('plan-day.sh: sql.sh failure is an error, not "(no rows)"', sh('plan-
 expectExit('pp-plan.sh: no box host → stops before any call', sh('pp-plan.sh', ['ext1', '480', '2026-11-02', '111', 'FULL'], { DM_HOST: '' }), 2, /no box host/);
 expectExit('plan-day.sh: bad emp', sh('plan-day.sh', ['ext1', 'abc', '2026-11-02']), 2, /numeric/);
 
+// api-pp.sh against a stub curl first in PATH: records what Keycloak / api-pp would receive (no network)
+{
+  const bin = join(sandbox, 'stub-bin'); const cap = join(sandbox, 'stub-cap'); mkdirSync(bin); mkdirSync(cap);
+  const payload = Buffer.from('{"azp":"polypoint-p4-api-personnelplanning","exp":1}').toString('base64url');
+  writeFileSync(join(bin, 'curl'), `#!/usr/bin/env bash
+out=""; url=""; prev=""
+for a in "$@"; do [ "$prev" = -o ] && out="$a"; case "$a" in http://*|https://*) url="$a";; esac; prev="$a"; done
+body=$(cat; printf x); body=\${body%x}
+case "$url" in
+  */protocol/openid-connect/token) printf '%s' "$body" > "$CAP/token-body"; printf '{"access_token":"h.${payload}.s"}';;
+  *) printf '%s' "$body" > "$CAP/api-body"; printf '%s' "$url" > "$CAP/api-url"; [ -n "$out" ] && printf '{}' > "$out"; printf 200;;
+esac
+`);
+  chmodSync(join(bin, 'curl'), 0o755);
+  const sf = join(sandbox, 'apipp-secret'); writeFileSync(sf, 's3cr+t/x\r\n'); chmodSync(sf, 0o600);
+  const env = { PATH: `${bin}:${process.env.PATH}`, CAP: cap, DM_HOST: 'ext1-host.deploymate.polypoint.dev', APIPP_SECRET_FILE: sf };
+  const form = (s) => `grant_type=client_credentials&client_id=polypoint-p4-api-personnelplanning&client_secret=${s}`;
+  const r1 = sh('api-pp.sh', ['ext1', 'token-check'], env);
+  t('api-pp.sh: token form ends with the encoded secret, no trailing newline', () => {
+    assert.equal(r1.status, 0, r1.stderr); assert.equal(readFileSync(join(cap, 'token-body'), 'utf8'), form('s3cr%2Bt%2Fx'));
+    assert.match(r1.stdout, /token OK: azp=polypoint-p4-api-personnelplanning/);
+  });
+  const r2 = sh('api-pp.sh', ['ext1', 'avail', '444', '2026-11-01', '2026-11-30'], env);
+  t('api-pp.sh: avail posts {"ids":[<employee id>]}', () => {
+    assert.equal(r2.status, 0, r2.stderr); assert.equal(readFileSync(join(cap, 'api-body'), 'utf8'), '{"ids":[444]}');
+    assert.match(readFileSync(join(cap, 'api-url'), 'utf8'), /\/pp-api-personnel-planning\/api\/v2\/poma-availability-info\/employee-ids\/range\/2026-11-01\/2026-11-30$/);
+  });
+  const r3 = run('bash', ['-c', 'APIPP_SECRET_FILE=<(printf "%s\\n" fd-secret) bash "$1" ext1 token-check', '_', join(SCRIPTS, 'api-pp.sh')], { ...env, APIPP_SECRET_FILE: '' });
+  t('api-pp.sh: a /dev/fd secret pipe is accepted (no second file)', () => { assert.equal(r3.status, 0, r3.stderr); assert.equal(readFileSync(join(cap, 'token-body'), 'utf8'), form('fd-secret')); });
+}
+
+// pe-paint.sh in a copied scripts/ layout with stub sql.sh, pep.sh and sleep (no PEP, no SQL, no waiting)
+{
+  const root = join(sandbox, 'pp'); const scr = join(root, 'scripts'); const bin = join(root, 'bin');
+  mkdirSync(join(scr, 'pep'), { recursive: true }); mkdirSync(bin);
+  writeFileSync(join(scr, 'pep', 'pe-paint.sh'), readFileSync(join(SCRIPTS, 'pep', 'pe-paint.sh')));
+  writeFileSync(join(scr, 'sql.sh'), `#!/usr/bin/env bash
+[ "$PP_MODE" = sqlfail ] && exit 1
+case "$2" in
+  *SNAP_OK*) [ -f "$PP_STATE/painted" ] && echo "494 2026-11-10 PA=111 #1"; echo SNAP_OK;;
+  *"'PAS='"*) if [ -f "$PP_STATE/painted" ]; then echo "PAS=111"; else echo "PAS="; fi;;
+  *"'HIT='"*) [ -f "$PP_STATE/painted" ] && echo "HIT=1|111|32400";;
+  *"'BLK='"*) echo "BLK=2";;
+esac
+exit 0
+`);
+  writeFileSync(join(scr, 'pep.sh'), `#!/usr/bin/env bash
+shift; echo "$*" >> "$PP_STATE/pep.log"
+case "$1" in
+  flow) touch "$PP_STATE/painted";;
+  click) touch "$PP_STATE/reopened";;
+  dialogs) if [ "$PP_MODE" = leftdialog ] && [ -f "$PP_STATE/reopened" ]; then printf '{\\n  "dialogs": [\\n    {\\n      "class": "TfrmKnotenwahlSperr"\\n    }\\n  ]\\n}\\n'; else echo '{ "dialogs": [] }'; fi;;
+  --out) : > "$2";;
+esac
+exit 0
+`);
+  writeFileSync(join(bin, 'sleep'), '#!/bin/sh\nexit 0\n');
+  for (const f of [join(scr, 'pep', 'pe-paint.sh'), join(scr, 'sql.sh'), join(scr, 'pep.sh'), join(bin, 'sleep')]) chmodSync(f, 0o755);
+  const paint = (mode) => {
+    const st = join(root, `state-${mode}`); mkdirSync(st);
+    const r = run('bash', [join(scr, 'pep', 'pe-paint.sh'), 'ext1', '494', '2026-11-10', '111', '99', '192', '106', '259'], { PATH: `${bin}:${process.env.PATH}`, PP_STATE: st, PP_MODE: mode, PE_OUT: join(st, 'out') });
+    return { r, st, log: existsSync(join(st, 'pep.log')) ? readFileSync(join(st, 'pep.log'), 'utf8').split('\n') : [] };
+  };
+  const ok = paint('ok');
+  t('pe-paint.sh: empty neighbourhood is no SQL failure; target plain-clicked first; BLOCK rows reported', () => {
+    assert.equal(ok.r.status, 0, ok.r.stdout + ok.r.stderr);
+    assert.equal(readFileSync(join(ok.st, 'out', '494-2026-11-10-before.txt'), 'utf8'), '');
+    assert.equal(ok.log[0], 'clickxy 440 259'); assert.equal(ok.log[1], 'clickxy 103 99');
+    assert.match(ok.r.stdout, /painted 494 2026-11-10 PA 111; neighbours unchanged .*BLOCK rows 2/);
+  });
+  const bad = paint('sqlfail');
+  t('pe-paint.sh: a failed SQL snapshot stops before any PEP gesture', () => { assert.equal(bad.r.status, 4); assert.match(bad.r.stdout, /snapshot failed/); assert.deepEqual(bad.log, []); });
+  const left = paint('leftdialog');
+  t('pe-paint.sh: a dialog left after the reopen → exit 6 after the neighbour check', () => {
+    assert.equal(left.r.status, 6, left.r.stdout); assert.match(left.r.stdout, /NOT reopened cleanly.*TfrmKnotenwahlSperr/); assert.match(left.r.stdout, /painted 494 2026-11-10 PA 111/);
+  });
+}
+
 // ---- 7. kit SQL: placeholders, guards, X/Y parameterisation (static inspection) -------------------------------------------
 const SEED = join(SCRIPTS, 'seed', 'common');
-const PARAMS = { 'definitions-kit.sql': ['env_role', 'nodes', 'abs_codes', 'swap_abs'], 'role-kit.sql': ['env_role', 'ga_node'], 'kit-member.sql': ['ma_ids', 'kit', 'leave'], 'verify-kits.sql': ['env_role'], 'stamm-fix.sql': [] };
+const PARAMS = { 'definitions-kit.sql': ['env_role', 'nodes', 'abs_codes', 'swap_abs'], 'role-kit.sql': ['env_role', 'ga_node'], 'kit-member.sql': ['ma_ids', 'kit', 'leave'], 'verify-kits.sql': ['env_role'], 'stamm-fix.sql': [], 'rulebook.sql': [] };
 for (const [f, params] of Object.entries(PARAMS)) {
   const s = readFileSync(join(SEED, f), 'utf8');
   const code = s.split('\n').filter((l) => !/^\s*--/.test(l)).join('\n');
@@ -268,8 +359,15 @@ for (const [f, params] of Object.entries(PARAMS)) {
 t('kit definitions-kit.sql: X and Y branches', () => { const s = readFileSync(join(SEED, 'definitions-kit.sql'), 'utf8'); assert.match(s, /v_role = 'X'/); assert.match(s, /v_role = 'Y'/); assert.match(s, /POMASCHICHTTYP/); assert.match(s, /SHIFT_DEFINITION_PALETTE/); });
 t('kit role-kit.sql: X and Y kits + G4b', () => { const s = readFileSync(join(SEED, 'role-kit.sql'), 'utf8'); for (const k of ['E2E:SP-ALL', 'E2E:PM-ALL', 'E2E:EXTPOOL', 'E2E:HP-NOSWAP', 'E2E:PLANALL', 'E2E:SP-GA', 'E2E:PM-GA', 'E2E:TA', 'E2E:HP-PLAIN', 'PERMISSION_ROLE', 'POLY_USER_ROLE_KEYCLOAK_ROLE_MAPPING', 'PERMISSION_GROUP']) assert.ok(s.includes(k), k); });
 t('kit kit-member.sql: enqueue after COMMIT, seed logins only', () => { const s = readFileSync(join(SEED, 'kit-member.sql'), 'utf8'); assert.ok(s.indexOf('PERMISSION_GROUP_MAPPING\', REGEXP') > s.indexOf('  COMMIT;')); assert.match(s, /DMSEED-%/); });
+// pe-paint.sh and audit.sql left this list on purpose after the 2026-11-02/03 pilot fixes (deferred repaint, empty neighbourhood,
+// reopen check; EMP_ID column): covered by the pe-paint.sh stub tests above and the audit.sql check below
+t('audit.sql A1 lists the employment id and the employee id (read-only)', () => {
+  const s = readFileSync(join(SEED, 'audit.sql'), 'utf8');
+  assert.match(s, /mp\.ID as MA_ID, m\.MITARBEITER_GLOBAL_ID as EMP_ID/); assert.match(s, /left join ECBERN\.MITARBEITER m on m\.ID = mp\.ID/);
+  assert.doesNotMatch(s.split('\n').filter((l) => !/^\s*(--|PROMPT)/i.test(l)).join('\n'), /^\s*(insert|update|delete|merge|alter|drop|create|grant)\s/im);
+});
 t('moved files unchanged', () => {
-  for (const [a, b] of [['pep/pe-ready.sh', 'scripts/pep/pe-ready.sh'], ['pep/pe-paint.sh', 'scripts/pep/pe-paint.sh'], ['seed/audit.sql', 'scripts/seed/common/audit.sql'], ['seed/rights.sql', 'scripts/seed/common/rights.sql'], ['seed/r0-root-rows.sql', 'scripts/seed/common/r0-root-rows.sql'], ['seed/psc-batch.sql', 'scripts/seed/common/psc-batch.sql']]) {
+  for (const [a, b] of [['pep/pe-ready.sh', 'scripts/pep/pe-ready.sh'], ['seed/rights.sql', 'scripts/seed/common/rights.sql'], ['seed/r0-root-rows.sql', 'scripts/seed/common/r0-root-rows.sql'], ['seed/psc-batch.sql', 'scripts/seed/common/psc-batch.sql']]) {
     const orig = execFileSync('git', ['-C', SKILL, 'show', `7e1711a19c5c4b197ad816cd4114b546d10caef7:skills/utr-e2e/skills/utr-e2e/scripts/${a}`  /* utr-e2e v0.5.0, before the move */], { encoding: 'utf8' });
     assert.equal(readFileSync(join(SKILL, b), 'utf8'), orig, b);
   }

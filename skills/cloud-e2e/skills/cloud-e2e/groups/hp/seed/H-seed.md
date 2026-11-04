@@ -11,8 +11,8 @@ Run after R1 (claims: N1, N2, N3, N3C of Geburtshilfe; N5, N5C of Paediatrie) an
 
 ## H2 — own swap N5 → N5C (gate HPN-G3)
 
-1. Choose `N5_DAY`: a seeded weekday ≥ R+1 where N5 and N5C both have a swappable presence (111 / 112 / 113) with **different** definitions (`calendar/roster` of both, read in their sessions). None → ask the steward to paint one cell for N5C with `pp-plan.sh` (hp has no SSH), then re-check.
-2. N5 session: `createOwnSwap(api, '<N5_DAY>', <N5C MITARBEITER_ID>)` (`scripts/hp-lib.mjs`) → status 200 and `oppId`; log it. `candidate not offered` → stop and tell the runner (a day where N5C has the same definition, a lock, or the definitions kit missing).
+1. Choose `N5_DAY`: a weekday ≥ R+1 where N5 and N5C both have a **PEP-painted** swappable presence (111 / 112 / 113) with **different** definitions (`calendar/roster` of both, read in their sessions). Seed plannings do not qualify: they carry no BLOCK rows (no start / end in api-pp → swap create 500, no "Diensttausch"; `scripts/seed/common/README.md` "Seed gaps" #3). hp has no SSH: ask the steward to paint both cells with `pe-paint.sh` under the PEP lock (`pp-plan.sh` fails on DeployMate boxes), then re-check.
+2. N5 session: `createOwnSwap(api, '<N5_DAY>', <N5C MITARBEITER_ID>)` (`scripts/hp-lib.mjs`) → status 200 and `oppId`; log it. `candidate not offered` → stop and tell the runner (a day where N5C has the same definition, a lock, the definitions kit or the planning rule book missing); HTTP 500 → a seed planning without BLOCK rows was picked.
 3. N5C session: the invitation is in the notification center (no answer). Leave the swap OPEN (HPN-05, HPN-21 read it; PV cancels it at the end).
 
 ## H3 — gates HPN-G2 and HPN-G4

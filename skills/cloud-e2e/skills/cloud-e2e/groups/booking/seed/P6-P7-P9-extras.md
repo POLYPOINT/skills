@@ -3,7 +3,7 @@
 ## P9 — oracles (before fan-out)
 
 1. `sql.sh --install` was done by the steward (check `kits/<env>`); a quick `scripts/plan-day.sh <env> <HPA id> <HPA_PRES>` must print the seed presence.
-2. **Gate BKG-G4:** `scripts/api-pp.sh <env> avail <HPA id> <today> <today+7>` → 200 (empty list is fine). Needs the api-pp service secret in the runner's local 0600 file (vault, OQ-11); without it every api-pp oracle step of AV is BLOCKED "no service token" — the runner with vault access or the steward runs the group.
+2. **Gate BKG-G4:** `scripts/api-pp.sh <env> avail <HPA EMP_ID> <today> <today+7>` → 200 (empty list is fine). `EMP_ID` = HPA's **employee** id (`MITARBEITER_GLOBAL_ID`, audit A1; record it next to the `MITARBEITER_ID` in `employees.md` for every actor), never the `MITARBEITER_ID`. Needs the api-pp service secret in the runner's local 0600 file (vault, OQ-11); without it every api-pp oracle step of AV is BLOCKED "no service token" — the runner with vault access or the steward runs the group.
 3. RR ids: `scripts/sql.sh <env> -f groups/booking/scripts/rr-ids.sql -D er=<ER id> -D day=<RR_DAY> -D cands=<HPG id>,<HPH id>` → `rr-ids.txt` (workers repeat it per RR day). Confirm `GROUP_NODE` (the Planblatt id: the palette node of R3 that is the Medizin Gruppe) and `GROUP_NAME`.
 4. **Gate BKG-G2:** as SP, `GET /api/private/shift-definition/roster?group-node-id=<GROUP_NODE>&from=<IPO_DAY>&to=<IPO_DAY>&include-presences=true&shift-type-filter=USE_IN_PLANNING&available-for-internal-pool=true` → non-empty and contains `DAY_DEF`. Empty → steward (definitions kit + G4b), IP family BLOCKED until fixed.
 

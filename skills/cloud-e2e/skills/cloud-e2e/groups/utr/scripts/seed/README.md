@@ -556,25 +556,30 @@ The `scripts/pep/pe-*.sh` helpers and the paint commands use screen coordinates 
 one team plan sheet open, month view, no zoom; Stempeleditor at its default 1078×766 size**. Measured 2026-10-14, identical on
 two boxes. **Verify with a screenshot first** (`scripts/pep.sh <id> --out <file> screenshot`) and override via environment.
 
-| What                                                         | Value                                                                | Override                           |
-| ------------------------------------------------------------ | -------------------------------------------------------------------- | ---------------------------------- |
-| Roster cell x of day-of-month d                              | `215 + (d−1)·25`                                                     | `PE_X0`, `PE_DX`                   |
-| Roster row y of the n-th employee of the sheet (n = 0 first) | default view `259 + n·25`; "Ist-Zeit Tag" view (Ctrl+0) `259 + n·41` | argument                           |
-| Palette radio "Ganz"                                         | `class=TfrmPEPMain > radio="Ganz"` (≈ 104,99)                        | —                                  |
-| First absence icon (25 after step c)                         | ≈ 192,135 — read the tooltip before painting                         | argument                           |
-| Blöcke grid: row x / Löschen button                          | 491 / 1421,475                                                       | `PE_ROW_X`, `PE_DEL_X`, `PE_DEL_Y` |
-| "Neu interpretieren" (Stempeluhr tab)                        | fraction 0.93 / 0.464 of `TStampEditor`                              | `PE_REINT_FX`, `PE_REINT_FY`       |
-| Flow-internal fractions ("Neu…", "Stempeln", popup items)    | defaults in `groups/utr/scripts/seed/flows/*.py`                     | `--param neu_fx=…` etc.            |
+| What                                                         | Value                                                                           | Override                           |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------- | ---------------------------------- |
+| Roster cell x of day-of-month d                              | `215 + (d−1)·25`                                                                | `PE_X0`, `PE_DX`                   |
+| Roster row y of the n-th employee of the sheet (n = 0 first) | default view `259 + n·25`; "Ist-Zeit Tag" view (Ctrl+0) `259 + n·41`            | argument                           |
+| Palette radio "Ganz"                                         | `class=TfrmPEPMain > radio="Ganz"` (≈ 104,99)                                   | —                                  |
+| First absence icon (25 after step c)                         | ≈ 192,135 — read the tooltip before painting                                    | argument                           |
+| Blöcke grid: row x / Löschen button                          | 491 / 1421,475                                                                  | `PE_ROW_X`, `PE_DEL_X`, `PE_DEL_Y` |
+| "Neu interpretieren" (Stempeluhr tab)                        | fraction 0.93 / 0.464 of `TStampEditor`                                         | `PE_REINT_FX`, `PE_REINT_FY`       |
+| Flow-internal fractions ("Neu…", "Stempeln", popup items)    | defaults in `groups/utr/scripts/seed/flows/*.py`                                | `--param neu_fx=…` etc.            |
+| Close box of the plan-sheet tab                              | 89,55; x moves with the node name (≈ 71 "Geburtshilfe", 95 "Pflege Paediatrie") | `PE_CLOSE_X`, `PE_CLOSE_Y`         |
+| Team node in `TfrmKnotenwahlSperr` (reopen)                  | 934,420 (931,559 for Geburtshilfe on `e2e-pilot-av`): depends on the tree       | `PE_NODE_X`, `PE_NODE_Y`           |
 
 Helpers: `pe-open.sh <id> <row_y> <day>` (cancel an open Stempeleditor, open the cell), `pe-del-zs.sh <id> <row_y>` (Blöcke tab:
 select row, Löschen → Ja; confirm screenshot to `$PE_OUT`), `pe-reinterp.sh <id>` (Neu interpretieren → OK → commit),
 `pe-shots.sh <id> <outdir> <label:row_y:day> …` (Blöcke-tab screenshot per prepared day, the PEP evidence of the oracle table).
 
-Painting (first run: icon 192,135, cell 362,358). Helper: `NEIGHBOURS=<ids> PE_OUT=<dir> scripts/pep/pe-paint.sh <id> <emp> <day> <pa> <radio_y> <slot_x> <slot_y> <row_y>` implements the rule below (exit 0 ok, 3 dialog, 4 unexpected change, 5 neighbour changed). **One cell per gesture**: PEP repaints the previously selected cell with the
-newly armed Dienst on the next gesture (deferred repaint). Before painting save a SQL snapshot of the plannings around the target
-(test employees of the sheet, target ±2 days); paint one cell; check the target by SQL and repeat the drag only if nothing changed;
-close and reopen the plan sheet (Datei › Planblatt bearbeiten › node › Weiter); snapshot again and diff — the only allowed change is
-the target cell, anything else → stop, no repaint, report. A dialog during the paint → screenshot, do not auto-confirm. Disarm with
+Painting (first run: icon 192,135, cell 362,358). Helper: `NEIGHBOURS=<ids> PE_OUT=<dir> scripts/pep/pe-paint.sh <id> <emp> <day> <pa> <radio_y> <slot_x> <slot_y> <row_y>` implements the rule below (exit 0 ok, 3 dialog, 4 unexpected change, 5 neighbour changed, 6 a dialog left after the reopen). **One cell per gesture**: PEP repaints the previously selected cell with the
+newly armed Dienst on the next gesture (deferred repaint, also after closing and reopening the sheet), so **plain-click the target
+cell first** (selects without painting): the deferred repaint then lands on the target itself. Before painting save a SQL snapshot
+of the plannings around the target (test employees of the sheet, target ±2 days; an empty neighbourhood is fine); paint one cell;
+check the target by SQL and repeat the drag only if nothing changed; close and reopen the plan sheet (close box of the sheet tab,
+Datei › Planblatt bearbeiten › node › Weiter); snapshot again and diff — the only allowed change is
+the target cell, anything else → stop, no repaint, report. A painted presence gets PEP's BLOCK rows (`pe-paint.sh` prints their
+count); seed plannings have none (`scripts/seed/common/README.md` "Seed gaps"). A dialog during the paint → screenshot, do not auto-confirm. Disarm with
 the palette radio, not `keys {ESC}` (PEP minimised itself once). Pikett definitions sit under the palette radio "Pikett"; hover a slot
 and read its tooltip before arming.
 

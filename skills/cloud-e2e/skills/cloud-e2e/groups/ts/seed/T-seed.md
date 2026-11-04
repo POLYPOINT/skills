@@ -11,9 +11,9 @@ Run after R1 (claims: N4, N4X, optional N4B on Pflege Geriatrie; the node is sha
 ## T2 — Sollplan saved for M+1, not for M+2 (gate TS-G2)
 
 1. PEP lock `locks/<env>~pep` (create-if-absent, renew ≤ 10 min) → `scripts/pep/pe-ready.sh <env>` → plan sheet of N4's Gruppe (`N4_NODE`).
-2. "Bearbeiten → Sollplan sichern [M+1]" (exploratory pep-verify session: no pep-driver flow exists, OQ-20); screenshots before / after; do **not** save M+2. Release the lock.
-3. Verify (inside the window, HPN-19 steps 4 / 5) or by a DB read of the Sollplan state if the table is identified (record it). No PEP path → TS-G2 FAIL: HPN-19 steps 4–5 BLOCKED, the rest runs.
-4. The save stays after the run (harmless on DM-X: the global option "Es muss ein Sollplan gesichert sein" is off there); log it.
+2. Plain-click one cell of M+1 (the menu item is greyed until a cell is selected and saves the month of that cell), then "Bearbeiten → Sollplan sichern [M+1]…" → "Wollen Sie die aktuellen Plandaten als Sollplan … sichern?" → Ja (done this way on `e2e-pilot-av` 2026-11-02; no pep-driver flow exists, OQ-20); screenshots before / after; do **not** save M+2. Release the lock.
+3. Verify by the DB (read-only): `SELECT SICHERUNGS_ID, GRUPPEN_ID, TO_CHAR(DATUM,'YYYY-MM-DD'), SOLLPLAN FROM ECBERN.PLANSICHERUNG WHERE GRUPPEN_ID = <N4_NODE> ORDER BY DATUM;` → one row with SOLLPLAN `T` for the 1st of M+1, none for M+2 (also listed by `verify-kits.sql`); inside the window HPN-19 steps 4 / 5 confirm it. No PEP path → TS-G2 FAIL: HPN-19 steps 4–5 BLOCKED, the rest runs.
+4. The save stays after the run; log it. The option "Es muss ein Sollplan gesichert sein" is **on** on DeployMate boxes (seed `ZEITBEGRENZTSOLLPLANSICHERN = T`), so the save makes M+1 of the Geriatrie Gruppe visible to its HPs (swap's U1..U4 included); M+2 stays hidden there.
 
 ## T3 — optional second employment for N4B (HPN-20)
 

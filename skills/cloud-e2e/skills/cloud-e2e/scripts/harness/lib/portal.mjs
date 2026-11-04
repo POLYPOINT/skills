@@ -48,7 +48,22 @@ export function jobTier(service, job) {
 // Flags whose ON value sends real messages: only inside the manual / messaging windows (env-plan conflict #6)
 export const MESSAGING_FLAGS = ['poma.internalPool.sendEmailConfirmation', 'poma.msTeams.notifications'];
 
-const listOf = (b) => (Array.isArray(b) ? b : b?.items || b?.content || b?.data || b?.organizations || b?.partners || []);
+// items of a portal admin list answer: a bare array or {items|content|data|organizations|partners: [...]}
+// (GET /integration-partners answers {after, data_type, next, partners: [...]})
+export const listOf = (b) => (Array.isArray(b) ? b : b?.items || b?.content || b?.data || b?.organizations || b?.partners || []);
+
+// Precondition of `partner logging on|off` on one partner of the list (null = send the PUT). portal-events builds the logging
+// Pub/Sub filter as an OR over the partner's subscriptions (IntegrationPartnerPubSubService.createLoggingSubscription): a partner
+// without one answers 400 "At least one filter must be provided"; a second ON answers EventLoggingAlreadyEnabledException.
+export function partnerLoggingCheck(partner, on) {
+  if (!partner) return { exit: 2, msg: 'partner not found in GET /integration-partners' };
+  if (!on) return null;
+  if (partner.logging_config?.enabled) return { exit: 0, msg: 'logging already on: nothing sent' };
+  if (!(partner.subscription_config_list || []).length) {
+    return { exit: 5, msg: 'logging needs at least one subscription on the partner (subscription_config_list is empty; portal-events answers 400 "At least one filter must be provided"): create the partner with a subscription, e.g. PLANNED_SHIFTS' };
+  }
+  return null;
+}
 
 // open a portal session: {base: 'ops'|'poma-ops'|'customer'}; dialogs = queue [{prompt:"DELETE"}|{confirm:true|false}]
 export async function openPortal({ profile, out, base = 'ops', stage = 'ct', headed = false, dialogs = [], logFile = 'portal-ops.log' }) {

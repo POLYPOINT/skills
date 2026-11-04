@@ -173,7 +173,7 @@
     },
     {
       "id": "BKG-G4",
-      "check": "api-pp availability oracle answers: scripts/api-pp.sh <env> avail <HPA id> <from> <to> → 200"
+      "check": "api-pp availability oracle answers: scripts/api-pp.sh <env> avail <HPA employee id (MITARBEITER_GLOBAL_ID)> <from> <to> → 200"
     }
   ],
   "seed": [

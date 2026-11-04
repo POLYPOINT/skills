@@ -9,9 +9,11 @@
 //                                               (poma.internalPool.sendEmailConfirmation, poma.msTeams.notifications) unless --allow-messaging
 //   flag delete <tenant> <code>                 DELETE the tenant override (master value applies again) = the restore
 //   tenant read <tenant>                        tenant row, services, IPs, licence (raw_xml → sha256) → tenant-<tenant>.json
-//   partner create <id> --spec <file.json>      POST an IntegrationPartner (id must start with e2e-; spec = the partner JSON)
+//   partner create <id> --spec <file.json>      POST an IntegrationPartner (id must start with e2e-; spec = the partner JSON, `name`
+//                                               a language map {de,en,fr,it}), then the presence check on the list (exit 5 if absent)
 //   partner delete <id>                         DELETE (e2e-* only), verified by a list read
-//   partner logging on|off <id>                 PUT /integration-partners/<id>/logs {enabled}
+//   partner logging on|off <id>                 PUT /integration-partners/<id>/logs {enabled}, re-read (exit 5 if not applied). on:
+//                                               already on = no-op; no subscription on the partner = refused, exit 5 (else portal-events 400)
 //   partner logs <id> [--since ISO] [--count N] [--pages P]   Debug-tab events → partner-logs-<id>.json
 //   partner secret-to-mem <id>                  checks that the client secret is readable (never printed); partner-api.mjs uses it
 //   job list <service>                          jobs + arguments of a service (actuator polypointjobs through the portal proxy)
@@ -33,7 +35,7 @@ import { pathToFileURL } from 'node:url';
 import { parseArgs, DM_DIR } from './lib/util.mjs';
 import { GuardError } from './lib/guard.mjs';
 import { redactDeep } from './lib/redact.mjs';
-import { openPortal, PortalExit, actuatorPath, ACTUATOR_REFUSED, jobTier, MESSAGING_FLAGS, readPartnerSecret, serviceSelector } from './lib/portal.mjs';
+import { openPortal, PortalExit, actuatorPath, ACTUATOR_REFUSED, jobTier, MESSAGING_FLAGS, readPartnerSecret, serviceSelector, listOf, partnerLoggingCheck } from './lib/portal.mjs';
 
 const USAGE = `usage: node portal-ops.mjs <profileDir> <script.mjs|-> <outDir> [--base ops|poma-ops|customer] [--stage ct|preview] [--headed] [--dialogs <json>]
        node portal-ops.mjs <profileDir> <login|flag|tenant|partner|job|health|audit> <outDir> [args…] [--org <slug>] [--spec f] [--tenant id] [--window id] [--since ISO]`;
@@ -82,7 +84,20 @@ const save = (name, obj) => { const f = join(out, name); writeFileSync(f, JSON.s
 const enc = encodeURIComponent;
 const TENANT_OK = /^[a-z][a-z0-9-]{0,62}$/;
 const PARTNER_OK = /^e2e-[a-z0-9-]{1,60}$/;
-const listOf = (b) => (Array.isArray(b) ? b : b?.items || b?.content || b?.data || []);
+const apiMsg = (b) => (b && typeof b === 'object' ? b.message || b.reason || b.error || '' : String(b || '')).slice(0, 200);
+// every partner of the list ({partners: [...], next}: follows `next` as `after`, ≤ 10 pages, stops on a repeated cursor)
+async function partnerList(s) {
+  const all = []; let after = null;
+  for (let p = 0; p < 10; p++) {
+    const l = await s.call('GET', `/integration-partners?count=500${after ? `&after=${enc(after)}` : ''}`);
+    if (l.status !== 200) throw new PortalExit(6, `partner list HTTP ${l.status}`);
+    const items = listOf(l.body); all.push(...items);
+    const next = l.body?.next || null;
+    if (!next || next === after || !items.length) break;
+    after = next;
+  }
+  return all;
+}
 
 async function main() {
   if (mode === 'cmd' && cmd[0] === 'partner' && cmd[1] === 'secret-to-mem') {
@@ -172,25 +187,36 @@ async function runCommand(s) {
       const spec = JSON.parse(readFileSync(flags['--spec'], 'utf8'));
       if (spec.id !== id) throw new PortalExit(4, `spec id ${spec.id} differs from ${id}`);
       const r = await s.call('POST', '/integration-partners', spec);
-      const l = await s.call('GET', '/integration-partners?count=500');
-      const present = listOf(l.body).some((p) => p.id === id);
+      if (r.status >= 300) { save(`partner-create-${id}.json`, { id, status: r.status, present: null, error: apiMsg(r.body) }); throw new PortalExit(6, `create HTTP ${r.status}: ${apiMsg(r.body)}`); }
+      const present = (await partnerList(s)).some((p) => p.id === id);
       save(`partner-create-${id}.json`, { id, status: r.status, present });
-      if (r.status >= 300) throw new PortalExit(6, `create HTTP ${r.status}`);
       return present ? 0 : 5;
     }
     if (action === 'delete') {
       const r = await s.call('DELETE', `/integration-partners/${enc(id)}`);
-      const l = await s.call('GET', '/integration-partners?count=500');
-      const gone = !listOf(l.body).some((p) => p.id === id);
+      const gone = !(await partnerList(s)).some((p) => p.id === id);
       save(`partner-delete-${id}.json`, { id, status: r.status, gone });
-      if (r.status >= 300 && r.status !== 404) throw new PortalExit(6, `delete HTTP ${r.status}`);
+      if (r.status >= 300 && r.status !== 404) throw new PortalExit(6, `delete HTTP ${r.status}: ${apiMsg(r.body)}`);
       return gone ? 0 : 5;
     }
     if (action === 'logging') {
       if (!['on', 'off'].includes(a2)) throw new PortalExit(4, 'partner logging on|off <id>');
-      const r = await s.call('PUT', `/integration-partners/${enc(id)}/logs`, { enabled: a2 === 'on' });
-      save(`partner-logging-${id}.json`, { id, enabled: a2 === 'on', status: r.status });
-      return r.status < 300 ? 0 : 6;
+      const on = a2 === 'on';
+      const find = async () => (await partnerList(s)).find((p) => p.id === id) || null;
+      const before = await find();
+      const stop = partnerLoggingCheck(before, on);
+      if (stop) {
+        save(`partner-logging-${id}.json`, { id, enabled: on, status: null, before: before?.logging_config ?? null, skipped: stop.msg });
+        s.log('partner logging', a2, id, '-', stop.msg);
+        if (stop.exit) throw new PortalExit(stop.exit, stop.msg);
+        return 0;
+      }
+      const r = await s.call('PUT', `/integration-partners/${enc(id)}/logs`, { enabled: on });
+      const after = r.status < 300 ? await find() : before;
+      const applied = !!after?.logging_config?.enabled === on;
+      save(`partner-logging-${id}.json`, { id, enabled: on, status: r.status, before: before?.logging_config ?? null, after: after?.logging_config ?? null, applied, error: r.status >= 300 ? apiMsg(r.body) : undefined });
+      if (r.status >= 300) throw new PortalExit(6, `logging HTTP ${r.status}: ${apiMsg(r.body)}`);
+      return applied ? 0 : 5;
     }
     if (action === 'logs') {
       const since = flags['--since'] || new Date(Date.now() - 24 * 3600e3).toISOString();

@@ -24,14 +24,14 @@ Source: `areas/hp-notif/data-plan.md` §1.2, §4 (T1–T3), §5 (window E-TS) wi
 | T2            | Sollplan **saved** for M+1 on N4's Gruppe node (`N4_NODE`), **not** saved for M+2: PEP "Bearbeiten → Sollplan sichern [M+1]" (exploratory pep-verify under `locks/<env>~pep`; no pep-driver flow yet, OQ-20); verify with HPN-19 steps 4 / 5 or the DB (gate TS-G2) | yes (≈ 20 min) |
 | T3 (optional) | N4B: second employment + end date of the first (PEP Personal → Anstellung, PSC enqueue); else HPN-20 BLOCKED-data                                                                                                                                                   | yes            |
 
-On DM-X the PEP option "Es muss ein Sollplan gesichert sein" is off, so the M+1 save changes no roster visibility for swap / booking / partner / hp.
+The PEP option "Es muss ein Sollplan gesichert sein" (`PLANBLATT` / `ZEITBEGRENZTSOLLPLANSICHERN`) is **on** on DeployMate boxes: the seed sets `T` (seen on `e2e-pilot-av`, 2026-11-02; `scripts/seed/common/README.md` "Seed gaps" #4). The M+1 save therefore makes M+1 of N4's Gruppe (Pflege Geriatrie) visible to that Gruppe's HPs, which the groups reading Geriatrie days in M+1 want; M+2 stays hidden there. Other Gruppen are not affected (a Sollplan is per Gruppe and month).
 
 ## 4. Concurrency
 
 | Scenario    | State                                 | Effect                                                                | Rule                                                                                                          |
 | ----------- | ------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | HPN-17..20  | `poma.flows.timesheet` ON             | replaces the month report with the timesheet for **every HP of DM-X** | W-X-TIMESHEET (FLAG, ≈ 90 min incl. 2 × propagation): pauses hp HP (HPN-01 sweep); never on a tenant with utr |
-| T2          | Sollplan of M+1 on the Geriatrie node | none on DM-X (option off)                                             | PEP lock only                                                                                                 |
+| T2          | Sollplan of M+1 on the Geriatrie node | M+1 of the Geriatrie Gruppe becomes visible to HP reads (option on)   | PEP lock only; no other group needs Geriatrie M+1 unsaved                                                     |
 | HPN-17 / 19 | the browser-local API-GW toggle       | per profile                                                           | own profile                                                                                                   |
 
 No stage-wide state, no job, no test-data endpoint, no GAT.

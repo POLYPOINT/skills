@@ -19,7 +19,7 @@ Runbook for one orchestrator session. It owns the environments, the data, the da
 - The `pep-verify` skill with its pep-driver checkout (`PEP_DRIVER`, default `~/dev/polypoint/pep-driver`) and the ansible repo (`PEP_ANSIBLE_ROOT`, default `~/ansible`: the synthesised box inventory lives there; `scripts/pep.sh` exports it).
 - A CT portal ops login (P-03 feature override; the PolyID ops frontend for a lockout repair) — headed sign-in by the operator when the skill asks.
 - az / poco CLIs; node, jq, python3, ssh with the DeployMate key (`~/.ssh/deploymate`); Playwright as installed by the deploymate skill under `~/.config/deploymate`.
-- **DM-213**: until DeployMate fixes it, every new environment needs the manual SYS repair of the deploymate skill (§6a "DM-213 repair"): the operator runs the SYS upgrade in their own terminal; the orchestrator then re-runs the P4 jobs.
+- **DM-213**: until DeployMate fixes it, every new environment needs the DM-213 repair of the deploymate skill (§6a): the orchestrator runs `dm-repair-dm213.sh <id>` (owner's revealed DB login, job re-run, health wait; no human step).
 
 ## Files
 

@@ -2,6 +2,8 @@
 --   scripts/sql.sh <env> -f scripts/seed/common/verify-kits.sql -D env_role=X|Y
 -- Prints CHECK|OK|… / CHECK|MISSING|… / CHECK|WARN|… lines (grep them; every MISSING blocks the groups that need it) and the
 -- detail sections K1–K9. Log the CHECK lines in kits/<env> (coordination db). Run after S1 step 5 and in every daily pre-flight.
+-- Also checks the seed gaps of a fresh DeployMate box: rule book id 1 (MISSING until rulebook.sql), presence plannings without
+-- BLOCK rows (INFO) and the Sollplan per future month (WARN: a PEP step, README.md "Seed gaps").
 SET SERVEROUTPUT ON SIZE UNLIMITED
 SET FEEDBACK OFF
 SET PAGESIZE 0
@@ -87,6 +89,39 @@ BEGIN
                     OR (k.BEZEICHNUNG = 'E2E:HP-NOSWAP' AND EXISTS (SELECT 1 FROM ECBERN.POLYUSRROLE_DETAIL x WHERE x.POLYUSRROLEID = o.POLYUSRROLEID AND x.FUNKTIONSID = 200005 AND TRIM(x.WERT) = 'T')))) LOOP
     chk(FALSE, m.KIT || ' member ' || LOWER(m.KUERZEL) || ' is still in "' || m.OTHER || '"' || CASE WHEN m.LB = 'T' THEN ' (LEITBEDIENER)' END || ': leave it if the group gate shows the unwanted right (kit-member.sql)', TRUE);
   END LOOP;
+END;
+/
+-- Seed gaps of a fresh DeployMate box (rule book, BLOCK rows, Sollplan; README.md "Seed gaps"). Own block + dynamic SQL: a column
+-- this image names differently prints one WARN line instead of breaking the kit checks above.
+DECLARE
+  n NUMBER; v VARCHAR2(4000);
+  PROCEDURE chk(p_ok BOOLEAN, p_what VARCHAR2, p_warn BOOLEAN DEFAULT FALSE) IS
+  BEGIN DBMS_OUTPUT.PUT_LINE('CHECK|' || CASE WHEN p_ok THEN 'OK' WHEN p_warn THEN 'WARN' ELSE 'MISSING' END || '|' || p_what); END;
+  FUNCTION cnt(p_sql VARCHAR2) RETURN NUMBER IS r NUMBER; BEGIN EXECUTE IMMEDIATE p_sql INTO r; RETURN r; END;
+BEGIN
+  BEGIN
+    n := cnt('SELECT COUNT(*) FROM ECBERN.PLANNINGRULEBOOK WHERE ID = 1');
+    chk(n = 1, 'planning rule book id 1 (rulebook.sql): without it no shift swap and no api-pp planning write');
+  EXCEPTION WHEN OTHERS THEN chk(FALSE, 'planning rule book not readable: ' || SQLERRM, TRUE); END;
+  BEGIN
+    n := cnt(q'[SELECT COUNT(*) FROM ECBERN.PLANUNG p JOIN ECBERN.DIENST d ON d.PA_CODE = p.PA_CODE
+                 WHERE p.DATUM > TRUNC(SYSDATE) AND TRIM(d.TYP) = 'P'
+                   AND NOT EXISTS (SELECT 1 FROM ECBERN.BLOCK b WHERE b.PLANUNG_ID = p.PLANUNG_ID)]');
+    DBMS_OUTPUT.PUT_LINE('INFO|future presence plannings without BLOCK rows: ' || n || ' (seed plannings are like this: api-pp start / end null, not swappable; swap days are PEP-painted)');
+  EXCEPTION WHEN OTHERS THEN chk(FALSE, 'BLOCK rows not readable: ' || SQLERRM, TRUE); END;
+  BEGIN
+    n := cnt(q'[SELECT COUNT(*) FROM ECBERN.GLOBALEINSTELLUNGEN WHERE UPPER(ABSCHNITT) = 'PLANBLATT'
+                 AND UPPER(SCHLUESSEL) = 'ZEITBEGRENZTSOLLPLANSICHERN' AND UPPER(TRIM(WERT)) = 'T']');
+    IF n = 0 THEN DBMS_OUTPUT.PUT_LINE('INFO|Sollplan gate off (PLANBLATT ZEITBEGRENZTSOLLPLANSICHERN is not T)');
+    ELSE
+      FOR mth IN (SELECT DISTINCT TRUNC(DATUM, 'MM') AS M FROM ECBERN.PLANUNG WHERE DATUM >= ADD_MONTHS(TRUNC(SYSDATE, 'MM'), 1) ORDER BY 1) LOOP
+        EXECUTE IMMEDIATE q'[SELECT COUNT(*), LISTAGG(GRUPPEN_ID, ',') WITHIN GROUP (ORDER BY GRUPPEN_ID)
+                               FROM ECBERN.PLANSICHERUNG WHERE TRIM(SOLLPLAN) = 'T' AND DATUM = :m]' INTO n, v USING mth.M;
+        chk(n > 0, 'Sollplan ' || TO_CHAR(mth.M, 'YYYY-MM') || ' saved for Gruppe node(s) ' || NVL(v, 'none')
+                   || ': HP reads hide this month on every Gruppe without one (PEP: Bearbeiten > Sollplan sichern)', TRUE);
+      END LOOP;
+    END IF;
+  EXCEPTION WHEN OTHERS THEN chk(FALSE, 'Sollplan gate not readable: ' || SQLERRM, TRUE); END;
 END;
 /
 PROMPT == K1 definitions (TAUSCH = DIENSTTAUSCH, TYP0 = POMASCHICHTTYP, ERSATZ = RESSOURCENERSATZ)

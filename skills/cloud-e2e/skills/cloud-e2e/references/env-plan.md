@@ -194,10 +194,10 @@ What does not change between options: the stage-wide windows S-CT-_, the shared-
 
 ### 6.2 Steward common seed (S1, per env, before any group)
 
-1. **Partition first.** `audit.sql` (UTR, unchanged), logins taken from `POLYUSER.KUERZEL` (the manifest drifts), ASCII kürzel only (umlauts break the PolyID form). Write `envs/<id>.partitions` and the claim plan **before any login**, so no gate touches a claimed actor (auth's NEWU must stay never-logged-in).
+1. **Partition first.** `audit.sql` (A1: `MA_ID` employment id and `EMP_ID` employee id per login, both into the allocation), logins taken from `POLYUSER.KUERZEL` (the manifest drifts), ASCII kürzel only (umlauts break the PolyID form). Write `envs/<id>.partitions` and the claim plan **before any login**, so no gate touches a claimed actor (auth's NEWU must stay never-logged-in).
 2. **`rights.sql`** on `DMSEED:Planner` (mobile-app rights) + `PERMISSION_ROLE` enqueue (UTR step b, unchanged file).
-3. **R0 root rows** `r0-root-rows.sql` + PEP restart / re-save + the `HIERARCHIE.STAMM` / ORGANIZATION_STRUCTURE fix (UTR steps j, k; seed trap of DS §4).
-4. **Definitions kit.**
+3. **R0 root rows** `r0-root-rows.sql` + PEP restart / re-save + the `HIERARCHIE.STAMM` / ORGANIZATION_STRUCTURE fix (UTR steps j, k; seed trap of DS §4). Then **`rulebook.sql`**: planning rule book id 1, which the DeployMate install leaves out (no swap and no api-pp planning write without it).
+4. **Definitions kit** (mandatory on both envs, also for a reduced seed: without POMA shift types no swap is possible).
    - DM-X: `DIENSTTAUSCH='T'` on 111/112/113 (141 stays F); one swappable palette absence; palette absences for booking; `DIENST_TEILEN='T'` on 111/112/113; `INTERNER_POOL='T'` on 111/112/113; POMA shift types (111 EARLY, 113 NORMAL, 112 LATE, 141 NIGHT; column names to confirm on the first run).
    - DM-Y: POMA shift types only. UTR and planner create their own codes in their group seeds.
    - Then **one** G4b batch (`SHIFT_DEFINITION`, `SHIFT_DEFINITION_PALETTE`, `SHIFT_DEFINITION_POLICY`) and verify: `available_for_shift_trade` true, roster shift types, internal-pool roster non-empty.
@@ -210,8 +210,9 @@ What does not change between options: the stage-wide windows S-CT-_, the shared-
 6. **Flag baseline** (§6.5), set explicitly, gate G-FLAGS.
 7. **DM-X only, stage objects:** the run partner (S-CT-REG, user OK; gate G-PTN-1 with an ops "Partner" publish), the provider gate P-PTN-3, the GLN (S-CT-GLN) after 00:00 of every run day.
 8. **Access:** `sql.sh --install`, tunnels, PEP cold start (pep-driver deploy), service-token check, dashboard publish + rows, registry docs `envs/*`.
+9. **PEP-only seed gaps** (`scripts/seed/common/README.md` "Seed gaps" 3, 4): seed plannings have no BLOCK rows (swap days are PEP-painted), and HP reads of a month after the current one need a saved Sollplan of that Gruppe and month (PEP "Sollplan sichern", saved by the group that claimed the Gruppe, after its paints; some stay unsaved on purpose: `steward.md` S1 step 9).
 
-Estimated ≈ 2–2.5 h per env, X and Y in parallel (separate boxes), plus ≈ 20 min DM-213 repair each.
+Estimated ≈ 2–2.5 h per env, X and Y in parallel (separate boxes), plus ≈ 20 min DM-213 repair each (`dm-repair-dm213.sh`, unattended).
 
 ### 6.3 DM-X allocation (50 people)
 

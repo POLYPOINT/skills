@@ -1,15 +1,18 @@
 -- audit.sql — Phase 1 step (a): what the DeployMate customer-roster seed provides on this box. Read-only.
--- Run: scripts/sql.sh <tenant-id> -f scripts/seed/audit.sql
+-- Run: scripts/sql.sh <tenant-id> -f scripts/seed/common/audit.sql
 -- Seed marker: POLYUSER.KUERZEL 'DMSEED-<KUERZEL>'; the on-prem Keycloak / PolyID login is lower(KUERZEL) = dmseed-<kuerzel>.
 -- Times in ECBERN are seconds after midnight; DAUER in seconds.
 
 PROMPT == A1 seed users -> employees (login, mode, BG, team node). AUTO_ZEITSTEMPEL F = must-stamp (TIMESTAMPS), T = auto-stamp (BLOCKS)
-select mp.ID as MA_ID, u.USER_ID as POLYUSER_ID, lower(u.KUERZEL) as LOGIN,
+PROMPT    MA_ID = MITARBEITER.ID = employment id (PLANUNG, plan-day.sh, pp-plan.sh); EMP_ID = MITARBEITER_GLOBAL_ID = employee id
+PROMPT    (POMA "user".pep_employee_id, api-pp.sh avail). Record BOTH in the env facts: they differ on DeployMate seeds.
+select mp.ID as MA_ID, m.MITARBEITER_GLOBAL_ID as EMP_ID, u.USER_ID as POLYUSER_ID, lower(u.KUERZEL) as LOGIN,
        case when u.KEYCLOAK_USER_ID is null then 'no' else 'yes' end as KC,
        md.AUTO_ZEITSTEMPEL as AUTO, md.BESCHAEFTIGUNGSGRAD as BG, md.TEILZEIT_STUNDENREDUKTION as RED,
        md.LOHNART, md.TAGESSOLL, mk.KNOTEN_ID as NODE, substr(k.NAME,1,30) as NODE_NAME
   from ECBERN.POLYUSER u
   join ECBERN.MITARBEITER_POLYUSER mp on mp.USER_ID = u.USER_ID
+  left join ECBERN.MITARBEITER m on m.ID = mp.ID
   left join ECBERN.MITARBEITER_DETAIL md on md.MITARBEITER_ID = mp.ID
        and trunc(sysdate) >= md.GUELTIG_AB and (md.GUELTIG_BIS is null or trunc(sysdate) <= md.GUELTIG_BIS)
   left join ECBERN.MITARBEITER_KATEGORIEDETAIL mk on mk.MITARBEITER_ID = mp.ID
