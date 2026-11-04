@@ -22,12 +22,16 @@ $login = [Console]::In.ReadLine()
 if (-not $login) { Write-Output "NO_LOGIN_ON_STDIN"; exit 2 }
 $chars = [char[]]((48..57) + (65..90) + (97..122))
 $pw = "Dm" + (-join (1..22 | ForEach-Object { $chars | Get-Random })) + "1"
+# sqlplus starts with /nolog and gets CONNECT on stdin: the login never appears on a command line (process list).
+# A failed CONNECT leaves sqlplus unconnected; the ALTER USER then prints SP2-0640, caught by the check below.
 $sql = @"
+WHENEVER OSERROR EXIT FAILURE
 WHENEVER SQLERROR EXIT FAILURE
+CONNECT $login
 ALTER USER INSTALLER IDENTIFIED BY "$pw" ACCOUNT UNLOCK;
 EXIT;
 "@
-$out = $sql | & sqlplus -L -S "$login"
+$out = $sql | & sqlplus -S /nolog
 if ($LASTEXITCODE -ne 0 -or ("$out" -match 'ORA-|SP2-')) { Write-Output "INSTALLER_RESET_FAILED"; Write-Output "$out"; exit 1 }
 Write-Output "INSTALLER_RESET_OK"
 $env:SPRING_DATASOURCE_URL = "jdbc:oracle:thin:@//localhost:1521/POLYP01"
