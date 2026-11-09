@@ -123,6 +123,11 @@ Ask about every mismatch:
   values. 340 and its copies may run again; 342 refuses while one is neither done nor skipped, so each runs or is
   marked skip by decision before the Prod stages. Commits the new build brings besides the fix ship only after the
   release manager types `ship-extra` ([orchestration.md](orchestration.md)).
+- **Chain links** (rb 1.6.0, optional): `CHAIN_LINKS='401>402,403 402,403>404'` in `config.sh` lets the operator's
+  board propose or start the next steps once a step ends done (details: [orchestration.md](orchestration.md) "The
+  chain"). Set them with `rb -r X plan chain set <id> <next ids|->` (or `>` on the board), check them with
+  `rb -r X plan chain show` — a plan edit: only the links the user agreed, then `rb push`. Renumbered or removed tasks
+  take their links along. The links never switch the chain on: that stays the operator's choice on the night (`A`, `W`).
 - Several people can edit the plan: `rb pull` before editing (it prints the others' changes as a diff and activates
   them only once the user types `accept` — Claude summarises the diff, never accepts), `rb push` after. A push that
   names a conflicting file means someone pushed it meanwhile: `rb pull --force` (review + `accept`), redo the change,
@@ -205,9 +210,9 @@ Ask about every mismatch:
 ## 5. Questions to settle with the user before the plan goes to the operator
 
 - Who is the operator, who is the release manager, and who communicates? When does the maintenance banner go up?
-- Who is the backup operator (release rule 14), and is their Mac set up with bucket and prod access before the week?
+- Who is the backup operator (release rule 14), and are they set up with bucket and prod access before the week?
   Which `RB_LEASE_STALE_MIN` applies in the window (e.g. 5 in `config.sh`, so a takeover can start after 5 minutes)?
-  Can both reach the UptimeRobot MAIN API key in Keeper (334 asks for it; a takeover Mac asks again at 469)?
+  Can both reach the UptimeRobot MAIN API key in Keeper (334 asks for it; a takeover asks again at 469)?
 - Which rotation mode applies after the release?
 - What are the go/no-go criteria, and who decides?
 - What is the rollback for each risky change? Which ones get an on-demand 9xx step?

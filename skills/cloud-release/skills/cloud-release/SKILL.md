@@ -21,28 +21,33 @@ Pick the mode from the request; ask when it is unclear. A release can be planned
 the plan travels through the bucket (`rb push` / `rb pull`, no PR — every pulled change is shown as a diff and becomes
 active only once the operator types `accept`), the operator holds the release's lease (`rb take` … `rb handover`) and
 their board syncs state, logs and artifacts (masked) to `<release>/run/`; everyone else follows with
-`rb watch PCR-xxxx`. A backup operator is ready for every window and takes over if the operator's Mac dies.
+`rb watch PCR-xxxx`. A backup operator is ready for every window and takes over if the operator drops out.
 Several releases can be open at once (a hotfix the week after a feature release): each has its own plan, run data and
 lease, so always name the release (`-r PCR-xxxx`) and check the board's header shows the one meant.
 
 ## Ground rules (non-negotiable)
 
 - **Only the operator runs board steps.** Never run `rb run`, `rb next` (without `--show`), `mark`, `reset`, `stop`,
-  `attach`, `window`, `forget`, `archive`, `take`, `handover`, `sync`, nor press board keys for the user — not even
-  local or "harmless" steps; never hold the lease. Hand over the exact command instead (`rb -r PCR-xxxx run 412`).
+  `attach`, `window`, `forget`, `archive`, `take`, `handover`, `sync`, nor press board keys for the user (`s`, `m`,
+  `d`, `U`, `A`, `W`, `Y`, `>` or any other) — not even local or "harmless" steps; never hold the lease. Hand over the
+  exact command instead (`rb -r PCR-xxxx run 412`). Never switch the chain on (`A`) or set auto (`W`) for the
+  operator: whether the chain runs is their local choice.
   Read-only commands are fine: `rb releases`, `rb watch PCR-xxxx --once`, `rb -r X list`, `next --show`, `where`,
-  `log <id>` (no `-f`), `timeline`, `board --once --no-color`, `pull` (without `--force`), `plan show`,
-  `plan components`, `plan releases <component> --from preview|maintenance` (reads Azure DevOps), and `dry-run` of a
-  step **without** `@plan yes` (an `@plan` step's dry-run runs its live read-only plan against the target).
-  `rb -r X plan section|task|group …` edit the local plan only — run them for what the user agreed in the discussion;
-  sharing it is `rb push` (below).
-- **The operator accepts plan changes, never Claude.** `rb pull` / `rb take` print the change and stop at the typed
-  `accept` (Claude has no terminal for it — never work around that). Claude may read the diff and summarise it: what
-  changed in `config.sh`, `steps/`, `probes/`, `lib/`, anything surprising (a `\xNN` control-character warning, a
-  write to prod, a secret) — then the operator types `accept`. Never type `accept`, `takeover` or a step's typed
-  decision for the user: `ship-extra` (340, the release manager's) or the count that accepts OutOfSync apps (344 / 467).
+  `log <id>` (no `-f`), `timeline`, `board --once --no-color`, `pull` (without `--force`), `pull --check`,
+  `plan show`, `plan chain show`, `plan components`, `plan releases <component> --from preview|maintenance` (reads
+  Azure DevOps), and `dry-run` of a step **without** `@plan yes` (an `@plan` step's dry-run runs its live read-only
+  plan against the target).
+  `rb -r X plan section|task|group|chain set …` edit the local plan only — run them for what the user agreed in the
+  discussion (chain links are a plan edit like any other); sharing it is `rb push` (below).
+- **The operator accepts plan changes, never Claude.** `rb pull` / `rb take` / the board's `U` print the change and
+  stop at the typed `accept` (Claude has no terminal for it — never work around that). Claude may read the diff and
+  summarise it: what changed in `config.sh`, `steps/`, `probes/`, `lib/`, anything surprising (a `\xNN`
+  control-character warning, a write to prod, a secret) — then the operator types `accept`. Never type `accept`,
+  `takeover` or a step's typed decision for the user: `ship-extra` (340, the release manager's) or the count that
+  accepts OutOfSync apps (344 / 467).
 - **No production access by Claude** unless the user grants it explicitly for that task. Prod and staging share the
-  prod cluster: steps reach them only through the operator's typed confirmation. When prod data is needed, give the
+  prod cluster: steps reach them only through the operator's typed confirmation — a step the chain starts waits for it
+  too, a check included; nothing types it for them. When prod data is needed, give the
   operator short read-only commands to run (one per line, explicit `--context`, no `use-context`) and read their output.
   Never `kubectl config use-context` anything.
 - **Secrets never pass through Claude:** never read `~/.release-board/*/private/`, Vault dumps, the keychain or
@@ -64,16 +69,18 @@ lease, so always name the release (`-r PCR-xxxx`) and check the board's header s
 
 ## Setup — find the board
 
-1. Engine: `rb` on PATH — installed with `curl -fsSL https://get-rb.polypoint.dev | bash` (updates itself, never while
-   this Mac operates a release; `rb version` shows it, `rb update` updates by hand). Not installed → the user runs that
-   line; `rb doctor` then checks tools, logins and access to `gs://ppcloud-releases` (a 403 means asking the team for
-   access) and creates `~/.release-board/operator.sh`. A pcr-companion checkout (`$PP_RELEASE_HOME`) is dev mode: `rb`
+1. Engine: `rb` on PATH — installed with `curl -fsSL https://get-rb.polypoint.dev | bash` (PATH and `rb <TAB>`
+   completion; updates itself, never while a release is operated here; `rb version` shows it, `rb update` updates by
+   hand). Not installed → the user runs that line; `rb doctor` then checks tools (poco is required), logins, access to
+   `gs://ppcloud-releases` (a 403 means asking the team for access) and the completion, and creates
+   `~/.release-board/operator.sh` — `CLOUD_REPO` is the cloud clone found by its origin (several: it asks which; none:
+   it asks for the path; the user answers). A pcr-companion checkout (`$PP_RELEASE_HOME`) is dev mode: `rb`
    via its alias, `rb update` = git pull — needed only to change the engine, the catalogue or the docs.
 2. Docs and catalogue: in the pcr-companion repo (`$PP_RELEASE_HOME` when cloned, else Azure DevOps `pcr-companion`).
    The installed engine carries the catalogue too: `rb version` prints the engine directory
    (`~/.release-board/engine/versions/<v>`), the catalogue is its `catalogue/`.
 3. Release: `-r PCR-xxxx` on every command or `$PP_RELEASE`. `rb releases` lists them: ACTIVE (window, lease, what
-   this Mac has — operated here / plan on this Mac) and ARCHIVED (frozen); `--active` / `--archived` filter. `rb board`
+   you have here — operated here / plan here) and ARCHIVED (frozen); `--active` / `--archived` filter. `rb board`
    or `rb watch` without a release ask which one (the user's terminal). `rb -r X where` shows the places: engine · plan cache `~/.release-board/<release>/plan/` of
    `gs://ppcloud-releases/<release>/plan/` · run data `~/.release-board/<release>/` · bucket paths · lease. Legacy
    `runs/<release>/` in git (PCR-2632) load read-only.
@@ -140,8 +147,12 @@ Commands, state-file format and the triage flow: [references/orchestration.md](r
 
 - **"Which step next?"** → `rb -r X next --show`, cross-check with `list`, answer with the step id(s) only
   (`412`, or `412, then 413`) unless the user asks for more. Mention a downtime badge (▲ starts, ▼ ends, ◆ inside)
-  when the next step carries one. Never suggest running steps in parallel unless asked.
-- **Progress** → `rb -r X list`, the state files and `rb -r X log <id>` on the operator's Mac, or `rb watch X --once`
+  when the next step carries one. Never suggest running steps in parallel unless asked. With the chain on
+  (`⛓ CHAIN ON`), the board may propose (`Y`) or start (`W`, auto) linked steps by itself: `list` / the timeline show
+  `started by chain after N`.
+- **Plan banner** (`⚠ plan changed in the bucket … U to review`) → `rb -r X pull --check` may confirm it (read-only);
+  tell the operator to press `U` and review — only their typed `accept` activates it; summarise the diff when asked.
+- **Progress** → `rb -r X list`, the state files and `rb -r X log <id>` on the operator's board, or `rb watch X --once`
   from anywhere (a read-only copy in `~/.release-board/<release>-watch/`); summarise running / failed / blocked and the
   ongoing downtimes. Keep `RELEASE.md` section F (log) current with what happened, in one line per event (in the
   operator's plan cache the board's sync pushes it; elsewhere `rb push` when the user says so).
@@ -153,7 +164,8 @@ Commands, state-file format and the triage flow: [references/orchestration.md](r
   `docs/release-recipes.md`; then propose ONE of: a fix to the step script (edit the plan's copy, show the diff, the
   operator reruns; then add it to the catalogue candidates in `RELEASE.md` G), a manual action as exact commands for
   the operator, or a decision for the release manager (skip / postpone / rollback step). The operator records outcomes (`rb -r X mark <id> done "<note>"` — give them the
-  command). After a fix, say exactly what to rerun and what to check.
+  command). After a fix, say exactly what to rerun and what to check. `mark` refuses a step that runs now; give
+  `--force` only when its runner is really gone or stuck, after saying what it means (orchestration.md).
 - **Late change after the freeze** (a critical PR) → the release-regeneration step 340, never an ad-hoc deploy:
   `HOTFIX_PR=<n>` in `config.sh` (it finds the merge commit); one unchanged copy per fix with its own
   `HOTFIX_*_<id>` (`rb -r X add releases/340-hotfix-release.sh 343 …`); 340 may run again; 342 refuses while a late
@@ -167,7 +179,7 @@ Commands, state-file format and the triage flow: [references/orchestration.md](r
   typed by the operator at a hidden prompt (keychain until 530; a refused key (401) is forgotten, the rerun asks
   again) — Claude never asks for it, reads it or passes it on. First live run: compare the dashboard with what 334
   printed (the API's time zone is assumed to be `UPTIMEROBOT_TZ`).
-- **The operator's Mac died** (power cut, crash) → the backup operator follows "Emergency takeover" in
+- **The operator dropped out** (power cut, crash) → the backup operator follows "Emergency takeover" in
   `docs/release-board.md`: wait until the lease is stale (`rb -r X where` shows the threshold), `rb -r X take` +
   `takeover` + `accept` (they type both), then check the step that was running (log, probes, the target) before a
   rerun or a `mark`. Claude reads (`rb watch X --once`, `log <id>`) and advises; it never takes the lease.
