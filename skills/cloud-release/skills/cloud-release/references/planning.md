@@ -14,7 +14,8 @@ classification table and the ordering rules the phases rely on.
 
   - **Header table:** Release ID, Type, PREVIEW and PROD deployment target dates, Release Trigger, **Includes
     myPOLYPOINT**, Technical Lead, and Change Failure / Time to Restore (filled after the night, from the retro).
-    "Includes myPOLYPOINT: Yes" means the maintenance page and the app-store submission are part of the plan.
+    "Includes myPOLYPOINT: Yes" means the maintenance page and the app-store submission are part of the plan (201:
+    the store upload for review on the freeze day).
   - **Change Log Release Candidate:** Major Features (REL epics with their PPCLOUD stories), Improvements, Regular
     Fixes, items covered by another team (e.g. "Scheduling Request / SmartPEP - covered via H1"), and Technical / Team
     Issues. Extract every Jira key with its section. The same key can appear twice; dedupe it.
@@ -26,8 +27,9 @@ classification table and the ordering rules the phases rely on.
     - myPP pushed to the App Store and Play Store;
     - production deployment completed.
 
-    Each item that isn't ticked is a manual board step in the right phase (BAT and banner before the window, app
-    stores as the app-release process says). Tick the boxes on the page after the night.
+    Each item that isn't ticked is a manual board step in the right phase (BAT and banner before the window). App
+    stores: 201 uploads for review on the freeze day; releasing to users stays manual, after the window. Tick the
+    boxes on the page after the night.
 
 - Keys starting with `PPTX` need the user's permission before they are opened (organisation rule).
 - Put the page link into the plan's `config.sh` (`CONFLUENCE_RELEASE_PAGE`) and into the `RELEASE.md` facts.
@@ -77,10 +79,14 @@ Ask about every mismatch:
 
 ## 3. Steps
 
-- Two starts. A feature release: `rb new PCR-xxxx --window "YYYY-MM-DD 22:00" --core` builds the plan in
+- Three starts. A feature release: `rb new PCR-xxxx --window "YYYY-MM-DD 22:00" --core` builds the plan in
   `~/.release-board/<release>/plan/` with `catalogue/CORE` and pushes it to `gs://ppcloud-releases/<release>/plan/`.
-  A hotfix or a small release: `rb new PCR-xxxx` — an empty plan (no section, no task) that opens the board in plan
-  mode (`--no-board` when Claude runs it). Add the rest with `rb plan …` / `rb -r PCR-xxxx add <group/file> [id]`, then
+  A bugfix release (`PCR-xxxx-BF<n>`) in which no Vault, Keycloak realm or bootstrapping migration ships:
+  `rb new PCR-xxxx-BF1 --window "YYYY-MM-DD 22:00" --bugfix` — the same from `catalogue/CORE-BF` = CORE without 120
+  210 268 401 406–408 410 411 414 466 468 (it excludes `--core`; a copy's dependency on a left-out step is dropped,
+  409 waits for 405 only). A migration ships after all → `--core`, or `rb add` the missing steps. A hotfix or a small
+  release: `rb new PCR-xxxx` — an empty plan (no section, no task) that opens the board in plan mode (`--no-board`
+  when Claude runs it). Add the rest with `rb plan …` / `rb -r PCR-xxxx add <group/file> [id]`, then
   `rb -r PCR-xxxx push` (when the user agrees — the bucket is shared). The board's plan mode pushes by itself.
 - **Sections** = the plan's phases (`rb plan section add "<name>" [--at "YYYY-MM-DD HH:MM"] [--on-demand]`; an
   on-demand section is a rollback, never offered as next). **Tasks** (`rb plan task add <section> "<title>" [--desc
@@ -103,10 +109,25 @@ Ask about every mismatch:
   - **a new one** — `--release create` (newest builds, every stage manual, after a typed `yes`);
   - **undecided** — no `--release`: the task lists the releases when it runs and asks.
     A release can also be changed later: `rb plan task set <release task id> release <id|create|"">`.
-- **In a CORE plan** a preview group adds the definition to `RELEASE_DEFS`, an existing release to
+- **In a CORE plan** (CORE or CORE-BF) a preview group adds the definition to `RELEASE_DEFS`, an existing release to
   `RELEASE_ID_<def>` (step 200 checks and uses it instead of creating one), and the prod syncs at their sync-table
   ids (422–425 for POMA) — CORE's 200 / 202 / 204 / 264 / 342 deploy every component at once, 266 / 290 / 426 / 467
-  check. Apps CORE syncs itself (403, 405, 409) are not added twice. Bootstrapping ships only with CORE.
+  check. Apps CORE syncs itself (403, 405, 409) are not added twice. Bootstrapping ships only with CORE; in a bugfix
+  plan the syncs CORE puts after 408 (messaging, event-handler, permissions) wait for the config sync 405 instead.
+- **Added per release** (not in CORE / CORE-BF; catalogue README): `releases/201-mypolypoint-store-upload.sh` when
+  myPOLYPOINT ships (its store upload for review on the freeze day, right after 200). `releases/340-hotfix-release.sh`
+  for a critical fix merged after the freeze (release rule 4): one unchanged copy per fix
+  (`rb -r X add releases/340-hotfix-release.sh [<id> late-fix-<what>]`, 340 for the first), its values in `config.sh`
+  as `HOTFIX_DEF_<id>` / `HOTFIX_PR_<id>` (the PR number: the step finds its merge commit and stays blocked until the
+  merge) / `HOTFIX_ALIASES_<id>` — the plain `HOTFIX_*` names are every copy's default; never edit a copy for its
+  values. 340 and its copies may run again; 342 refuses while one is neither done nor skipped, so each runs or is
+  marked skip by decision before the Prod stages. Commits the new build brings besides the fix ship only after the
+  release manager types `ship-extra` ([orchestration.md](orchestration.md)).
+- **Chain links** (rb 1.6.0, optional): `CHAIN_LINKS='401>402,403 402,403>404'` in `config.sh` lets the operator's
+  board propose or start the next steps once a step ends done (details: [orchestration.md](orchestration.md) "The
+  chain"). Set them with `rb -r X plan chain set <id> <next ids|->` (or `>` on the board), check them with
+  `rb -r X plan chain show` — a plan edit: only the links the user agreed, then `rb push`. Renumbered or removed tasks
+  take their links along. The links never switch the chain on: that stays the operator's choice on the night (`A`, `W`).
 - Several people can edit the plan: `rb pull` before editing (it prints the others' changes as a diff and activates
   them only once the user types `accept` — Claude summarises the diff, never accepts), `rb push` after. A push that
   names a conflicting file means someone pushed it meanwhile: `rb pull --force` (review + `accept`), redo the change,
@@ -150,7 +171,13 @@ Ask about every mismatch:
 - **Before the window:**
 
   - read-only checks;
+  - the freeze day: 126 rebuilds every component on the frozen head (changes=all; 45–49 min at BF1), 128 the
+    myPOLYPOINT build on that head, then 200 creates the releases (it waits for both) and 201 uploads myPOLYPOINT
+    for store review the same day (review takes days);
   - Preview and Staging deploys;
+  - late fixes (340 and its copies), done or skipped before 342;
+  - the UptimeRobot maintenance window (334, the afternoon session after GO 330): it starts at `PHASE_AT_window`
+    (`--window` sets it) and needs the operator's access to the account's MAIN API key in Keeper;
   - the Prod stages, which only commit to gitops;
   - dumps and PITR timestamps;
   - pre-created indexes that don't block writes.
@@ -171,7 +198,8 @@ Ask about every mismatch:
   11. switch-specific work;
   12. bootstrapping down + root token removed;
   13. maintenance page off;
-  14. all-synced check.
+  14. all-synced check;
+  15. UptimeRobot window cut to the real end (469, rb 1.5.0).
 - **Group the downtimes:** start the slow independent syncs as background jobs so their user impact overlaps
   (portal-tenant-access, appointment index, poma-core ran together at PCR-2643). Name each downtime in one line for the
   communication: what users see, from which step to which, the estimate.
@@ -182,8 +210,9 @@ Ask about every mismatch:
 ## 5. Questions to settle with the user before the plan goes to the operator
 
 - Who is the operator, who is the release manager, and who communicates? When does the maintenance banner go up?
-- Who is the backup operator (release rule 14), and is their Mac set up with bucket and prod access before the week?
+- Who is the backup operator (release rule 14), and are they set up with bucket and prod access before the week?
   Which `RB_LEASE_STALE_MIN` applies in the window (e.g. 5 in `config.sh`, so a takeover can start after 5 minutes)?
+  Can both reach the UptimeRobot MAIN API key in Keeper (334 asks for it; a takeover asks again at 469)?
 - Which rotation mode applies after the release?
 - What are the go/no-go criteria, and who decides?
 - What is the rollback for each risky change? Which ones get an on-demand 9xx step?
