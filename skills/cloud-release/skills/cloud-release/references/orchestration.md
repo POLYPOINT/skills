@@ -89,6 +89,32 @@ Exit codes: 0 done · 3 skip · 4 blocked · anything else failed · 130 interru
 - While the maintenance page is on, every sync re-routes the `MAINT_APPS` Ingresses it reset. The myPOLYPOINT app only
   shows the banner after its own next API call.
 - A prod or staging step asks for the typed target. Read-only checks reuse that confirmation for 30 minutes.
+- **NO-GO (330).** The operator marks 330 skip, then `rb -r X mark 334-469 skip "no-go"` — a skipped range leaves
+  its done steps done (a late fix 340 that already ran keeps its record). A skipped 330 counts as a met dependency, so
+  until that mark the board offers the next prep steps: from rb 1.5.1 342 (the Prod stages) refuses after a NO-GO,
+  334 sets nothing. Claude gives the command, never marks.
+- **A late fix (340 or a copy)** lists per component every commit the new build adds besides the fix, with its PR,
+  and asks for `ship-extra`: the release manager decides, the operator types it; anything else stops, nothing created.
+  Claude may summarise that list for the release manager (the step output; `state/artifacts/hotfix-<id>.txt` keeps
+  `extra=` and `decision=` once shipped) — it never types the word. A copy that already ran asks `resume` (deploy its
+  release's Preview / Staging stages) or `again` (a new regeneration from the release `artifacts/releases.txt` names
+  now; a superseded release that never replaced the row may be abandoned — its Prod stage must never run). 342
+  refuses while a copy is neither done nor skipped: run it, or `rb -r X mark <id> skip "<decision>"`.
+- **OutOfSync apps at 344 / 467.** Health problems, paused Deployments and (467) the page still on fail with no
+  question. Apps that are only OutOfSync (Healthy) — at 344 those no step syncs — are listed last; the operator
+  accepts the whole list by typing how many apps it shows (e.g. `27`), logged in the step log, note and timeline —
+  anything else, or no terminal, fails. Claude may explain an app's drift read-only (the step log, the gitops
+  history; prod facts through the operator's read-only commands) and whether it belongs to the release; it never
+  accepts for them. An app the release ships needs its sync step instead.
+- **UptimeRobot (rb 1.5.0).** 334 (prep, the afternoon session, after GO 330) sets the night's maintenance window
+  from `PHASE_AT_window` for `UPTIMEROBOT_WINDOW_MIN` minutes (480) over the monitors it lists before a typed `y`;
+  nothing is set after a NO-GO. A rerun keeps it, `[u]pdate`s a moved window start or `[d]elete`s it — a night
+  called off after 334: rerun 334 → `[d]elete` (it ends skip), then `mark 469 skip`. 469 (after 467) cuts the window
+  to the real end so UptimeRobot alerts again; it refuses before the window's start and says when the night ran past
+  the window. The account's MAIN API key (Keeper) is typed by the operator at 334's hidden prompt, kept in the
+  keychain until 530 and handed to curl on stdin only; a refused key (401) is forgotten and the rerun asks again.
+  Claude never asks for the key, reads it or passes it on. First live run: compare the window in the UptimeRobot
+  dashboard with what 334 printed — the API takes date + time without a zone, assumed to be `UPTIMEROBOT_TZ`.
 - The board's sync line: `sync ✔ <age>` is normal; `⚠ LEASE LOST` means someone took the release over (or the lease
   was deleted) — this board is read-only now, the operator runs `rb watch` or a new `rb take`; `PLAN CONFLICT` means a
   plan file was pushed from elsewhere — `rb push` names it; "plan change … waits for review" means a pulled change was
@@ -111,4 +137,5 @@ The backup operator runs it (release rule 14), following `docs/release-board.md`
    diff; it never types either word.
 3. The step that was running shows as runner gone: read its log and the probes, check the target (an ADO stage, ArgoCD
    sync or rollout keeps going server-side), then the operator reruns it or records it (`rb -r X mark <id> …`).
-4. Credentials and target confirmations are asked again on the new Mac; proxies start again on demand.
+4. Credentials and target confirmations are asked again on the new Mac (the UptimeRobot key at 469 too); proxies
+   start again on demand.

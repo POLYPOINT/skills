@@ -7,8 +7,8 @@ migrations, first-pod-then-all, lanes run in parallel). Newest release first.
 ## PCR-2643-BF1 — bugfix release (Wed 2026-11-04, prod)
 
 Every component from release/preview; no Vault / Keycloak bootstrapping in the window (CORE without 120 210 268 401
-406–408 410 411 414 466 468). After Keycloak and PolyID, the app syncs ran in four lanes at once (Portal · TPMS · shared
-services · POMA).
+406–408 410 411 414 466 468 — since rb 1.4.0 `catalogue/CORE-BF`, `rb new … --bugfix`: the reference for a bugfix
+plan). After Keycloak and PolyID, the app syncs ran in four lanes at once (Portal · TPMS · shared services · POMA).
 
 **Window:** 22:00:35 → 23:39:28 = 1 h 39 min — **not a reference**: every app sync was done by 22:46 (46 min);
 portal-tenant-access was held back on purpose until 23:25 (HA-Proxy migration), then came the ConfigMap restart and the

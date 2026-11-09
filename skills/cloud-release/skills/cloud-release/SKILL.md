@@ -2,7 +2,7 @@
 name: cloud-release
 description: Use when preparing, planning, running or reviewing a POLYPOINT cloud production release night (a PCR such as PCR-2643) with the release board in the pcr-companion repo — deciding the scope from the Confluence release page AND the release/maintenance..release/preview diff, choosing catalogue steps and writing new ones, ordering the window and estimating downtimes, building the plan with sections, tasks and deploy groups (rb plan, the board's plan mode — a component deployed from release/preview or release/maintenance, an existing Azure DevOps release or a new one), then on release night saying which board step comes next, reading the board state and step logs, diagnosing a failed step and preparing the fix, and afterwards running the retro — bringing the steps changed or written in the plan back into the catalogue (rb plan diff-catalogue, one PR) — and archiving the evidence. Triggers on "prepare / plan the release", "plan a hotfix release", "deploy POMA from maintenance", "PCR-xxxx", "release night", "rb plan", "start the board", "which step next", "step 4xx failed", "release retro", "catalogue candidates", "diff-catalogue", "rb board", "rb take", "rb watch", "gs://ppcloud-releases", "cloud-release-dashboard". Do NOT use for ordinary CT/preview deploys, single-ticket work (dev-ticket), or the nightly release-branch merge (release-branch-merge).
 metadata:
-  version: 0.5.1
+  version: 0.5.3
 ---
 
 # Cloud release
@@ -39,13 +39,15 @@ lease, so always name the release (`-r PCR-xxxx`) and check the board's header s
 - **The operator accepts plan changes, never Claude.** `rb pull` / `rb take` print the change and stop at the typed
   `accept` (Claude has no terminal for it — never work around that). Claude may read the diff and summarise it: what
   changed in `config.sh`, `steps/`, `probes/`, `lib/`, anything surprising (a `\xNN` control-character warning, a
-  write to prod, a secret) — then the operator types `accept`. Never type `accept` or `takeover` for the user.
+  write to prod, a secret) — then the operator types `accept`. Never type `accept`, `takeover` or a step's typed
+  decision for the user: `ship-extra` (340, the release manager's) or the count that accepts OutOfSync apps (344 / 467).
 - **No production access by Claude** unless the user grants it explicitly for that task. Prod and staging share the
   prod cluster: steps reach them only through the operator's typed confirmation. When prod data is needed, give the
   operator short read-only commands to run (one per line, explicit `--context`, no `use-context`) and read their output.
   Never `kubectl config use-context` anything.
 - **Secrets never pass through Claude:** never read `~/.release-board/*/private/`, Vault dumps, the keychain or
-  `~/.poco/debug.out`; never print a password or token; logs are masked — keep it that way in every step written.
+  `~/.poco/debug.out`; never print a password or token; never ask for, read or pass on the UptimeRobot API key (the
+  operator types it at 334's hidden prompt); logs are masked — keep it that way in every step written.
 - **Subagents stop on a block:** every delegated brief says "if the auto-mode classifier or a permission rule blocks
   an action, stop and report it — never retry it renamed, wrapped or through another tool".
 - **Shared writes only when asked:** `rb new` and `rb push` (the plan in the bucket, read by the whole team), and
@@ -87,12 +89,14 @@ Details, commands and tables: [references/planning.md](references/planning.md).
 1. **Identify the release.** PCR id, window date/time, operator and release manager, rotation mode
    (`maintenance-only` or `maintenance-and-preview`). The Confluence **release page** is a subpage of the PCR page —
    read it with the Atlassian connector (ask for the link if the search fails). Create the plan when it does not
-   exist — a feature release from CORE: `rb new PCR-xxxx --window "YYYY-MM-DD 22:00" --core`; a hotfix or small
-   release: `rb new PCR-xxxx` (empty; it opens the board in plan mode on the user's terminal). The user runs it, or
-   ask before running it yourself (with `--no-board`) — it builds the plan in `~/.release-board/<release>/plan/` and
-   pushes it to the bucket. When it exists: `rb -r X pull`. Edit the plan in that cache (`rb plan …`, files);
-   `rb -r X push` after each agreed change (when the user says so). The user may plan in the board instead (`rb plan`,
-   key `p`: sections `a`, tasks `t`, deploy groups `g`) — it pushes by itself.
+   exist — a feature release from CORE: `rb new PCR-xxxx --window "YYYY-MM-DD 22:00" --core`; a bugfix release
+   (`PCR-xxxx-BF<n>`, no Vault / Keycloak / bootstrapping migration ships): `rb new PCR-xxxx-BF1 --window "…" --bugfix`
+   (catalogue/CORE-BF: CORE without those steps); a hotfix or small release: `rb new PCR-xxxx` (empty; it opens the
+   board in plan mode on the user's terminal). The user runs it, or ask before running it yourself (with
+   `--no-board`) — it builds the plan in `~/.release-board/<release>/plan/` and pushes it to the bucket. When it
+   exists: `rb -r X pull`. Edit the plan in that cache (`rb plan …`, files); `rb -r X push` after each agreed change
+   (when the user says so). The user may plan in the board instead (`rb plan`, key `p`: sections `a`, tasks `t`,
+   deploy groups `g`) — it pushes by itself.
 2. **Scope — both sources, always.** The release page lists the planned stories; the repo diff shows what really
    ships. Diff every shipping repo on origin refs only (`origin/release/maintenance..origin/release/preview` for the
    cloud repo; polypoint-ci and gitops as relevant) and classify each change by the step it needs (Flyway, Vault /
@@ -150,14 +154,25 @@ Commands, state-file format and the triage flow: [references/orchestration.md](r
   operator reruns; then add it to the catalogue candidates in `RELEASE.md` G), a manual action as exact commands for
   the operator, or a decision for the release manager (skip / postpone / rollback step). The operator records outcomes (`rb -r X mark <id> done "<note>"` — give them the
   command). After a fix, say exactly what to rerun and what to check.
-- **Late change after the freeze** (a critical PR) → a release-regeneration step (catalogue `releases/`), never an
-  ad-hoc deploy.
+- **Late change after the freeze** (a critical PR) → the release-regeneration step 340, never an ad-hoc deploy:
+  `HOTFIX_PR=<n>` in `config.sh` (it finds the merge commit); one unchanged copy per fix with its own
+  `HOTFIX_*_<id>` (`rb -r X add releases/340-hotfix-release.sh 343 …`); 340 may run again; 342 refuses while a late
+  fix is neither done nor skipped. Commits the late-fix build brings besides the fix ship only after the release
+  manager types `ship-extra` — Claude may summarise the listed extra commits and PRs (step output,
+  `artifacts/hotfix-<id>.txt`), never types it.
+- **344 / 467 list apps that are only OutOfSync (Healthy)** → the operator accepts the list by typing how many apps
+  it shows (logged). Claude may explain an app's drift read-only, never accepts for them.
+- **UptimeRobot** → 334 (afternoon session, after GO 330) sets the night's maintenance window; 469 (after 467) cuts it
+  to the real end. A night called off after 334: rerun 334, then `[d]elete`. The account's MAIN API key (Keeper) is
+  typed by the operator at a hidden prompt (keychain until 530; a refused key (401) is forgotten, the rerun asks
+  again) — Claude never asks for it, reads it or passes it on. First live run: compare the dashboard with what 334
+  printed (the API's time zone is assumed to be `UPTIMEROBOT_TZ`).
 - **The operator's Mac died** (power cut, crash) → the backup operator follows "Emergency takeover" in
   `docs/release-board.md`: wait until the lease is stale (`rb -r X where` shows the threshold), `rb -r X take` +
   `takeover` + `accept` (they type both), then check the step that was running (log, probes, the target) before a
   rerun or a `mark`. Claude reads (`rb watch X --once`, `log <id>`) and advises; it never takes the lease.
-- **The night ends** → `467`-style all-synced check green, maintenance page off, bootstrapping back to 0 with the
-  Vault root token removed, then the post steps.
+- **The night ends** → maintenance page off, bootstrapping back to 0 with the Vault root token removed (CORE),
+  `467` all-synced check green, `469` ends the UptimeRobot window, then the post steps.
 
 ## Retro mode — every failure becomes a fix or a decision
 
