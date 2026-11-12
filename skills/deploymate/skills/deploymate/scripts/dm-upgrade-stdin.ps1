@@ -12,6 +12,10 @@
 #   revealed login  VINCULUM_FLEET[ECBERN]/<password>@127.0.0.1:1521/POLYP01             (DBA role: enough for ALTER USER)
 #   SYS fallback    <sys user>/<password>@127.0.0.1:1521/POLYP01 as sysdba
 # Output: INSTALLER_RESET_OK, UPGRADE_EXIT <code>, filtered Liquibase lines (log: D:\TempPOLYPOINT\liquibase\dm-upgrade.log).
+# appointment-planning (when the box has its job file): its label `api-appointement-planning` (product spelling) joins the upgrade,
+# and a second run applies its api-baseline, which DeployMate skipped on purpose since DM-154, plus the label again (grants on the new
+# objects) -> AP_BASELINE_EXIT <code> (log dm-baseline-ap.log). AP_BASELINE_SKIPPED <reason> when the module is not deployed here or
+# the jar predates SAAS-846 (pp-services 2026-08-26, cross-schema grants; without them the baseline fails with ORA-00942).
 # INSTALLER_RESET_FAILED / NO_LOGIN_ON_STDIN = nothing changed.
 # Recovered from the 2026-10-14 repair session (final version, reused in the 10-15 and 10-16 repairs); jar name as on the box.
 $ErrorActionPreference = 'Continue'
@@ -37,8 +41,39 @@ Write-Output "INSTALLER_RESET_OK"
 $env:SPRING_DATASOURCE_URL = "jdbc:oracle:thin:@//localhost:1521/POLYP01"
 $env:SPRING_DATASOURCE_USERNAME = "INSTALLER"
 $env:SPRING_DATASOURCE_PASSWORD = $pw
+$java = "D:\POLYPOINT_SRV\java\jdk21\bin\java.exe"
+$jar = "D:\TempPOLYPOINT\liquibase\boostrap-app.jar"
+$filter = "Upgrade default scope|label|API baseline|UPDATE SUMMARY|Run:|Previously run|Filtered out|MARK_RAN|ran successfully|ERROR|Exception|completed|failed"
+$labels = "api-personnel-planning,api-patient-case,api-id-administration-service,api-gateway"
+$ap = Test-Path "D:\TempPOLYPOINT\nomad-job-definitions\api-ap-appointment-planning.nomad"
+if ($ap) { $labels += ",api-appointement-planning" }
 $env:BOOTSTRAP_UPGRADE_RUN_ON_STARTUP = "true"
-$env:BOOTSTRAP_UPGRADE_LABELS = "api-personnel-planning,api-patient-case,api-id-administration-service,api-gateway"
-& "D:\POLYPOINT_SRV\java\jdk21\bin\java.exe" -jar "D:\TempPOLYPOINT\liquibase\boostrap-app.jar" *> "D:\TempPOLYPOINT\liquibase\dm-upgrade.log"
-Write-Output "UPGRADE_EXIT $LASTEXITCODE"
-Get-Content "D:\TempPOLYPOINT\liquibase\dm-upgrade.log" | Select-String -Pattern "Upgrade default scope|label|UPDATE SUMMARY|Run:|Previously run|Filtered out|MARK_RAN|ran successfully|ERROR|Exception|completed|failed" | ForEach-Object { $_.Line }
+$env:BOOTSTRAP_UPGRADE_LABELS = $labels
+& $java -jar $jar *> "D:\TempPOLYPOINT\liquibase\dm-upgrade.log"
+$rc = $LASTEXITCODE
+Write-Output "UPGRADE_EXIT $rc"
+Get-Content "D:\TempPOLYPOINT\liquibase\dm-upgrade.log" | Select-String -Pattern $filter | ForEach-Object { $_.Line }
+if (-not $ap) { Write-Output "AP_BASELINE_SKIPPED not deployed on this box"; exit 0 }
+if ($rc -ne 0) { Write-Output "AP_BASELINE_SKIPPED upgrade failed"; exit 0 }
+# Does the jar's pp-baseline-appointment-planning carry SAAS-846's cross-schema grants (the same probe as the p4-db-baseline role)?
+Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
+$ok = $false
+$zip = [System.IO.Compression.ZipFile]::OpenRead($jar)
+try {
+  $lib = $zip.Entries | Where-Object { $_.FullName -like 'BOOT-INF/lib/pp-baseline-appointment-planning-*.jar' } | Select-Object -First 1
+  if ($lib) {
+    $ms = New-Object System.IO.MemoryStream
+    $s = $lib.Open(); try { $s.CopyTo($ms) } finally { $s.Dispose() }
+    $inner = New-Object System.IO.Compression.ZipArchive($ms)
+    try { $ok = $null -ne $inner.GetEntry('db/oracle/APIAPDBA/change-sets/02b-cross-schema-grants.xml') } finally { $inner.Dispose() }
+  }
+} finally { $zip.Dispose() }
+if (-not $ok) { Write-Output "AP_BASELINE_SKIPPED jar predates SAAS-846"; exit 0 }
+# Second run, as in the 2026-11-12 hand fix on e2e-pilot-av: the module baseline (idempotent: Liquibase skips what ran), then the
+# label again, so the grants that failed before the APIAPDBA objects existed (failOnError=false, never recorded) are applied.
+$env:BOOTSTRAP_MODULES = "appointment-planning"
+$env:BOOTSTRAP_API_BASELINE_RUN_ON_STARTUP = "true"
+$env:BOOTSTRAP_UPGRADE_LABELS = "api-appointement-planning"
+& $java -jar $jar *> "D:\TempPOLYPOINT\liquibase\dm-baseline-ap.log"
+Write-Output "AP_BASELINE_EXIT $LASTEXITCODE"
+Get-Content "D:\TempPOLYPOINT\liquibase\dm-baseline-ap.log" | Select-String -Pattern $filter | ForEach-Object { $_.Line }
